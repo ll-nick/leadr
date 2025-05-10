@@ -5,6 +5,8 @@ use leadr::{Config, LeadrError, ShortcutHandler, ShortcutResult};
 #[command(name = "leadr")]
 #[command(about = "Minimal shell shortcut launcher")]
 struct Cli {
+    #[arg(long)]
+    bash: bool,
     #[arg(long, short = 'l', help = "List all shortcuts")]
     list: bool,
 }
@@ -19,6 +21,12 @@ fn main() {
             std::process::exit(1);
         }
     };
+
+    if cli.bash {
+        let script = leadr::shell::init_bash(&config);
+        println!("{}", script);
+        return;
+    }
 
     if cli.list {
         println!("{}", config.render_table());

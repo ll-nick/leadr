@@ -1,4 +1,4 @@
-use leadr::{Config, LeadrError, ShortcutManager, ShortcutResult};
+use leadr::{Config, LeadrError, ShortcutHandler, ShortcutResult};
 
 fn main() {
     let config: Config = match confy::load("leadr", "config") {
@@ -9,9 +9,9 @@ fn main() {
         }
     };
 
-    let mut manager = ShortcutManager::new(config.shortcuts);
+    let mut handler = ShortcutHandler::new(config.shortcuts);
 
-    match manager.run() {
+    match handler.run() {
         Ok(ShortcutResult::Execute(command)) => print!("#EXEC {}", command),
         Ok(ShortcutResult::Insert(command)) => print!("{}", command),
         Ok(ShortcutResult::NoMatch | ShortcutResult::Cancelled) => {}

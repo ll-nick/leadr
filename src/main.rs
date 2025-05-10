@@ -1,4 +1,4 @@
-use leadr::{Shortcut, ShortcutManager};
+use leadr::{LeadrError, Shortcut, ShortcutManager, ShortcutResult};
 
 fn main() {
     let shortcuts = vec![
@@ -24,7 +24,19 @@ fn main() {
 
     let mut manager = ShortcutManager::new(shortcuts);
 
-    if let Ok(shortcut) = manager.run() {
-        print!("{}", shortcut)
+    match manager.run() {
+        Ok(ShortcutResult::Execute(command)) => print!("#EXEC {}", command),
+        Ok(ShortcutResult::Insert(command)) => print!("{}", command),
+        Ok(ShortcutResult::NoMatch | ShortcutResult::Cancelled) => {}
+        Err(e) => {
+            eprintln!(
+                "Fatal error: {}",
+                match e {
+                    LeadrError::TerminalSetup(msg) => msg,
+                    LeadrError::ReadError(msg) => msg,
+                }
+            );
+            std::process::exit(1);
+        }
     }
 }

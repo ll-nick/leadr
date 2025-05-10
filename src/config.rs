@@ -2,6 +2,7 @@ use crate::models::Shortcut;
 
 #[derive(Debug, serde::Serialize, serde::Deserialize)]
 pub struct Config {
+    pub leader: String,
     pub shortcuts: Vec<Shortcut>,
 }
 
@@ -28,6 +29,7 @@ impl Config {
 impl ::std::default::Default for Config {
     fn default() -> Self {
         Self {
+            leader: "<C-Space>".into(),
             shortcuts: vec![
                 // File navigation
                 Shortcut {

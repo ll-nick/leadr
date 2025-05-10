@@ -1,28 +1,15 @@
-use leadr::{LeadrError, Shortcut, ShortcutManager, ShortcutResult};
+use leadr::{Config, LeadrError, ShortcutManager, ShortcutResult};
 
 fn main() {
-    let shortcuts = vec![
-        Shortcut {
-            sequence: "gs".into(),
-            command: "git status".into(),
-            execute: true,
-            description: Some("Status of the git project".to_string()),
-        },
-        Shortcut {
-            sequence: "v".into(),
-            command: "vim ".into(),
-            execute: false,
-            description: None,
-        },
-        Shortcut {
-            sequence: "ll".into(),
-            command: "ls -la".into(),
-            execute: true,
-            description: Some("List directories".to_string()),
-        },
-    ];
+    let config: Config = match confy::load("leadr", "config") {
+        Ok(cfg) => cfg,
+        Err(e) => {
+            eprintln!("Error loading config: {}", e);
+            std::process::exit(1);
+        }
+    };
 
-    let mut manager = ShortcutManager::new(shortcuts);
+    let mut manager = ShortcutManager::new(config.shortcuts);
 
     match manager.run() {
         Ok(ShortcutResult::Execute(command)) => print!("#EXEC {}", command),

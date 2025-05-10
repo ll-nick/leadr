@@ -7,7 +7,7 @@ LEADR_RESET_COLOR='\e[0m'
 # === Handle leadr output ===
 __leadr_invoke__() {
     local cmd
-    cmd="#EXEC git status"
+    cmd="$(leadr)"
 
     if [[ "$cmd" =~ ^${LEADR_EXEC_PREFIX}[[:space:]]+(.*) ]]; then
         # If using the exec prefix , run the command right away and manually append to history

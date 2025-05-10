@@ -1,48 +1,30 @@
-use crossterm::event::{read, Event, KeyCode, KeyEvent};
-use crossterm::terminal::{enable_raw_mode, disable_raw_mode};
-use std::collections::HashMap;
+use leadr::{Shortcut, ShortcutManager};
 
 fn main() {
-    let mut shortcuts = HashMap::new();
-    shortcuts.insert("gs", ("git status", true));
-    shortcuts.insert("v", ("vim ", false));
-    shortcuts.insert("ll", ("ls -la", true));
+    let shortcuts = vec![
+        Shortcut {
+            sequence: "gs".into(),
+            command: "git status".into(),
+            execute: true,
+            description: Some("Status of the git project".to_string()),
+        },
+        Shortcut {
+            sequence: "v".into(),
+            command: "vim ".into(),
+            execute: false,
+            description: None,
+        },
+        Shortcut {
+            sequence: "ll".into(),
+            command: "ls -la".into(),
+            execute: true,
+            description: Some("List directories".to_string()),
+        },
+    ];
 
-    let mut sequence = String::new();
+    let mut manager = ShortcutManager::new(shortcuts);
 
-    enable_raw_mode().expect("Failed to enter raw mode");
-
-    loop {
-        if let Event::Key(KeyEvent { code, .. }) = read().expect("Failed to read event") {
-            match code {
-                KeyCode::Char(c) => {
-                    sequence.push(c);
-                    if let Some((cmd, execute_immediately)) = shortcuts.get(&sequence as &str) {
-                        if *execute_immediately {
-                            print!("#EXEC {}", cmd);
-                        } else {
-                            print!("{}", cmd); 
-                        }
-                        break;
-                    }
-
-                    let partial_match = shortcuts.keys().any(|k| k.starts_with(&sequence));
-                    if !partial_match {
-                        // No possible completions — exit
-                        break;
-                    }
-                }
-                KeyCode::Backspace => {
-                    sequence.pop();
-                }
-                KeyCode::Esc => {
-                    break;
-                }
-                _ => {}
-            }
-        }
+    if let Ok(shortcut) = manager.run() {
+        print!("{}", shortcut)
     }
-
-    disable_raw_mode().expect("Failed to disable raw mode");
 }
-

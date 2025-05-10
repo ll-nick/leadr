@@ -1,6 +1,21 @@
 use crossterm::event::{read, Event, KeyCode, KeyEvent};
-use crossterm::terminal::{disable_raw_mode, enable_raw_mode};
 use std::collections::HashMap;
+
+struct RawModeGuard;
+
+impl RawModeGuard {
+    fn new() -> Result<Self, String> {
+        crossterm::terminal::enable_raw_mode()
+            .map_err(|e| format!("Failed to enable raw mode: {}", e))?;
+        Ok(Self)
+    }
+}
+
+impl Drop for RawModeGuard {
+    fn drop(&mut self) {
+        let _ = crossterm::terminal::disable_raw_mode();
+    }
+}
 
 pub enum LeadrError {
     TerminalSetup(String),
@@ -39,7 +54,7 @@ impl ShortcutManager {
     }
 
     pub fn run(&mut self) -> Result<ShortcutResult, LeadrError> {
-        enable_raw_mode().map_err(|e| LeadrError::TerminalSetup(e.to_string()))?;
+        let _guard = RawModeGuard::new().map_err(LeadrError::TerminalSetup)?;
 
         loop {
             if let Event::Key(KeyEvent { code, .. }) =
@@ -50,12 +65,8 @@ impl ShortcutManager {
                         self.sequence.push(c);
                         if let Some(shortcut) = self.shortcuts.get(&self.sequence) {
                             if shortcut.execute {
-                                disable_raw_mode()
-                                    .map_err(|e| LeadrError::TerminalSetup(e.to_string()))?;
                                 return Ok(ShortcutResult::Execute(shortcut.command.to_string()));
                             } else {
-                                disable_raw_mode()
-                                    .map_err(|e| LeadrError::TerminalSetup(e.to_string()))?;
                                 return Ok(ShortcutResult::Insert(shortcut.command.to_string()));
                             }
                         }
@@ -63,8 +74,6 @@ impl ShortcutManager {
                         let partial_match =
                             self.shortcuts.keys().any(|k| k.starts_with(&self.sequence));
                         if !partial_match {
-                            disable_raw_mode()
-                                .map_err(|e| LeadrError::TerminalSetup(e.to_string()))?;
                             return Ok(ShortcutResult::NoMatch);
                         }
                     }
@@ -72,7 +81,6 @@ impl ShortcutManager {
                         self.sequence.pop();
                     }
                     KeyCode::Esc => {
-                        disable_raw_mode().map_err(|e| LeadrError::TerminalSetup(e.to_string()))?;
                         return Ok(ShortcutResult::Cancelled);
                     }
                     _ => {}

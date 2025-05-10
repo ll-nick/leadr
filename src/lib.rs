@@ -95,3 +95,55 @@ impl ShortcutManager {
         self.shortcuts.keys().any(|k| k.starts_with(seq))
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn test_shortcuts() -> Vec<Shortcut> {
+        vec![
+            Shortcut {
+                sequence: "gs".into(),
+                command: "git status".into(),
+                description: None,
+                execute: true,
+            },
+            Shortcut {
+                sequence: "v".into(),
+                command: "vim ".into(),
+                description: None,
+                execute: false,
+            },
+        ]
+    }
+
+    #[test]
+    fn test_exact_match() {
+        let shortcuts = test_shortcuts();
+        let manager = ShortcutManager::new(shortcuts);
+
+        let result = manager.match_sequence("gs");
+        assert!(result.is_some());
+        assert!(result.unwrap().execute);
+
+        let result = manager.match_sequence("v");
+        assert!(result.is_some());
+        assert!(!result.unwrap().execute);
+
+        let result = manager.match_sequence("x");
+        assert!(result.is_none());
+
+        let result = manager.match_sequence("g");
+        assert!(result.is_none());
+    }
+
+    #[test]
+    fn test_partial_match() {
+        let shortcuts = test_shortcuts();
+        let manager = ShortcutManager::new(shortcuts);
+
+        assert!(manager.has_partial_match("g"));
+        assert!(!manager.has_partial_match("x"));
+    }
+}
+

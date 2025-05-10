@@ -32,6 +32,9 @@ fn main() {
                         break;
                     }
                 }
+                KeyCode::Backspace => {
+                    sequence.pop();
+                }
                 KeyCode::Esc => {
                     break;
                 }

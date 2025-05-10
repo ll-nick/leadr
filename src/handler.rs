@@ -1,7 +1,7 @@
-use crate::models::{LeadrError, Shortcut, ShortcutResult};
-use crossterm::event::{read, Event, KeyCode, KeyEvent};
-use std::collections::HashMap;
 use crate::input::RawModeGuard;
+use crate::models::{LeadrError, Shortcut, ShortcutResult};
+use crossterm::event::{Event, KeyCode, KeyEvent, read};
+use std::collections::HashMap;
 
 pub struct ShortcutHandler {
     shortcuts: HashMap<String, Shortcut>,

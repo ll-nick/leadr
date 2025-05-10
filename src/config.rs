@@ -8,7 +8,10 @@ pub struct Config {
 impl Config {
     pub fn render_table(&self) -> String {
         let mut output = String::new();
-        output.push_str(&format!("{:<8} {:<30} {}\n", "Keys", "Command", "Description"));
+        output.push_str(&format!(
+            "{:<8} {:<30} {}\n",
+            "Keys", "Command", "Description"
+        ));
         output.push_str(&format!("{:-<8} {:-<30} {:-<}\n", "", "", ""));
         for shortcut in &self.shortcuts {
             output.push_str(&format!(

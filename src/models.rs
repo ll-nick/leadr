@@ -17,4 +17,3 @@ pub enum LeadrError {
     TerminalSetup(String),
     ReadError(String),
 }
-

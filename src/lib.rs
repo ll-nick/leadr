@@ -63,7 +63,7 @@ impl ShortcutManager {
                 match code {
                     KeyCode::Char(c) => {
                         self.sequence.push(c);
-                        if let Some(shortcut) = self.shortcuts.get(&self.sequence) {
+                        if let Some(shortcut) = self.match_sequence(&self.sequence) {
                             if shortcut.execute {
                                 return Ok(ShortcutResult::Execute(shortcut.command.to_string()));
                             } else {
@@ -71,9 +71,7 @@ impl ShortcutManager {
                             }
                         }
 
-                        let partial_match =
-                            self.shortcuts.keys().any(|k| k.starts_with(&self.sequence));
-                        if !partial_match {
+                        if !self.has_partial_match(&self.sequence) {
                             return Ok(ShortcutResult::NoMatch);
                         }
                     }
@@ -87,5 +85,13 @@ impl ShortcutManager {
                 }
             }
         }
+    }
+
+    pub fn match_sequence(&self, seq: &str) -> Option<&Shortcut> {
+        self.shortcuts.get(seq)
+    }
+
+    pub fn has_partial_match(&self, seq: &str) -> bool {
+        self.shortcuts.keys().any(|k| k.starts_with(seq))
     }
 }

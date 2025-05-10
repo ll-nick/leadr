@@ -25,6 +25,12 @@ fn main() {
                         }
                         break;
                     }
+
+                    let partial_match = shortcuts.keys().any(|k| k.starts_with(&sequence));
+                    if !partial_match {
+                        // No possible completions — exit
+                        break;
+                    }
                 }
                 KeyCode::Esc => {
                     break;

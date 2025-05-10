@@ -1,6 +1,7 @@
 pub mod config;
 pub mod handler;
 pub mod input;
+pub mod keymap;
 pub mod models;
 
 pub use config::Config;

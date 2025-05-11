@@ -43,8 +43,9 @@ fn main() {
     let mut handler = ShortcutHandler::new(config.shortcuts);
 
     match handler.run() {
-        Ok(ShortcutResult::Execute(command)) => print!("#EXEC {}", command),
-        Ok(ShortcutResult::Insert(command)) => print!("{}", command),
+        Ok(ShortcutResult::Shortcut(shortcut)) => {
+            print!("{}", shortcut.format_command(&config.exec_prefix))
+        }
         Ok(ShortcutResult::NoMatch | ShortcutResult::Cancelled) => {}
         Err(e) => {
             eprintln!(

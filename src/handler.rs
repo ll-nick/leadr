@@ -31,11 +31,7 @@ impl ShortcutHandler {
                     KeyCode::Char(c) => {
                         self.sequence.push(c);
                         if let Some(shortcut) = self.match_sequence(&self.sequence) {
-                            if shortcut.execute {
-                                return Ok(ShortcutResult::Execute(shortcut.command.to_string()));
-                            } else {
-                                return Ok(ShortcutResult::Insert(shortcut.command.to_string()));
-                            }
+                            return Ok(ShortcutResult::Shortcut(shortcut.clone()));
                         }
 
                         if !self.has_partial_match(&self.sequence) {

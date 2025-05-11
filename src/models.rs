@@ -1,4 +1,4 @@
-#[derive(Debug, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 pub struct Shortcut {
     pub sequence: String,
     pub command: String,
@@ -6,9 +6,18 @@ pub struct Shortcut {
     pub execute: bool,
 }
 
+impl Shortcut {
+    pub fn format_command(&self, exec_prefix: &str) -> String {
+        if self.execute {
+            format!("{}{}", exec_prefix, self.command)
+        } else {
+            self.command.to_string()
+        }
+    }
+}
+
 pub enum ShortcutResult {
-    Execute(String),
-    Insert(String),
+    Shortcut(Shortcut),
     Cancelled,
     NoMatch,
 }

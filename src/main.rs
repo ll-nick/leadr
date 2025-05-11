@@ -23,9 +23,16 @@ fn main() {
     };
 
     if cli.bash {
-        let script = leadr::shell::init_bash(&config);
-        println!("{}", script);
-        return;
+        match leadr::shell::init_bash(&config) {
+            Ok(script) => {
+                print!("{}", script);
+                return;
+            }
+            Err(e) => {
+                eprintln!("Error generating bash script: {:?}", e);
+                std::process::exit(1);
+            }
+        };
     }
 
     if cli.list {
@@ -45,6 +52,7 @@ fn main() {
                 match e {
                     LeadrError::TerminalSetup(msg) => msg,
                     LeadrError::ReadError(msg) => msg,
+                    LeadrError::InvalidKeymapError(msg) => msg,
                 }
             );
             std::process::exit(1);

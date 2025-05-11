@@ -1,6 +1,8 @@
 # === Configurable Variables ===
-LEADR_BIND_KEY='\C-@' # Ctrl-Space
-LEADR_EXEC_PREFIX='#EXEC'
+LEADR_BIND_KEY='{{bind_key}}'
+LEADR_EXEC_PREFIX='{{exec_prefix}}'
+
+# === Style Variables ===
 LEADR_CMD_COLOR='\e[1;32m' # Bold green
 LEADR_RESET_COLOR='\e[0m'
 

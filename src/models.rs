@@ -13,7 +13,9 @@ pub enum ShortcutResult {
     NoMatch,
 }
 
+#[derive(Debug)]
 pub enum LeadrError {
     TerminalSetup(String),
     ReadError(String),
+    InvalidKeymapError(String),
 }

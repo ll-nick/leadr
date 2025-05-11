@@ -1,5 +1,5 @@
 use clap::Parser;
-use leadr::{Config, LeadrError, ShortcutHandler, ShortcutResult};
+use leadr::{Config, ShortcutHandler, ShortcutResult};
 
 #[derive(Parser)]
 #[command(name = "leadr")]
@@ -48,14 +48,7 @@ fn main() {
         }
         Ok(ShortcutResult::NoMatch | ShortcutResult::Cancelled) => {}
         Err(e) => {
-            eprintln!(
-                "Fatal error: {}",
-                match e {
-                    LeadrError::TerminalSetup(msg) => msg,
-                    LeadrError::ReadError(msg) => msg,
-                    LeadrError::InvalidKeymapError(msg) => msg,
-                }
-            );
+            eprintln!("Fatal error: {}", e);
             std::process::exit(1);
         }
     }

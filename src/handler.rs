@@ -23,13 +23,12 @@ impl ShortcutHandler {
     }
 
     pub fn run(&mut self) -> Result<ShortcutResult, LeadrError> {
-        let _guard = RawModeGuard::new().map_err(LeadrError::TerminalSetup)?;
+        let _guard = RawModeGuard::new()?;
 
         loop {
             if let Event::Key(KeyEvent {
                 code, modifiers, ..
-            }) = read().map_err(|e| LeadrError::ReadError(e.to_string()))?
-            {
+            }) = read().map_err(LeadrError::InputReadError)? {
                 if modifiers == crossterm::event::KeyModifiers::CONTROL {
                     if code == KeyCode::Char('c') {
                         return Ok(ShortcutResult::Cancelled);

@@ -1,3 +1,5 @@
+use thiserror::Error;
+
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 pub struct Shortcut {
     pub sequence: String,
@@ -22,9 +24,14 @@ pub enum ShortcutResult {
     NoMatch,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Error)]
 pub enum LeadrError {
-    TerminalSetup(String),
-    ReadError(String),
+    #[error("Failed to enable terminal raw mode: {0}")]
+    TerminalRawModeError(#[source] std::io::Error),
+
+    #[error("Failed to read user input: {0}")]
+    InputReadError(#[source] std::io::Error),
+
+    #[error("Invalid keymap: {0}")]
     InvalidKeymapError(String),
 }

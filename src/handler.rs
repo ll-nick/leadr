@@ -1,11 +1,7 @@
 use crate::input::RawModeGuard;
 use crate::models::{LeadrError, Shortcut, ShortcutResult};
 use crossterm::event::{read, Event, KeyCode, KeyEvent};
-use crossterm::{
-    cursor,
-    terminal,
-    QueueableCommand,
-};
+use crossterm::{cursor, terminal, QueueableCommand};
 use std::collections::HashMap;
 use std::io::Write;
 
@@ -43,7 +39,7 @@ impl ShortcutHandler {
                 match code {
                     KeyCode::Char(c) => {
                         self.sequence.push(c);
-                        self.print_sequence_bottom_right();
+                        let _ = self.print_sequence_bottom_right();
                         if let Some(shortcut) = self.match_sequence(&self.sequence) {
                             return Ok(ShortcutResult::Shortcut(shortcut.clone()));
                         }
@@ -54,7 +50,7 @@ impl ShortcutHandler {
                     }
                     KeyCode::Backspace => {
                         self.sequence.pop();
-                        self.print_sequence_bottom_right();
+                        let _ = self.print_sequence_bottom_right();
                     }
                     KeyCode::Esc => {
                         return Ok(ShortcutResult::Cancelled);
@@ -73,11 +69,10 @@ impl ShortcutHandler {
         self.shortcuts.keys().any(|k| k.starts_with(seq))
     }
 
-    fn print_sequence_bottom_right(&self) {
+    fn print_sequence_bottom_right(&self) -> std::io::Result<()> {
         let mut stdout = std::fs::OpenOptions::new()
             .write(true)
-            .open("/dev/tty")
-            .unwrap();
+            .open("/dev/tty")?;
         let sequence = &self.sequence;
 
         let (cols, rows) = terminal::size().unwrap_or((80, 24));
@@ -87,43 +82,37 @@ impl ShortcutHandler {
         let y = rows.saturating_sub(1);
 
         stdout
-            .queue(cursor::SavePosition)
-            .unwrap()
-            .queue(cursor::MoveTo(x, y))
-            .unwrap()
-            .queue(terminal::Clear(terminal::ClearType::CurrentLine))
-            .unwrap()
-            .queue(cursor::Hide)
-            .unwrap();
+            .queue(cursor::SavePosition)?
+            .queue(cursor::MoveTo(x, y))?
+            .queue(terminal::Clear(terminal::ClearType::CurrentLine))?
+            .queue(cursor::Hide)?;
 
-        write!(stdout, "{}", &sequence[..max_len]).unwrap();
+        write!(stdout, "{}", &sequence[..max_len])?;
 
         stdout
-            .queue(cursor::Show)
-            .unwrap()
-            .queue(cursor::RestorePosition)
-            .unwrap()
-            .flush()
-            .unwrap();
+            .queue(cursor::Show)?
+            .queue(cursor::RestorePosition)?
+            .flush()?;
+
+        Ok(())
     }
 
-    pub fn clear_sequence(&mut self) {
+    pub fn clear_sequence(&mut self) -> std::io::Result<()> {
         self.sequence.clear();
         let mut stdout = std::fs::OpenOptions::new()
             .write(true)
-            .open("/dev/tty")
-            .unwrap();
+            .open("/dev/tty")?;
         stdout
-            .queue(terminal::Clear(terminal::ClearType::CurrentLine))
-            .unwrap()
-            .flush()
-            .unwrap();
+            .queue(terminal::Clear(terminal::ClearType::CurrentLine))?
+            .flush()?;
+
+        Ok(())
     }
 }
 
 impl Drop for ShortcutHandler {
     fn drop(&mut self) {
-        self.clear_sequence();
+        let _ = self.clear_sequence();
     }
 }
 

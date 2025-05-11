@@ -1,4 +1,4 @@
-use crate::{Config, LeadrError, keymap::to_bash_binding};
+use crate::{keymap::to_bash_binding, Config, LeadrError};
 
 const INIT_SCRIPT_TEMPLATE: &str = include_str!("../shell/init.bash");
 

@@ -1,6 +1,6 @@
 use crossterm::terminal;
 
-use crate::models::LeadrError;
+use crate::LeadrError;
 
 pub struct RawModeGuard;
 

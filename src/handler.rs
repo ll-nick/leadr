@@ -8,7 +8,8 @@ use crossterm::{
 
 use crate::{
     input::RawModeGuard,
-    models::{LeadrError, Shortcut, ShortcutResult},
+    types::{Shortcut, ShortcutResult},
+    LeadrError,
 };
 
 pub struct ShortcutHandler {

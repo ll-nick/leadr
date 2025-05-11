@@ -9,7 +9,7 @@ pub struct Shortcut {
 impl Shortcut {
     pub fn format_command(&self, exec_prefix: &str) -> String {
         if self.execute {
-            format!("{}{}", exec_prefix, self.command)
+            format!("{} {}", exec_prefix, self.command)
         } else {
             self.command.to_string()
         }

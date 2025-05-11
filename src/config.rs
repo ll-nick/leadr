@@ -31,7 +31,7 @@ impl ::std::default::Default for Config {
     fn default() -> Self {
         Self {
             leader: "<C-Space>".into(),
-            exec_prefix: "#EXEC ".into(),
+            exec_prefix: "#EXEC".into(),
             shortcuts: vec![
                 // File navigation
                 Shortcut {

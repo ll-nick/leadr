@@ -1,5 +1,6 @@
-use crate::LeadrError;
 use std::collections::HashMap;
+
+use crate::LeadrError;
 
 pub fn to_bash_binding(key: &str) -> Result<String, LeadrError> {
     let mut map = HashMap::new();

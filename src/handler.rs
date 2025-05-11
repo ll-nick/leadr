@@ -1,9 +1,15 @@
-use crate::input::RawModeGuard;
-use crate::models::{LeadrError, Shortcut, ShortcutResult};
-use crossterm::event::{read, Event, KeyCode, KeyEvent};
-use crossterm::{cursor, terminal, QueueableCommand};
-use std::collections::HashMap;
-use std::io::Write;
+use std::{collections::HashMap, io::Write};
+
+use crossterm::{
+    cursor,
+    event::{read, Event, KeyCode, KeyEvent},
+    terminal, QueueableCommand,
+};
+
+use crate::{
+    input::RawModeGuard,
+    models::{LeadrError, Shortcut, ShortcutResult},
+};
 
 pub struct ShortcutHandler {
     shortcuts: HashMap<String, Shortcut>,
@@ -28,7 +34,8 @@ impl ShortcutHandler {
         loop {
             if let Event::Key(KeyEvent {
                 code, modifiers, ..
-            }) = read().map_err(LeadrError::InputReadError)? {
+            }) = read().map_err(LeadrError::InputReadError)?
+            {
                 if modifiers == crossterm::event::KeyModifiers::CONTROL {
                     if code == KeyCode::Char('c') {
                         return Ok(ShortcutResult::Cancelled);
@@ -69,9 +76,7 @@ impl ShortcutHandler {
     }
 
     fn print_sequence_bottom_right(&self) -> std::io::Result<()> {
-        let mut stdout = std::fs::OpenOptions::new()
-            .write(true)
-            .open("/dev/tty")?;
+        let mut stdout = std::fs::OpenOptions::new().write(true).open("/dev/tty")?;
         let sequence = &self.sequence;
 
         let (cols, rows) = terminal::size().unwrap_or((80, 24));
@@ -98,9 +103,7 @@ impl ShortcutHandler {
 
     pub fn clear_sequence(&mut self) -> std::io::Result<()> {
         self.sequence.clear();
-        let mut stdout = std::fs::OpenOptions::new()
-            .write(true)
-            .open("/dev/tty")?;
+        let mut stdout = std::fs::OpenOptions::new().write(true).open("/dev/tty")?;
         stdout
             .queue(terminal::Clear(terminal::ClearType::CurrentLine))?
             .flush()?;

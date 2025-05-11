@@ -1,4 +1,5 @@
 use clap::Parser;
+
 use leadr::{Config, ShortcutHandler, ShortcutResult};
 
 #[derive(Parser)]

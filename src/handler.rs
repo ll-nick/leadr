@@ -24,9 +24,15 @@ impl ShortcutHandler {
         let _guard = RawModeGuard::new().map_err(LeadrError::TerminalSetup)?;
 
         loop {
-            if let Event::Key(KeyEvent { code, .. }) =
+            if let Event::Key(KeyEvent { code, modifiers, .. }) =
                 read().map_err(|e| LeadrError::ReadError(e.to_string()))?
             {
+                if modifiers == crossterm::event::KeyModifiers::CONTROL {
+                    if code == KeyCode::Char('c') {
+                        return Ok(ShortcutResult::Cancelled);
+                    }
+                    continue;
+                }
                 match code {
                     KeyCode::Char(c) => {
                         self.sequence.push(c);

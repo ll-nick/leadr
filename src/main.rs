@@ -41,7 +41,7 @@ fn main() {
         return;
     }
 
-    let mut handler = ShortcutHandler::new(config.shortcuts);
+    let mut handler = ShortcutHandler::new(config.shortcuts, config.padding);
 
     match handler.run() {
         Ok(ShortcutResult::Shortcut(shortcut)) => {

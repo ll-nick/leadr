@@ -14,17 +14,19 @@ use crate::{
 
 pub struct ShortcutHandler {
     shortcuts: HashMap<String, Shortcut>,
+    padding: usize,
     sequence: String,
 }
 
 impl ShortcutHandler {
-    pub fn new(shortcuts: Vec<Shortcut>) -> Self {
+    pub fn new(shortcuts: Vec<Shortcut>, padding: usize) -> Self {
         let mut map = HashMap::new();
         for shortcut in shortcuts {
             map.insert(shortcut.sequence.clone(), shortcut);
         }
         ShortcutHandler {
             shortcuts: map,
+            padding,
             sequence: String::new(),
         }
     }
@@ -82,8 +84,7 @@ impl ShortcutHandler {
 
         let (cols, rows) = terminal::size().unwrap_or((80, 24));
         let max_len = sequence.len().min(cols as usize);
-        let padding = 4;
-        let x = cols.saturating_sub((max_len + padding) as u16);
+        let x = cols.saturating_sub((max_len + self.padding) as u16);
         let y = rows.saturating_sub(1);
 
         stdout
@@ -143,7 +144,7 @@ mod tests {
     #[test]
     fn test_exact_match() {
         let shortcuts = test_shortcuts();
-        let manager = ShortcutHandler::new(shortcuts);
+        let manager = ShortcutHandler::new(shortcuts, 0);
 
         let result = manager.match_sequence("gs");
         assert!(result.is_some());
@@ -163,7 +164,7 @@ mod tests {
     #[test]
     fn test_partial_match() {
         let shortcuts = test_shortcuts();
-        let manager = ShortcutHandler::new(shortcuts);
+        let manager = ShortcutHandler::new(shortcuts, 0);
 
         assert!(manager.has_partial_match("g"));
         assert!(!manager.has_partial_match("x"));

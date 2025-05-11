@@ -6,6 +6,8 @@ pub struct Config {
     pub leader: String,
     #[serde(default = "default_exec_prefix")]
     pub exec_prefix: String,
+    #[serde(default = "default_padding")]
+    pub padding: usize,
     pub shortcuts: Vec<Shortcut>,
 }
 
@@ -37,11 +39,16 @@ fn default_exec_prefix() -> String {
     "#EXEC".into()
 }
 
+fn default_padding() -> usize {
+    4
+}
+
 impl ::std::default::Default for Config {
     fn default() -> Self {
         Self {
             leader: default_leader(),
             exec_prefix: default_exec_prefix(),
+            padding: default_padding(),
             shortcuts: vec![
                 // File navigation
                 Shortcut {

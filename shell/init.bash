@@ -12,13 +12,18 @@ __leadr_invoke__() {
     cmd="$(leadr)"
 
     if [[ "$cmd" =~ ^${LEADR_EXEC_PREFIX}[[:space:]]+(.*) ]]; then
-        # If using the exec prefix , run the command right away and manually append to history
-        # Unfortunately, there is no easy way to simulate a user pressing enter,
-        # so this is the best we can do without additional dependencies
+        # If using the exec prefix , run the command right away.
         local actual_cmd="${BASH_REMATCH[1]}"
-        printf "${LEADR_CMD_COLOR}%s${LEADR_RESET_COLOR}\n" "$actual_cmd"
-        history -s "$actual_cmd"
-        eval "$actual_cmd"
+        if [[ -n "$TMUX" ]]; then
+            # When using tmux, this is simple:
+            tmux send-keys "$actual_cmd" Enter
+        else
+            # Without tmux, there is no easy way to simulate a user pressing enter,
+            # so this is the best we can do without additional dependencies.
+            printf "${LEADR_CMD_COLOR}%s${LEADR_RESET_COLOR}\n" "$actual_cmd"
+            history -s "$actual_cmd"
+            eval "$actual_cmd"
+        fi
     else
         # Otherwise, just prepare the command for the user to run
         READLINE_LINE="$cmd"

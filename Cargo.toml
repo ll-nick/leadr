@@ -1,6 +1,6 @@
 [package]
 name = "leadr"
-version = "0.2.0"
+version = "0.2.1"
 authors = ["ll-nick <github@le-large.com>"]
 edition = "2024"
 description = "Shell aliases on steroids"

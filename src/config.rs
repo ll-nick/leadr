@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use crate::types::Shortcut;
 
 #[derive(Debug, serde::Serialize, serde::Deserialize)]
@@ -8,7 +10,7 @@ pub struct Config {
     pub exec_prefix: String,
     #[serde(default = "default_padding")]
     pub padding: usize,
-    pub shortcuts: Vec<Shortcut>,
+    pub shortcuts: HashMap<String, Shortcut>,
 }
 
 impl Config {
@@ -19,10 +21,10 @@ impl Config {
             "Keys", "Command", "Description"
         ));
         output.push_str(&format!("{:-<8} {:-<30} {:-<}\n", "", "", ""));
-        for shortcut in &self.shortcuts {
+        for (key, shortcut) in &self.shortcuts {
             output.push_str(&format!(
                 "{:<8} {:<30} {}\n",
-                shortcut.sequence,
+                key,
                 shortcut.command,
                 shortcut.description.clone().unwrap_or_default()
             ));
@@ -45,106 +47,47 @@ fn default_padding() -> usize {
 
 impl ::std::default::Default for Config {
     fn default() -> Self {
+        let mut shortcuts = HashMap::new();
+        shortcuts.insert("gs".into(), Shortcut {
+            command: "git status".into(),
+            description: Some("Git status".into()),
+            execute: true,
+        });
+        shortcuts.insert("ga".into(), Shortcut {
+            command: "git add .".into(),
+            description: Some("Git add all".into()),
+            execute: true,
+        });
+        shortcuts.insert("gc".into(), Shortcut {
+            command: "git commit -m \"".into(),
+            description: Some("Start a Git commit".into()),
+            execute: false,
+        });
+        shortcuts.insert("gp".into(), Shortcut {
+            command: "git push".into(),
+            description: Some("Git push".into()),
+            execute: true,
+        });
+        shortcuts.insert("gl".into(), Shortcut {
+            command: "git log --oneline".into(),
+            description: Some("Compact Git log".into()),
+            execute: true,
+        });
+        shortcuts.insert("h".into(), Shortcut {
+            command: "htop".into(),
+            description: Some("System monitor".into()),
+            execute: true,
+        });
+        shortcuts.insert("ip".into(), Shortcut {
+            command: "ip addr show".into(),
+            description: Some("Show IP addresses".into()),
+            execute: true,
+        });
         Self {
             leader: default_leader(),
             exec_prefix: default_exec_prefix(),
             padding: default_padding(),
-            shortcuts: vec![
-                // File navigation
-                Shortcut {
-                    sequence: "ll".into(),
-                    command: "ls -la".into(),
-                    description: Some("List directory contents (detailed)".into()),
-                    execute: true,
-                },
-                Shortcut {
-                    sequence: "..".into(),
-                    command: "cd ..".into(),
-                    description: Some("Go up one directory".into()),
-                    execute: true,
-                },
-                Shortcut {
-                    sequence: "cc".into(),
-                    command: "cd ~".into(),
-                    description: Some("Change to home directory".into()),
-                    execute: true,
-                },
-                Shortcut {
-                    sequence: ".".into(),
-                    command: "source .".into(),
-                    description: Some("Source local environment file".into()),
-                    execute: true,
-                },
-                // Git
-                Shortcut {
-                    sequence: "gs".into(),
-                    command: "git status".into(),
-                    description: Some("Git status".into()),
-                    execute: true,
-                },
-                Shortcut {
-                    sequence: "ga".into(),
-                    command: "git add .".into(),
-                    description: Some("Git add all".into()),
-                    execute: true,
-                },
-                Shortcut {
-                    sequence: "gc".into(),
-                    command: "git commit -m \"".into(),
-                    description: Some("Start a Git commit".into()),
-                    execute: false,
-                },
-                Shortcut {
-                    sequence: "gp".into(),
-                    command: "git push".into(),
-                    description: Some("Git push".into()),
-                    execute: true,
-                },
-                Shortcut {
-                    sequence: "gl".into(),
-                    command: "git log --oneline".into(),
-                    description: Some("Compact Git log".into()),
-                    execute: true,
-                },
-                // System utilities
-                Shortcut {
-                    sequence: "rm".into(),
-                    command: "rm -r ".into(),
-                    description: Some("Remove file".into()),
-                    execute: false,
-                },
-                Shortcut {
-                    sequence: "h".into(),
-                    command: "htop".into(),
-                    description: Some("System monitor".into()),
-                    execute: true,
-                },
-                Shortcut {
-                    sequence: "p".into(),
-                    command: "ping google.com".into(),
-                    description: Some("Ping Google".into()),
-                    execute: true,
-                },
-                Shortcut {
-                    sequence: "df".into(),
-                    command: "df -h".into(),
-                    description: Some("Disk usage".into()),
-                    execute: true,
-                },
-                // Networking
-                Shortcut {
-                    sequence: "ip".into(),
-                    command: "ip a".into(),
-                    description: Some("Show IP addresses".into()),
-                    execute: true,
-                },
-                Shortcut {
-                    sequence: "ss".into(),
-                    command: "ss -tuln".into(),
-                    description: Some("Show open sockets and ports".into()),
-                    execute: true,
-                },
-            ],
+            shortcuts,
         }
     }
 }

@@ -1,6 +1,5 @@
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 pub struct Shortcut {
-    pub sequence: String,
     pub command: String,
     pub description: Option<String>,
     pub execute: bool,

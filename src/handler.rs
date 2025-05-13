@@ -19,13 +19,9 @@ pub struct ShortcutHandler {
 }
 
 impl ShortcutHandler {
-    pub fn new(shortcuts: Vec<Shortcut>, padding: usize) -> Self {
-        let mut map = HashMap::new();
-        for shortcut in shortcuts {
-            map.insert(shortcut.sequence.clone(), shortcut);
-        }
+    pub fn new(shortcuts: HashMap<String, Shortcut>, padding: usize) -> Self {
         ShortcutHandler {
-            shortcuts: map,
+            shortcuts,
             padding,
             sequence: String::new(),
         }
@@ -124,21 +120,23 @@ impl Drop for ShortcutHandler {
 mod tests {
     use super::*;
 
-    fn test_shortcuts() -> Vec<Shortcut> {
-        vec![
+    fn test_shortcuts() -> HashMap<String, Shortcut> {
+        let mut shortcuts = HashMap::new();
+        shortcuts.insert(
+            "gs".into(),
             Shortcut {
-                sequence: "gs".into(),
                 command: "git status".into(),
                 description: None,
                 execute: true,
-            },
+            });
+        shortcuts.insert(
+            "v".into(),
             Shortcut {
-                sequence: "v".into(),
                 command: "vim ".into(),
                 description: None,
                 execute: false,
-            },
-        ]
+            });
+        shortcuts
     }
 
     #[test]

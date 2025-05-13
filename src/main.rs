@@ -18,7 +18,13 @@ fn main() {
     let config: Config = match confy::load("leadr", "config") {
         Ok(cfg) => cfg,
         Err(e) => {
-            eprintln!("Error loading config: {}", e);
+            eprintln!("Error loading config");
+            match &e {
+                confy::ConfyError::BadTomlData(inner) => {
+                    eprintln!("TOML error: {}", inner);
+                }
+                _ => eprintln!("Error: {}", e),
+            }
             std::process::exit(1);
         }
     };

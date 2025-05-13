@@ -3,7 +3,7 @@ use crate::{keymap::to_bash_binding, Config, LeadrError};
 const INIT_SCRIPT_TEMPLATE: &str = include_str!("../shell/init.bash");
 
 pub fn init_bash(config: &Config) -> Result<String, LeadrError> {
-    let leader_key = to_bash_binding(&config.leader)?;
+    let leader_key = to_bash_binding(&config.leadr_key)?;
 
     Ok(INIT_SCRIPT_TEMPLATE
         .replace("{{bind_key}}", &leader_key)

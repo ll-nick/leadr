@@ -4,8 +4,8 @@ use crate::types::Shortcut;
 
 #[derive(Debug, serde::Serialize, serde::Deserialize)]
 pub struct Config {
-    #[serde(default = "default_leader")]
-    pub leader: String,
+    #[serde(default = "default_leadr_key")]
+    pub leadr_key: String,
 
     #[serde(
         default = "default_exec_prefix",
@@ -42,7 +42,7 @@ impl Config {
     }
 }
 
-fn default_leader() -> String {
+fn default_leadr_key() -> String {
     "<C-Space>".into()
 }
 
@@ -121,7 +121,7 @@ impl ::std::default::Default for Config {
             },
         );
         Self {
-            leader: default_leader(),
+            leadr_key: default_leadr_key(),
             exec_prefix: default_exec_prefix(),
             padding: default_padding(),
             shortcuts,

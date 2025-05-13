@@ -1,11 +1,11 @@
 [package]
 name = "leadr"
-version = "0.1.0"
+version = "0.2.0"
 authors = ["ll-nick <github@le-large.com>"]
 edition = "2024"
 description = "Shell aliases on steroids"
 license = "MIT"
-respository = "https://github.com/ll-nick/leadr"
+repository = "https://github.com/ll-nick/leadr"
 keywords = ["cli", "shortcuts", "terminal", "aliases", "shell"]
 categories = ["cli"]
 

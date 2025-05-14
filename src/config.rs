@@ -128,3 +128,27 @@ impl ::std::default::Default for Config {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_config_defaults() {
+        let config = Config::default();
+        assert_eq!(config.leadr_key, "<C-Space>");
+        assert_eq!(config.exec_prefix, "#EXEC");
+        assert_eq!(config.padding, 4);
+        assert!(config.shortcuts.contains_key("gs"));
+    }
+
+    #[test]
+    fn test_render_table_contains_shortcut_keys() {
+        let config = Config::default();
+        let table = config.render_table();
+        assert!(table.contains("gs"));
+        assert!(table.contains("git status"));
+        assert!(table.contains("Description"));
+    }
+}
+

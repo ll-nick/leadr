@@ -1,9 +1,9 @@
 name: Release
 on:
   push:
-    branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
+    tags:
+    - 'v*'
+
 env:
   CARGO_TERM_COLOR: always
 jobs:
@@ -13,8 +13,6 @@ jobs:
     - uses: actions/checkout@v4
     - name: Build
       run: cargo build --release --verbose
-    - name: Upload binary artifact
-      uses: actions/upload-artifact@v4
+    - uses: ncipollo/release-action@v1
       with:
-        name: leadr
-        path: target/release/leadr
+        artifacts: "target/release/leadr"

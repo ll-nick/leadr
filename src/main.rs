@@ -3,8 +3,7 @@ use clap::Parser;
 use leadr::{Config, ShortcutHandler, ShortcutResult};
 
 #[derive(Parser)]
-#[command(name = "leadr")]
-#[command(about = "Minimal shell shortcut launcher")]
+#[command(about, version)]
 struct Cli {
     #[arg(long)]
     bash: bool,

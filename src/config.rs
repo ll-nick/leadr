@@ -23,7 +23,7 @@ pub struct Config {
 }
 
 impl Config {
-    pub fn render_table(&self) -> String {
+    pub fn render_shortcut_table(&self) -> String {
         let mut output = String::new();
         output.push_str(&format!(
             "{:<8} {:<30} {}\n",
@@ -145,7 +145,7 @@ mod tests {
     #[test]
     fn test_render_table_contains_shortcut_keys() {
         let config = Config::default();
-        let table = config.render_table();
+        let table = config.render_shortcut_table();
         assert!(table.contains("gs"));
         assert!(table.contains("git status"));
         assert!(table.contains("Description"));

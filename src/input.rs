@@ -2,10 +2,7 @@ use std::io::Write;
 
 use crossterm::{cursor, terminal, QueueableCommand};
 
-
 use crate::LeadrError;
-
-pub struct RawModeGuard;
 
 pub fn clear_bottom_line() -> std::io::Result<()> {
     let mut stdout = std::fs::OpenOptions::new().write(true).open("/dev/tty")?;
@@ -22,6 +19,7 @@ pub fn clear_bottom_line() -> std::io::Result<()> {
     Ok(())
 }
 
+pub struct RawModeGuard;
 
 impl RawModeGuard {
     pub fn new() -> Result<Self, LeadrError> {

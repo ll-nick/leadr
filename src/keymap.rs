@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use crate::LeadrError;
 
-pub fn to_bash_binding(key: &str) -> Result<String, LeadrError> {
+pub fn to_ascii(key: &str) -> Result<String, LeadrError> {
     let mut map = HashMap::new();
     map.insert("<C-Space>", "\\x00");
     map.insert("<C-a>", "\\x01");

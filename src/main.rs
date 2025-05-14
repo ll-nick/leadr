@@ -9,6 +9,8 @@ struct Cli {
     bash: bool,
     #[arg(long, short = 'l', help = "List all shortcuts")]
     list: bool,
+    #[arg(long)]
+    zsh: bool,
 }
 
 fn main() {
@@ -36,6 +38,18 @@ fn main() {
             }
             Err(e) => {
                 eprintln!("Error generating bash script: {:?}", e);
+                std::process::exit(1);
+            }
+        };
+    }
+    if cli.zsh {
+        match leadr::shell::init_zsh(&config) {
+            Ok(script) => {
+                print!("{}", script);
+                return;
+            }
+            Err(e) => {
+                eprintln!("Error generating zsh script: {:?}", e);
                 std::process::exit(1);
             }
         };

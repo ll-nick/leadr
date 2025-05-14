@@ -98,23 +98,8 @@ impl ShortcutHandler {
 
         Ok(())
     }
-
-    pub fn clear_sequence(&mut self) -> std::io::Result<()> {
-        self.sequence.clear();
-        let mut stdout = std::fs::OpenOptions::new().write(true).open("/dev/tty")?;
-        stdout
-            .queue(terminal::Clear(terminal::ClearType::CurrentLine))?
-            .flush()?;
-
-        Ok(())
-    }
 }
 
-impl Drop for ShortcutHandler {
-    fn drop(&mut self) {
-        let _ = self.clear_sequence();
-    }
-}
 
 #[cfg(test)]
 mod tests {

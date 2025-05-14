@@ -1,6 +1,6 @@
 use std::io::Write;
 
-use crossterm::{cursor, terminal, QueueableCommand};
+use crossterm::{QueueableCommand, cursor, terminal};
 
 use crate::LeadrError;
 
@@ -19,9 +19,13 @@ pub fn clear_bottom_line() -> std::io::Result<()> {
     Ok(())
 }
 
+/// Guard that enables raw mode on creation and disables it on drop while also clearing the bottom line.
 pub struct RawModeGuard;
 
 impl RawModeGuard {
+    /// Enables raw terminal mode.
+    ///
+    /// Used to capture keystrokes without requiring Enter.
     pub fn new() -> Result<Self, LeadrError> {
         terminal::enable_raw_mode().map_err(LeadrError::TerminalRawModeError)?;
         Ok(Self)

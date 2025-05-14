@@ -1,17 +1,18 @@
 use std::{collections::HashMap, io::Write};
 
 use crossterm::{
-    cursor,
-    event::{read, Event, KeyCode, KeyEvent},
-    terminal, QueueableCommand,
+    QueueableCommand, cursor,
+    event::{Event, KeyCode, KeyEvent, read},
+    terminal,
 };
 
 use crate::{
+    LeadrError,
     input::RawModeGuard,
     types::{Shortcut, ShortcutResult},
-    LeadrError,
 };
 
+/// Handles keyboard input and matches sequences to configured shortcuts.
 pub struct ShortcutHandler {
     shortcuts: HashMap<String, Shortcut>,
     padding: usize,
@@ -19,6 +20,9 @@ pub struct ShortcutHandler {
 }
 
 impl ShortcutHandler {
+    /// Creates a new `ShortcutHandler` with given shortcuts and padding.
+    ///
+    /// `padding` controls how far from the right edge the input sequence is displayed.
     pub fn new(shortcuts: HashMap<String, Shortcut>, padding: usize) -> Self {
         ShortcutHandler {
             shortcuts,
@@ -27,6 +31,8 @@ impl ShortcutHandler {
         }
     }
 
+    /// Runs the input loop, capturing key events and returning when a shortcut is matched,
+    /// cancelled, or an invalid sequence is entered.
     pub fn run(&mut self) -> Result<ShortcutResult, LeadrError> {
         let _guard = RawModeGuard::new()?;
 
@@ -66,14 +72,17 @@ impl ShortcutHandler {
         }
     }
 
-    pub fn match_sequence(&self, seq: &str) -> Option<&Shortcut> {
+    /// Returns an exact match for a given sequence, if one exists.
+    fn match_sequence(&self, seq: &str) -> Option<&Shortcut> {
         self.shortcuts.get(seq)
     }
 
-    pub fn has_partial_match(&self, seq: &str) -> bool {
+    /// Returns true if any shortcut begins with the given sequence.
+    fn has_partial_match(&self, seq: &str) -> bool {
         self.shortcuts.keys().any(|k| k.starts_with(seq))
     }
 
+    /// Displays the current input sequence at the bottom right of the terminal.
     fn print_sequence_bottom_right(&self) -> std::io::Result<()> {
         let mut stdout = std::fs::OpenOptions::new().write(true).open("/dev/tty")?;
         let sequence = &self.sequence;
@@ -100,7 +109,6 @@ impl ShortcutHandler {
     }
 }
 
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -113,14 +121,16 @@ mod tests {
                 command: "git status".into(),
                 description: None,
                 execute: true,
-            });
+            },
+        );
         shortcuts.insert(
             "v".into(),
             Shortcut {
                 command: "vim ".into(),
                 description: None,
                 execute: false,
-            });
+            },
+        );
         shortcuts
     }
 

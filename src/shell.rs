@@ -1,8 +1,9 @@
-use crate::{keymap::to_ascii, Config, LeadrError};
+use crate::{Config, LeadrError, keymap::to_ascii};
 
 const BASH_INIT_TEMPLATE: &str = include_str!("../shell/init.bash");
 const ZSH_INIT_TEMPLATE: &str = include_str!("../shell/init.zsh");
 
+/// Generates a bash script that handles the resulting command and binds it to the leadr key.
 pub fn init_bash(config: &Config) -> Result<String, LeadrError> {
     let leader_key = to_ascii(&config.leadr_key)?;
 
@@ -11,6 +12,7 @@ pub fn init_bash(config: &Config) -> Result<String, LeadrError> {
         .replace("{{exec_prefix}}", &config.exec_prefix))
 }
 
+/// Generates a zsh script that handles the resulting command and binds it to the leadr key.
 pub fn init_zsh(config: &Config) -> Result<String, LeadrError> {
     let leader_key = to_ascii(&config.leadr_key)?;
 
@@ -40,4 +42,3 @@ mod tests {
         assert!(result.contains("\\x00"));
     }
 }
-

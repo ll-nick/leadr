@@ -1,3 +1,4 @@
+/// Represents a user-defined command with additional metadata.
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 pub struct Shortcut {
     pub command: String,
@@ -5,7 +6,11 @@ pub struct Shortcut {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub description: Option<String>,
 
-    #[serde(default="default_execute", skip_serializing_if = "is_default_execute")]
+    /// Whether this command should be executed automatically or just inserted.
+    #[serde(
+        default = "default_execute",
+        skip_serializing_if = "is_default_execute"
+    )]
     pub execute: bool,
 }
 
@@ -17,6 +22,7 @@ fn is_default_execute(val: &bool) -> bool {
 }
 
 impl Shortcut {
+    /// Formats the command, by applying the exec prefix if applicable.
     pub fn format_command(&self, exec_prefix: &str) -> String {
         if self.execute {
             format!("{} {}", exec_prefix, self.command)
@@ -56,4 +62,3 @@ mod tests {
         assert_eq!(sc.format_command("#EXEC"), "vim ");
     }
 }
-

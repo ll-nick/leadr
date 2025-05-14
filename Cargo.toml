@@ -1,13 +1,14 @@
 [package]
 name = "leadr"
-version = "0.3.2"
-authors = ["ll-nick <github@le-large.com>"]
-edition = "2024"
 description = "Shell aliases on steroids"
+version = "0.3.2"
+edition = "2024"
 license = "MIT"
+authors = ["ll-nick"]
 repository = "https://github.com/ll-nick/leadr"
+readme = "README.md"
 keywords = ["cli", "shortcuts", "terminal", "aliases", "shell"]
-categories = ["cli"]
+categories = ["command-line-utilities"]
 
 [dependencies]
 clap = {version = "4.5.37", features = ["derive"] }

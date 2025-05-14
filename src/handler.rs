@@ -73,12 +73,12 @@ impl ShortcutHandler {
     }
 
     /// Returns an exact match for a given sequence, if one exists.
-    pub fn match_sequence(&self, seq: &str) -> Option<&Shortcut> {
+    fn match_sequence(&self, seq: &str) -> Option<&Shortcut> {
         self.shortcuts.get(seq)
     }
 
     /// Returns true if any shortcut begins with the given sequence.
-    pub fn has_partial_match(&self, seq: &str) -> bool {
+    fn has_partial_match(&self, seq: &str) -> bool {
         self.shortcuts.keys().any(|k| k.starts_with(seq))
     }
 

@@ -2,6 +2,9 @@ use std::collections::HashMap;
 
 use crate::LeadrError;
 
+/// Converts a key name like `<C-a>` to its ASCII representation (`\x01`).
+///
+/// Returns an error if the key is unrecognized.
 pub fn to_ascii(key: &str) -> Result<String, LeadrError> {
     let mut map = HashMap::new();
     map.insert("<C-Space>", "\\x00");

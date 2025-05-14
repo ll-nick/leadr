@@ -1,3 +1,8 @@
+//! leadr: Shell aliases on steroids
+//!
+//! Define key sequences that expand into commands.
+//! Inspired by (Neo)Vim leader key concepts.
+
 use clap::Parser;
 
 use leadr::{Config, ShortcutHandler, ShortcutResult};

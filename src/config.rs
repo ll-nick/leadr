@@ -4,25 +4,30 @@ use crate::types::Shortcut;
 
 #[derive(Debug, serde::Serialize, serde::Deserialize)]
 pub struct Config {
+    /// The key binding to activate the shortcut handler.
     #[serde(default = "default_leadr_key")]
     pub leadr_key: String,
 
+    /// Prefix used for commands that should be executed right away.
     #[serde(
         default = "default_exec_prefix",
         skip_serializing_if = "is_default_exec_prefix"
     )]
     pub exec_prefix: String,
 
+    /// Padding from the right edge of the screen when rendering sequences.
     #[serde(
         default = "default_padding",
         skip_serializing_if = "is_default_padding"
     )]
     pub padding: usize,
 
+    /// The shortcut mappings from key sequences to commands.
     pub shortcuts: HashMap<String, Shortcut>,
 }
 
 impl Config {
+    /// Renders the configured shortcuts as a formatted table.
     pub fn render_shortcut_table(&self) -> String {
         let mut output = String::new();
         output.push_str(&format!(

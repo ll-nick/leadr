@@ -1,3 +1,8 @@
+//! leadr: Shell aliases on steroids
+//!
+//! Define key sequences that expand into commands.
+//! Inspired by the (Neo)Vim leader key.
+
 pub mod config;
 pub mod error;
 pub mod handler;

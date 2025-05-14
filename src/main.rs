@@ -1,7 +1,7 @@
 //! leadr: Shell aliases on steroids
 //!
 //! Define key sequences that expand into commands.
-//! Inspired by (Neo)Vim leader key concepts.
+//! Inspired by the (Neo)Vim leader key.
 
 use clap::Parser;
 

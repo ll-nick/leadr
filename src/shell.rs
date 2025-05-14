@@ -1,4 +1,4 @@
-use crate::{keymap::to_ascii, Config, LeadrError};
+use crate::{Config, LeadrError, keymap::to_ascii};
 
 const BASH_INIT_TEMPLATE: &str = include_str!("../shell/init.bash");
 const ZSH_INIT_TEMPLATE: &str = include_str!("../shell/init.zsh");
@@ -40,4 +40,3 @@ mod tests {
         assert!(result.contains("\\x00"));
     }
 }
-

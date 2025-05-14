@@ -60,7 +60,6 @@ fn is_default_padding(val: &usize) -> bool {
     *val == default_padding()
 }
 
-
 impl ::std::default::Default for Config {
     fn default() -> Self {
         let mut shortcuts = HashMap::new();
@@ -151,4 +150,3 @@ mod tests {
         assert!(table.contains("Description"));
     }
 }
-

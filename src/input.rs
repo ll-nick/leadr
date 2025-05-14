@@ -1,6 +1,6 @@
 use std::io::Write;
 
-use crossterm::{cursor, terminal, QueueableCommand};
+use crossterm::{QueueableCommand, cursor, terminal};
 
 use crate::LeadrError;
 

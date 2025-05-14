@@ -54,4 +54,3 @@ mod tests {
         assert!(matches!(err, Err(LeadrError::InvalidKeymapError(_))));
     }
 }
-

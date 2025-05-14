@@ -1,15 +1,15 @@
 use std::{collections::HashMap, io::Write};
 
 use crossterm::{
-    cursor,
-    event::{read, Event, KeyCode, KeyEvent},
-    terminal, QueueableCommand,
+    QueueableCommand, cursor,
+    event::{Event, KeyCode, KeyEvent, read},
+    terminal,
 };
 
 use crate::{
+    LeadrError,
     input::RawModeGuard,
     types::{Shortcut, ShortcutResult},
-    LeadrError,
 };
 
 pub struct ShortcutHandler {
@@ -100,7 +100,6 @@ impl ShortcutHandler {
     }
 }
 
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -113,14 +112,16 @@ mod tests {
                 command: "git status".into(),
                 description: None,
                 execute: true,
-            });
+            },
+        );
         shortcuts.insert(
             "v".into(),
             Shortcut {
                 command: "vim ".into(),
                 description: None,
                 execute: false,
-            });
+            },
+        );
         shortcuts
     }
 

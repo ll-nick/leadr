@@ -5,7 +5,10 @@ pub struct Shortcut {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub description: Option<String>,
 
-    #[serde(default="default_execute", skip_serializing_if = "is_default_execute")]
+    #[serde(
+        default = "default_execute",
+        skip_serializing_if = "is_default_execute"
+    )]
     pub execute: bool,
 }
 
@@ -56,4 +59,3 @@ mod tests {
         assert_eq!(sc.format_command("#EXEC"), "vim ");
     }
 }
-

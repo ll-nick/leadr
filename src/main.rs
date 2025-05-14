@@ -31,7 +31,7 @@ fn main() {
     };
 
     if cli.bash {
-        match leadr::shell::init_bash(&config) {
+        match leadr::init_bash(&config) {
             Ok(script) => {
                 print!("{}", script);
                 return;
@@ -43,7 +43,7 @@ fn main() {
         };
     }
     if cli.zsh {
-        match leadr::shell::init_zsh(&config) {
+        match leadr::init_zsh(&config) {
             Ok(script) => {
                 print!("{}", script);
                 return;
@@ -56,7 +56,7 @@ fn main() {
     }
 
     if cli.list {
-        println!("{}", config.render_table());
+        println!("{}", config.render_shortcut_table());
         return;
     }
 

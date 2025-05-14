@@ -36,3 +36,22 @@ pub fn to_ascii(key: &str) -> Result<String, LeadrError> {
         None => Err(LeadrError::InvalidKeymapError(key.to_string())),
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::LeadrError;
+
+    #[test]
+    fn test_valid_key_conversion() {
+        assert_eq!(to_ascii("<C-a>").unwrap(), "\\x01");
+        assert_eq!(to_ascii("<C-Space>").unwrap(), "\\x00");
+    }
+
+    #[test]
+    fn test_invalid_key_conversion() {
+        let err = to_ascii("<C-unknown>");
+        assert!(matches!(err, Err(LeadrError::InvalidKeymapError(_))));
+    }
+}
+

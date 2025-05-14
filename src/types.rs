@@ -31,3 +31,29 @@ pub enum ShortcutResult {
     Cancelled,
     NoMatch,
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_format_command_exec_true() {
+        let sc = Shortcut {
+            command: "ls -la".into(),
+            description: None,
+            execute: true,
+        };
+        assert_eq!(sc.format_command("#EXEC"), "#EXEC ls -la");
+    }
+
+    #[test]
+    fn test_format_command_exec_false() {
+        let sc = Shortcut {
+            command: "vim ".into(),
+            description: Some("Edit file".into()),
+            execute: false,
+        };
+        assert_eq!(sc.format_command("#EXEC"), "vim ");
+    }
+}
+

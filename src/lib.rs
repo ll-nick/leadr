@@ -18,3 +18,4 @@ pub use handler::ShortcutHandler;
 pub use shell::init_bash;
 pub use shell::init_zsh;
 pub use types::{Shortcut, ShortcutResult};
+pub use ui::Ui;

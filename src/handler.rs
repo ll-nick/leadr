@@ -3,28 +3,29 @@ use std::collections::HashMap;
 use crossterm::event::{read, Event, KeyCode, KeyEvent};
 
 use crate::{
+    Config,
     input::RawModeGuard,
     types::{Shortcut, ShortcutResult},
-    ui::Ui,
+    Ui,
     LeadrError,
 };
 
 /// Handles keyboard input and matches sequences to configured shortcuts.
 pub struct ShortcutHandler {
     shortcuts: HashMap<String, Shortcut>,
-    padding: usize,
     sequence: String,
+    ui: Ui,
 }
 
 impl ShortcutHandler {
     /// Creates a new `ShortcutHandler` with given shortcuts and padding.
     ///
     /// `padding` controls how far from the right edge the input sequence is displayed.
-    pub fn new(shortcuts: HashMap<String, Shortcut>, padding: usize) -> Self {
+    pub fn new(config: Config) -> Self {
         ShortcutHandler {
-            shortcuts,
-            padding,
+            shortcuts: config.shortcuts,
             sequence: String::new(),
+            ui: Ui::new(config.print_sequence, config.padding),
         }
     }
 
@@ -32,7 +33,6 @@ impl ShortcutHandler {
     /// cancelled, or an invalid sequence is entered.
     pub fn run(&mut self) -> Result<ShortcutResult, LeadrError> {
         let _guard = RawModeGuard::new()?;
-        let ui = Ui::new(true, self.padding);
 
         loop {
             if let Event::Key(KeyEvent {
@@ -48,7 +48,7 @@ impl ShortcutHandler {
                 match code {
                     KeyCode::Char(c) => {
                         self.sequence.push(c);
-                        let _ = ui.update(&self.sequence);
+                        let _ = self.ui.update(&self.sequence);
                         if let Some(shortcut) = self.match_sequence(&self.sequence) {
                             return Ok(ShortcutResult::Shortcut(shortcut.clone()));
                         }
@@ -59,7 +59,7 @@ impl ShortcutHandler {
                     }
                     KeyCode::Backspace => {
                         self.sequence.pop();
-                        let _ = ui.update(&self.sequence);
+                        let _ = self.ui.update(&self.sequence);
                     }
                     KeyCode::Esc => {
                         return Ok(ShortcutResult::Cancelled);
@@ -85,7 +85,7 @@ impl ShortcutHandler {
 mod tests {
     use super::*;
 
-    fn test_shortcuts() -> HashMap<String, Shortcut> {
+    fn test_config() -> Config {
         let mut shortcuts = HashMap::new();
         shortcuts.insert(
             "gs".into(),
@@ -103,13 +103,13 @@ mod tests {
                 execute: false,
             },
         );
-        shortcuts
+
+        Config{shortcuts, ..Default::default()}
     }
 
     #[test]
     fn test_exact_match() {
-        let shortcuts = test_shortcuts();
-        let manager = ShortcutHandler::new(shortcuts, 0);
+        let manager = ShortcutHandler::new(test_config());
 
         let result = manager.match_sequence("gs");
         assert!(result.is_some());
@@ -128,8 +128,7 @@ mod tests {
 
     #[test]
     fn test_partial_match() {
-        let shortcuts = test_shortcuts();
-        let manager = ShortcutHandler::new(shortcuts, 0);
+        let manager = ShortcutHandler::new(test_config());
 
         assert!(manager.has_partial_match("g"));
         assert!(!manager.has_partial_match("x"));

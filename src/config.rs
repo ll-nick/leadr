@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use crate::types::Shortcut;
 
-#[derive(Debug, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 pub struct Config {
     /// The key binding to activate the shortcut handler.
     #[serde(default = "default_leadr_key")]
@@ -14,6 +14,10 @@ pub struct Config {
         skip_serializing_if = "is_default_exec_prefix"
     )]
     pub exec_prefix: String,
+
+    /// Whether or not to print the sequence of keys pressed at the bottom of the screen.
+    #[serde(default = "default_print_sequence")]
+    pub print_sequence: bool,
 
     /// Padding from the right edge of the screen when rendering sequences.
     #[serde(
@@ -56,6 +60,10 @@ fn default_exec_prefix() -> String {
 }
 fn is_default_exec_prefix(val: &str) -> bool {
     val == default_exec_prefix()
+}
+
+fn default_print_sequence() -> bool {
+    false
 }
 
 fn default_padding() -> usize {
@@ -127,6 +135,7 @@ impl ::std::default::Default for Config {
         Self {
             leadr_key: default_leadr_key(),
             exec_prefix: default_exec_prefix(),
+            print_sequence: default_print_sequence(),
             padding: default_padding(),
             shortcuts,
         }
@@ -142,6 +151,7 @@ mod tests {
         let config = Config::default();
         assert_eq!(config.leadr_key, "<C-Space>");
         assert_eq!(config.exec_prefix, "#EXEC");
+        assert!(!config.print_sequence);
         assert_eq!(config.padding, 4);
         assert!(config.shortcuts.contains_key("gs"));
     }

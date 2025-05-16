@@ -1,13 +1,9 @@
-use std::{collections::HashMap, io::Write};
+use std::collections::HashMap;
 
-use crossterm::{
-    QueueableCommand, cursor,
-    event::{Event, KeyCode, KeyEvent, read},
-    terminal,
-};
+use crossterm::event::{Event, KeyCode, KeyEvent, read};
 
 use crate::{
-    LeadrError,
+    Config, LeadrError, Ui,
     input::RawModeGuard,
     types::{Shortcut, ShortcutResult},
 };
@@ -15,19 +11,19 @@ use crate::{
 /// Handles keyboard input and matches sequences to configured shortcuts.
 pub struct ShortcutHandler {
     shortcuts: HashMap<String, Shortcut>,
-    padding: usize,
     sequence: String,
+    ui: Ui,
 }
 
 impl ShortcutHandler {
     /// Creates a new `ShortcutHandler` with given shortcuts and padding.
     ///
     /// `padding` controls how far from the right edge the input sequence is displayed.
-    pub fn new(shortcuts: HashMap<String, Shortcut>, padding: usize) -> Self {
+    pub fn new(config: Config) -> Self {
         ShortcutHandler {
-            shortcuts,
-            padding,
+            shortcuts: config.shortcuts,
             sequence: String::new(),
+            ui: Ui::new(config.print_sequence, config.padding),
         }
     }
 
@@ -50,7 +46,7 @@ impl ShortcutHandler {
                 match code {
                     KeyCode::Char(c) => {
                         self.sequence.push(c);
-                        let _ = self.print_sequence_bottom_right();
+                        let _ = self.ui.update(&self.sequence);
                         if let Some(shortcut) = self.match_sequence(&self.sequence) {
                             return Ok(ShortcutResult::Shortcut(shortcut.clone()));
                         }
@@ -61,7 +57,7 @@ impl ShortcutHandler {
                     }
                     KeyCode::Backspace => {
                         self.sequence.pop();
-                        let _ = self.print_sequence_bottom_right();
+                        let _ = self.ui.update(&self.sequence);
                     }
                     KeyCode::Esc => {
                         return Ok(ShortcutResult::Cancelled);
@@ -81,39 +77,13 @@ impl ShortcutHandler {
     fn has_partial_match(&self, seq: &str) -> bool {
         self.shortcuts.keys().any(|k| k.starts_with(seq))
     }
-
-    /// Displays the current input sequence at the bottom right of the terminal.
-    fn print_sequence_bottom_right(&self) -> std::io::Result<()> {
-        let mut stdout = std::fs::OpenOptions::new().write(true).open("/dev/tty")?;
-        let sequence = &self.sequence;
-
-        let (cols, rows) = terminal::size().unwrap_or((80, 24));
-        let max_len = sequence.len().min(cols as usize);
-        let x = cols.saturating_sub((max_len + self.padding) as u16);
-        let y = rows.saturating_sub(1);
-
-        stdout
-            .queue(cursor::SavePosition)?
-            .queue(cursor::MoveTo(x, y))?
-            .queue(terminal::Clear(terminal::ClearType::CurrentLine))?
-            .queue(cursor::Hide)?;
-
-        write!(stdout, "{}", &sequence[..max_len])?;
-
-        stdout
-            .queue(cursor::Show)?
-            .queue(cursor::RestorePosition)?
-            .flush()?;
-
-        Ok(())
-    }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
 
-    fn test_shortcuts() -> HashMap<String, Shortcut> {
+    fn test_config() -> Config {
         let mut shortcuts = HashMap::new();
         shortcuts.insert(
             "gs".into(),
@@ -131,13 +101,16 @@ mod tests {
                 execute: false,
             },
         );
-        shortcuts
+
+        Config {
+            shortcuts,
+            ..Default::default()
+        }
     }
 
     #[test]
     fn test_exact_match() {
-        let shortcuts = test_shortcuts();
-        let manager = ShortcutHandler::new(shortcuts, 0);
+        let manager = ShortcutHandler::new(test_config());
 
         let result = manager.match_sequence("gs");
         assert!(result.is_some());
@@ -156,8 +129,7 @@ mod tests {
 
     #[test]
     fn test_partial_match() {
-        let shortcuts = test_shortcuts();
-        let manager = ShortcutHandler::new(shortcuts, 0);
+        let manager = ShortcutHandler::new(test_config());
 
         assert!(manager.has_partial_match("g"));
         assert!(!manager.has_partial_match("x"));

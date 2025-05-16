@@ -1,23 +1,6 @@
-use std::io::Write;
-
-use crossterm::{QueueableCommand, cursor, terminal};
+use crossterm::terminal;
 
 use crate::LeadrError;
-
-pub fn clear_bottom_line() -> std::io::Result<()> {
-    let mut stdout = std::fs::OpenOptions::new().write(true).open("/dev/tty")?;
-    let (_cols, rows) = terminal::size().unwrap_or((80, 24));
-    let y = rows.saturating_sub(1);
-
-    stdout
-        .queue(cursor::SavePosition)?
-        .queue(cursor::MoveTo(0, y))?
-        .queue(terminal::Clear(terminal::ClearType::CurrentLine))?
-        .queue(cursor::RestorePosition)?
-        .flush()?;
-
-    Ok(())
-}
 
 /// Guard that enables raw mode on creation and disables it on drop while also clearing the bottom line.
 pub struct RawModeGuard;
@@ -34,7 +17,6 @@ impl RawModeGuard {
 
 impl Drop for RawModeGuard {
     fn drop(&mut self) {
-        let _ = clear_bottom_line();
         let _ = terminal::disable_raw_mode();
     }
 }

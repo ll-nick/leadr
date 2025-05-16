@@ -1,15 +1,12 @@
-use std::{collections::HashMap, io::Write};
+use std::collections::HashMap;
 
-use crossterm::{
-    QueueableCommand, cursor,
-    event::{Event, KeyCode, KeyEvent, read},
-    terminal,
-};
+use crossterm::event::{read, Event, KeyCode, KeyEvent};
 
 use crate::{
-    LeadrError,
     input::RawModeGuard,
     types::{Shortcut, ShortcutResult},
+    ui::Ui,
+    LeadrError,
 };
 
 /// Handles keyboard input and matches sequences to configured shortcuts.
@@ -35,6 +32,7 @@ impl ShortcutHandler {
     /// cancelled, or an invalid sequence is entered.
     pub fn run(&mut self) -> Result<ShortcutResult, LeadrError> {
         let _guard = RawModeGuard::new()?;
+        let ui = Ui::new(true, self.padding);
 
         loop {
             if let Event::Key(KeyEvent {
@@ -50,7 +48,7 @@ impl ShortcutHandler {
                 match code {
                     KeyCode::Char(c) => {
                         self.sequence.push(c);
-                        let _ = self.print_sequence_bottom_right();
+                        let _ = ui.update(&self.sequence);
                         if let Some(shortcut) = self.match_sequence(&self.sequence) {
                             return Ok(ShortcutResult::Shortcut(shortcut.clone()));
                         }
@@ -61,7 +59,7 @@ impl ShortcutHandler {
                     }
                     KeyCode::Backspace => {
                         self.sequence.pop();
-                        let _ = self.print_sequence_bottom_right();
+                        let _ = ui.update(&self.sequence);
                     }
                     KeyCode::Esc => {
                         return Ok(ShortcutResult::Cancelled);
@@ -80,32 +78,6 @@ impl ShortcutHandler {
     /// Returns true if any shortcut begins with the given sequence.
     fn has_partial_match(&self, seq: &str) -> bool {
         self.shortcuts.keys().any(|k| k.starts_with(seq))
-    }
-
-    /// Displays the current input sequence at the bottom right of the terminal.
-    fn print_sequence_bottom_right(&self) -> std::io::Result<()> {
-        let mut stdout = std::fs::OpenOptions::new().write(true).open("/dev/tty")?;
-        let sequence = &self.sequence;
-
-        let (cols, rows) = terminal::size().unwrap_or((80, 24));
-        let max_len = sequence.len().min(cols as usize);
-        let x = cols.saturating_sub((max_len + self.padding) as u16);
-        let y = rows.saturating_sub(1);
-
-        stdout
-            .queue(cursor::SavePosition)?
-            .queue(cursor::MoveTo(x, y))?
-            .queue(terminal::Clear(terminal::ClearType::CurrentLine))?
-            .queue(cursor::Hide)?;
-
-        write!(stdout, "{}", &sequence[..max_len])?;
-
-        stdout
-            .queue(cursor::Show)?
-            .queue(cursor::RestorePosition)?
-            .flush()?;
-
-        Ok(())
     }
 }
 

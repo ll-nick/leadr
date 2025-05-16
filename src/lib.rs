@@ -10,6 +10,7 @@ pub mod input;
 pub mod keymap;
 pub mod shell;
 pub mod types;
+pub mod ui;
 
 pub use config::Config;
 pub use error::LeadrError;

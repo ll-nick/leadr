@@ -1,13 +1,11 @@
 use std::collections::HashMap;
 
-use crossterm::event::{read, Event, KeyCode, KeyEvent};
+use crossterm::event::{Event, KeyCode, KeyEvent, read};
 
 use crate::{
-    Config,
+    Config, LeadrError, Ui,
     input::RawModeGuard,
     types::{Shortcut, ShortcutResult},
-    Ui,
-    LeadrError,
 };
 
 /// Handles keyboard input and matches sequences to configured shortcuts.
@@ -104,7 +102,10 @@ mod tests {
             },
         );
 
-        Config{shortcuts, ..Default::default()}
+        Config {
+            shortcuts,
+            ..Default::default()
+        }
     }
 
     #[test]

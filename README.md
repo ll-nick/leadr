@@ -79,4 +79,5 @@ Similarly, you can pre-populate `git commit -m "` by pressing `<Ctrl-Space>` fol
 Modify the configuration file to add your own shortcuts or adjust the `leadr` keybinding.
 For a list of currently supported keybindings, see [src/keymap.rs](src/keymap.rs).
 
-
+You can print the currently typed key sequence by setting `print_sequence = true`.
+Be aware though that this is somewhat experimental and might lead to issues.

@@ -34,4 +34,7 @@ pub enum LeadrError {
 
     #[error("Invalid keymap: {0}")]
     InvalidKeymapError(String),
+
+    #[error("Conflicting sequence: {0}")]
+    ConflictingSequenceError(String),
 }

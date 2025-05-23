@@ -1,7 +1,10 @@
 # === Configurable Variables ===
 LEADR_BIND_KEY='{{bind_key}}'
-LEADR_EXEC_PREFIX='{{exec_prefix}}'
 LEADR_CURSOR_POSITION_ENCODING='{{cursor_position_encoding}}'
+LEADR_EXEC_PREFIX='{{exec_prefix}}'
+LEADR_PREPEND_PREFIX='{{prepend_prefix}}'
+LEADR_APPEND_PREFIX='{{append_prefix}}'
+
 
 # === Style Variables ===
 LEADR_CMD_COLOR=$'\e[1;32m'   # Bold green
@@ -12,7 +15,7 @@ __leadr_invoke__() {
     local cmd
     cmd="$(leadr)"
 
-    if [[ "$cmd" =~ "^${LEADR_EXEC_PREFIX}[[:space:]]+(.*)" ]]; then
+    if [[ "$cmd" =~ "^${LEADR_EXEC_PREFIX} (.*)" ]]; then
         # If using the exec prefix, run the command right away.
         actual_cmd=$match[1]
 
@@ -29,6 +32,24 @@ __leadr_invoke__() {
             print -s -- "$actual_cmd"
             eval "$actual_cmd"
         fi
+        zle reset-prompt
+        return
+    fi
+
+    if [[ "$cmd" =~ "^${LEADR_PREPEND_PREFIX} (.*)" ]]; then
+        local to_prepend=$match[1]
+        local original_cursor=$CURSOR
+        BUFFER="${to_prepend}${BUFFER}"
+        CURSOR=$((original_cursor + ${#to_prepend}))
+        zle reset-prompt
+        return
+    fi
+
+    if [[ "$cmd" =~ "^${LEADR_APPEND_PREFIX} (.*)" ]]; then
+        local to_append=$match[1]
+        BUFFER="${BUFFER}${to_append}"
+        CURSOR=${#BUFFER}
+        # Cursor remains unchanged
         zle reset-prompt
         return
     fi

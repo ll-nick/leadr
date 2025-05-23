@@ -1,7 +1,9 @@
 # === Configurable Variables ===
 LEADR_BIND_KEY='{{bind_key}}'
-LEADR_EXEC_PREFIX='{{exec_prefix}}'
 LEADR_CURSOR_POSITION_ENCODING='{{cursor_position_encoding}}'
+LEADR_EXEC_PREFIX='{{exec_prefix}}'
+LEADR_PREPEND_PREFIX='{{prepend_prefix}}'
+LEADR_APPEND_PREFIX='{{append_prefix}}'
 
 # === Style Variables ===
 LEADR_CMD_COLOR='\e[1;32m' # Bold green
@@ -12,7 +14,7 @@ __leadr_invoke__() {
     local cmd
     cmd="$(leadr)"
 
-    if [[ "$cmd" =~ ^${LEADR_EXEC_PREFIX}[[:space:]]+(.*) ]]; then
+    if [[ "$cmd" =~ ^${LEADR_EXEC_PREFIX}\ (.*) ]]; then
         # If using the exec prefix, run the command right away.
         local actual_cmd="${BASH_REMATCH[1]}"
 
@@ -29,6 +31,21 @@ __leadr_invoke__() {
             history -s "$actual_cmd"
             eval "$actual_cmd"
         fi
+        return
+    fi
+
+    if [[ "$cmd" =~ ^${LEADR_PREPEND_PREFIX}\ (.*) ]]; then
+        local to_prepend="${BASH_REMATCH[1]}"
+        local original_point=$READLINE_POINT
+        READLINE_LINE="${to_prepend}${READLINE_LINE}"
+        READLINE_POINT=$((original_point + ${#to_prepend}))
+        return
+    fi
+
+    if [[ "$cmd" =~ ^${LEADR_APPEND_PREFIX}\ (.*) ]]; then
+        local to_append="${BASH_REMATCH[1]}"
+        READLINE_LINE="${READLINE_LINE}${to_append}"
+        READLINE_POINT=${#READLINE_LINE}
         return
     fi
 

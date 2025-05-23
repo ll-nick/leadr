@@ -30,15 +30,15 @@ mod tests {
     fn test_bash_script_contains_replacements() {
         let config = Config::default();
         let result = init_bash(&config).unwrap();
-        assert!(result.contains("\\x00"));
         assert!(result.contains(&config.encoding_strings.exec_prefix));
+        assert!(result.contains("\\x07"));
     }
 
     #[test]
     fn test_zsh_script_contains_replacements() {
         let config = Config::default();
         let result = init_zsh(&config).unwrap();
-        assert!(result.contains("\\x00"));
         assert!(result.contains(&config.encoding_strings.exec_prefix));
+        assert!(result.contains("\\x07"));
     }
 }

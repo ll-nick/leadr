@@ -27,18 +27,13 @@ pub struct Config {
     pub encoding_strings: EncodingStrings,
 
     /// The key binding to activate the shortcut handler.
-    #[serde(default = "default_leadr_key")]
     pub leadr_key: String,
 
     /// Whether or not to print the sequence of keys pressed at the bottom of the screen.
-    #[serde(default = "default_print_sequence")]
     pub print_sequence: bool,
 
     /// Padding from the right edge of the screen when rendering sequences.
-    #[serde(
-        default = "default_padding",
-        skip_serializing_if = "is_default_padding"
-    )]
+    #[serde(skip_serializing)]
     pub padding: usize,
 
     /// The shortcut mappings from key sequences to commands.
@@ -64,28 +59,6 @@ impl Config {
         }
         output
     }
-}
-
-fn default_leadr_key() -> String {
-    "<C-Space>".into()
-}
-
-fn default_exec_prefix() -> String {
-    "#EXEC".into()
-}
-fn is_default_exec_prefix(val: &str) -> bool {
-    val == default_exec_prefix()
-}
-
-fn default_print_sequence() -> bool {
-    false
-}
-
-fn default_padding() -> usize {
-    4
-}
-fn is_default_padding(val: &usize) -> bool {
-    *val == default_padding()
 }
 
 impl ::std::default::Default for Config {
@@ -148,11 +121,10 @@ impl ::std::default::Default for Config {
             },
         );
         Self {
-            leadr_key: default_leadr_key(),
-            exec_prefix: default_exec_prefix(),
-            print_sequence: default_print_sequence(),
-            padding: default_padding(),
             encoding_strings: EncodingStrings::default(),
+            leadr_key: "<C-g>".into(),
+            print_sequence: false,
+            padding: 4,
             shortcuts,
         }
     }
@@ -165,7 +137,7 @@ mod tests {
     #[test]
     fn test_config_defaults() {
         let config = Config::default();
-        assert_eq!(config.leadr_key, "<C-Space>");
+        assert_eq!(config.leadr_key, "<C-g>");
         assert_eq!(config.encoding_strings.exec_prefix, "#EXEC");
         assert_eq!(config.encoding_strings.cursor_position, "#CURSOR");
         assert!(!config.print_sequence);

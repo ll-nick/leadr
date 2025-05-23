@@ -69,6 +69,14 @@ impl ::std::default::Default for Config {
     fn default() -> Self {
         let mut shortcuts = HashMap::new();
         shortcuts.insert(
+            "c".into(),
+            Shortcut {
+                command: " | xclip -selection clipboard".into(),
+                description: Some("Append copy to clipboard".into()),
+                shortcut_type: ShortcutType::Append,
+            },
+        );
+        shortcuts.insert(
             "gs".into(),
             Shortcut {
                 command: "git status".into(),
@@ -130,14 +138,6 @@ impl ::std::default::Default for Config {
                 command: "sudo ".into(),
                 description: Some("Prepend sudo".into()),
                 shortcut_type: ShortcutType::Prepend,
-            },
-        );
-        shortcuts.insert(
-            "c".into(),
-            Shortcut {
-                command: " | xclip -selection clipboard".into(),
-                description: Some("Append copy to clipboard".into()),
-                shortcut_type: ShortcutType::Append,
             },
         );
         Self {

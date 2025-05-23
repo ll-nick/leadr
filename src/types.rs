@@ -1,5 +1,21 @@
 use crate::EncodingStrings;
 
+#[derive(Clone, Debug, Default, PartialEq, serde::Serialize, serde::Deserialize)]
+pub enum ShortcutType {
+    /// A shortcut that is executed immediately.
+    #[default]
+    Execute,
+
+    /// A shortcut that is inserted into the command line, replacing existing text.
+    Replace,
+
+    /// A shortcut that is prepended to the currently typed command.
+    Prepend,
+
+    /// A shortcut that is appended to the currently typed command.
+    Append,
+}
+
 /// Represents a user-defined command with additional metadata.
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 pub struct Shortcut {

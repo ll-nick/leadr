@@ -63,21 +63,29 @@ source <(leadr --bash)
 source <(leadr --zsh)
 ```
 
-## 🛠️ Configuration and Usage
+## 🎮 Usage
 
-`leadr` will automatically create a configuration file and fill it with some default shortcuts the first time you run it.
-See [confy's Readme](https://github.com/rust-cli/confy?tab=readme-ov-file#config-file-location) for the location of the configuration file.
+After installing `leadr`, you can start using it by pressing the `leadr` keybinding followed by a shortcut.
 
-For a list of all available commands, run:
+With the default config, you can e.g. execute `git status` by pressing `<Ctrl-g>` followed by `gs`.
+Similarly, you can pre-populate `git commit -m ""` by pressing `<Ctrl-g>` followed by `gc`.
+
+Notice how your cursor is placed in between the double quotes? Neat, right?
+You can define the cursor position in the configuration of your shortcuts by inserting `#CURSOR` in the command string.
+This is of course ignored when commands are set to be executed right away.
+
+To list your currently configured shortcuts, run:
 ```bash
 leadr --list
 ```
 
-With the default config, you can e.g. execute `git status` by pressing `<Ctrl-Space>` followed by `gs`.
-Similarly, you can pre-populate `git commit -m "` by pressing `<Ctrl-Space>` followed by `gc`.
+## 🛠️ Configuration
+
+`leadr` will automatically create a configuration file and fill it with some default shortcuts the first time you run it.
+See [confy's Readme](https://github.com/rust-cli/confy?tab=readme-ov-file#config-file-location) for the location of the configuration file.
 
 Modify the configuration file to add your own shortcuts or adjust the `leadr` keybinding.
 For a list of currently supported keybindings, see [src/keymap.rs](src/keymap.rs).
 
-You can print the currently typed key sequence by setting `print_sequence = true`.
+You can print the currently typed key sequence at the bottom right of your terminal by setting `print_sequence = true`.
 Be aware though that this is somewhat experimental and might lead to issues.

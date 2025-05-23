@@ -9,7 +9,8 @@ pub fn init_bash(config: &Config) -> Result<String, LeadrError> {
 
     Ok(BASH_INIT_TEMPLATE
         .replace("{{bind_key}}", &leader_key)
-        .replace("{{exec_prefix}}", &config.encoding_strings.exec_prefix))
+        .replace("{{exec_prefix}}", &config.encoding_strings.exec_prefix)
+        .replace("{{cursor_position_encoding}}", &config.encoding_strings.cursor_position))
 }
 
 /// Generates a zsh script that handles the resulting command and binds it to the leadr key.
@@ -31,6 +32,7 @@ mod tests {
         let config = Config::default();
         let result = init_bash(&config).unwrap();
         assert!(result.contains(&config.encoding_strings.exec_prefix));
+        assert!(result.contains(&config.encoding_strings.cursor_position));
         assert!(result.contains("\\x07"));
     }
 

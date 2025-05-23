@@ -65,11 +65,11 @@ fn main() {
         return;
     }
 
-    let mut handler = ShortcutHandler::new(config.clone());
+    let mut handler = ShortcutHandler::new(config);
 
     match handler.run() {
         Ok(ShortcutResult::Shortcut(shortcut)) => {
-            print!("{}", shortcut.format_command(&config.exec_prefix))
+            print!("{}", shortcut);
         }
         Ok(ShortcutResult::NoMatch | ShortcutResult::Cancelled) => {}
         Err(e) => {

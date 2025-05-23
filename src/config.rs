@@ -2,28 +2,38 @@ use std::collections::HashMap;
 
 use crate::types::Shortcut;
 
-#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+#[derive(serde::Serialize, serde::Deserialize)]
+#[serde(default)]
+pub struct EncodingStrings {
+    pub cursor_position: String,
+    pub exec_prefix: String,
+}
+
+impl std::default::Default for EncodingStrings {
+    fn default() -> Self {
+        Self {
+            cursor_position: "#CURSOR".into(),
+            exec_prefix: "#EXEC".into(),
+        }
+    }
+}
+
+#[derive(serde::Serialize, serde::Deserialize)]
+#[serde(default)]
 pub struct Config {
+    /// String that will be injected into the command, the interpreted by the shell script.
+    /// These usually do not need to be changed unless they conflict with a shell command.
+    #[serde(skip_serializing)]
+    pub encoding_strings: EncodingStrings,
+
     /// The key binding to activate the shortcut handler.
-    #[serde(default = "default_leadr_key")]
     pub leadr_key: String,
 
-    /// Prefix used for commands that should be executed right away.
-    #[serde(
-        default = "default_exec_prefix",
-        skip_serializing_if = "is_default_exec_prefix"
-    )]
-    pub exec_prefix: String,
-
     /// Whether or not to print the sequence of keys pressed at the bottom of the screen.
-    #[serde(default = "default_print_sequence")]
     pub print_sequence: bool,
 
     /// Padding from the right edge of the screen when rendering sequences.
-    #[serde(
-        default = "default_padding",
-        skip_serializing_if = "is_default_padding"
-    )]
+    #[serde(skip_serializing)]
     pub padding: usize,
 
     /// The shortcut mappings from key sequences to commands.
@@ -51,28 +61,6 @@ impl Config {
     }
 }
 
-fn default_leadr_key() -> String {
-    "<C-Space>".into()
-}
-
-fn default_exec_prefix() -> String {
-    "#EXEC".into()
-}
-fn is_default_exec_prefix(val: &str) -> bool {
-    val == default_exec_prefix()
-}
-
-fn default_print_sequence() -> bool {
-    false
-}
-
-fn default_padding() -> usize {
-    4
-}
-fn is_default_padding(val: &usize) -> bool {
-    *val == default_padding()
-}
-
 impl ::std::default::Default for Config {
     fn default() -> Self {
         let mut shortcuts = HashMap::new();
@@ -95,7 +83,7 @@ impl ::std::default::Default for Config {
         shortcuts.insert(
             "gc".into(),
             Shortcut {
-                command: "git commit -m \"".into(),
+                command: "git commit -m \"#CURSOR\"".into(),
                 description: Some("Start a Git commit".into()),
                 execute: false,
             },
@@ -133,10 +121,10 @@ impl ::std::default::Default for Config {
             },
         );
         Self {
-            leadr_key: default_leadr_key(),
-            exec_prefix: default_exec_prefix(),
-            print_sequence: default_print_sequence(),
-            padding: default_padding(),
+            encoding_strings: EncodingStrings::default(),
+            leadr_key: "<C-g>".into(),
+            print_sequence: false,
+            padding: 4,
             shortcuts,
         }
     }
@@ -149,8 +137,9 @@ mod tests {
     #[test]
     fn test_config_defaults() {
         let config = Config::default();
-        assert_eq!(config.leadr_key, "<C-Space>");
-        assert_eq!(config.exec_prefix, "#EXEC");
+        assert_eq!(config.leadr_key, "<C-g>");
+        assert_eq!(config.encoding_strings.exec_prefix, "#EXEC");
+        assert_eq!(config.encoding_strings.cursor_position, "#CURSOR");
         assert!(!config.print_sequence);
         assert_eq!(config.padding, 4);
         assert!(config.shortcuts.contains_key("gs"));

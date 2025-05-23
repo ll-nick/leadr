@@ -1,6 +1,7 @@
 # === Configurable Variables ===
 LEADR_BIND_KEY='{{bind_key}}'
 LEADR_EXEC_PREFIX='{{exec_prefix}}'
+LEADR_CURSOR_POSITION_ENCODING='{{cursor_position_encoding}}'
 
 # === Style Variables ===
 LEADR_CMD_COLOR='\e[1;32m' # Bold green
@@ -12,8 +13,12 @@ __leadr_invoke__() {
     cmd="$(leadr)"
 
     if [[ "$cmd" =~ ^${LEADR_EXEC_PREFIX}[[:space:]]+(.*) ]]; then
-        # If using the exec prefix , run the command right away.
+        # If using the exec prefix, run the command right away.
         local actual_cmd="${BASH_REMATCH[1]}"
+
+        # Strip cursor placeholder if present
+        actual_cmd="${actual_cmd//$LEADR_CURSOR_POSITION_ENCODING/}"
+
         if [[ -n "$TMUX" ]]; then
             # When using tmux, this is simple:
             tmux send-keys "$actual_cmd" Enter
@@ -24,8 +29,21 @@ __leadr_invoke__() {
             history -s "$actual_cmd"
             eval "$actual_cmd"
         fi
+        return
+    fi
+
+    if [[ "$cmd" == *"$LEADR_CURSOR_POSITION_ENCODING"* ]]; then
+        # Determine cursor position and prepare line for user
+        cursor_pos="${cmd%%$LEADR_CURSOR_POSITION_ENCODING*}"
+        # Everything before the cursor placeholder
+        # Length of the string before the cursor placeholder
+        cursor_pos=${#cursor_pos}
+        # Remove the cursor placeholder
+        cmd="${cmd//$LEADR_CURSOR_POSITION_ENCODING/}"
+
+        READLINE_LINE="$cmd"
+        READLINE_POINT=$cursor_pos
     else
-        # Otherwise, just prepare the command for the user to run
         READLINE_LINE="$cmd"
         READLINE_POINT=${#READLINE_LINE}
     fi

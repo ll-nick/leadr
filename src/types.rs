@@ -1,3 +1,5 @@
+use crate::EncodingStrings;
+
 /// Represents a user-defined command with additional metadata.
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 pub struct Shortcut {
@@ -23,9 +25,9 @@ fn is_default_execute(val: &bool) -> bool {
 
 impl Shortcut {
     /// Formats the command, by applying the exec prefix if applicable.
-    pub fn format_command(&self, exec_prefix: &str) -> String {
+    pub fn format_command(&self, encoding_strings: &EncodingStrings) -> String {
         if self.execute {
-            format!("{} {}", exec_prefix, self.command)
+            format!("{} {}", encoding_strings.exec_prefix, self.command)
         } else {
             self.command.to_string()
         }
@@ -33,7 +35,7 @@ impl Shortcut {
 }
 
 pub enum ShortcutResult {
-    Shortcut(Shortcut),
+    Shortcut(String),
     Cancelled,
     NoMatch,
 }
@@ -49,7 +51,8 @@ mod tests {
             description: None,
             execute: true,
         };
-        assert_eq!(sc.format_command("#EXEC"), "#EXEC ls -la");
+        let encoding_strings = EncodingStrings::default();
+        assert_eq!(sc.format_command(&encoding_strings), "#EXEC ls -la");
     }
 
     #[test]
@@ -59,6 +62,7 @@ mod tests {
             description: Some("Edit file".into()),
             execute: false,
         };
-        assert_eq!(sc.format_command("#EXEC"), "vim ");
+        let encoding_strings = EncodingStrings::default();
+        assert_eq!(sc.format_command(&encoding_strings), "vim ");
     }
 }

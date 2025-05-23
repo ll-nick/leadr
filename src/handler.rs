@@ -3,13 +3,14 @@ use std::collections::HashMap;
 use crossterm::event::{Event, KeyCode, KeyEvent, read};
 
 use crate::{
-    Config, LeadrError, Ui,
+    Config, EncodingStrings, LeadrError, Ui,
     input::RawModeGuard,
     types::{Shortcut, ShortcutResult},
 };
 
 /// Handles keyboard input and matches sequences to configured shortcuts.
 pub struct ShortcutHandler {
+    encoding_strings: EncodingStrings,
     shortcuts: HashMap<String, Shortcut>,
     sequence: String,
     ui: Ui,
@@ -21,6 +22,7 @@ impl ShortcutHandler {
     /// `padding` controls how far from the right edge the input sequence is displayed.
     pub fn new(config: Config) -> Self {
         ShortcutHandler {
+            encoding_strings: config.encoding_strings,
             shortcuts: config.shortcuts,
             sequence: String::new(),
             ui: Ui::new(config.print_sequence, config.padding),
@@ -48,7 +50,9 @@ impl ShortcutHandler {
                         self.sequence.push(c);
                         let _ = self.ui.update(&self.sequence);
                         if let Some(shortcut) = self.match_sequence(&self.sequence) {
-                            return Ok(ShortcutResult::Shortcut(shortcut.clone()));
+                            return Ok(ShortcutResult::Shortcut(
+                                shortcut.format_command(&self.encoding_strings),
+                            ));
                         }
 
                         if !self.has_partial_match(&self.sequence) {

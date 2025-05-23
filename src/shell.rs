@@ -9,7 +9,7 @@ pub fn init_bash(config: &Config) -> Result<String, LeadrError> {
 
     Ok(BASH_INIT_TEMPLATE
         .replace("{{bind_key}}", &leader_key)
-        .replace("{{exec_prefix}}", &config.exec_prefix))
+        .replace("{{exec_prefix}}", &config.encoding_strings.exec_prefix))
 }
 
 /// Generates a zsh script that handles the resulting command and binds it to the leadr key.
@@ -18,7 +18,7 @@ pub fn init_zsh(config: &Config) -> Result<String, LeadrError> {
 
     Ok(ZSH_INIT_TEMPLATE
         .replace("{{bind_key}}", &leader_key)
-        .replace("{{exec_prefix}}", &config.exec_prefix))
+        .replace("{{exec_prefix}}", &config.encoding_strings.exec_prefix))
 }
 
 #[cfg(test)]
@@ -30,15 +30,15 @@ mod tests {
     fn test_bash_script_contains_replacements() {
         let config = Config::default();
         let result = init_bash(&config).unwrap();
-        assert!(result.contains(&config.exec_prefix));
         assert!(result.contains("\\x00"));
+        assert!(result.contains(&config.encoding_strings.exec_prefix));
     }
 
     #[test]
     fn test_zsh_script_contains_replacements() {
         let config = Config::default();
         let result = init_zsh(&config).unwrap();
-        assert!(result.contains(&config.exec_prefix));
         assert!(result.contains("\\x00"));
+        assert!(result.contains(&config.encoding_strings.exec_prefix));
     }
 }

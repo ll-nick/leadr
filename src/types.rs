@@ -25,27 +25,24 @@ pub struct Shortcut {
     pub description: Option<String>,
 
     /// Whether this command should be executed automatically or just inserted.
-    #[serde(
-        default = "default_execute",
-        skip_serializing_if = "is_default_execute"
-    )]
-    pub execute: bool,
+    #[serde(default, skip_serializing_if = "is_execute")]
+    pub shortcut_type: ShortcutType,
 }
 
-fn default_execute() -> bool {
-    true
-}
-fn is_default_execute(val: &bool) -> bool {
-    *val
+fn is_execute(shortcut_type: &ShortcutType) -> bool {
+    matches!(shortcut_type, ShortcutType::Execute)
 }
 
 impl Shortcut {
-    /// Formats the command, by applying the exec prefix if applicable.
+    /// Formats the command, by injecting the encoding strings into the command.
     pub fn format_command(&self, encoding_strings: &EncodingStrings) -> String {
-        if self.execute {
-            format!("{} {}", encoding_strings.exec_prefix, self.command)
-        } else {
-            self.command.to_string()
+        match self.shortcut_type {
+            ShortcutType::Execute => format!("{} {}", encoding_strings.exec_prefix, self.command),
+            ShortcutType::Replace => format!("{}", self.command),
+            ShortcutType::Prepend => {
+                format!("{} {}", encoding_strings.prepend_prefix, self.command)
+            }
+            ShortcutType::Append => format!("{} {}", encoding_strings.append_prefix, self.command),
         }
     }
 }
@@ -61,24 +58,46 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_format_command_exec_true() {
+    fn test_format_command_exec() {
         let sc = Shortcut {
             command: "ls -la".into(),
             description: None,
-            execute: true,
+            shortcut_type: ShortcutType::Execute,
         };
         let encoding_strings = EncodingStrings::default();
         assert_eq!(sc.format_command(&encoding_strings), "#EXEC ls -la");
     }
 
     #[test]
-    fn test_format_command_exec_false() {
+    fn test_format_command_replace() {
         let sc = Shortcut {
             command: "vim ".into(),
             description: Some("Edit file".into()),
-            execute: false,
+            shortcut_type: ShortcutType::Replace,
         };
         let encoding_strings = EncodingStrings::default();
         assert_eq!(sc.format_command(&encoding_strings), "vim ");
+    }
+
+    #[test]
+    fn test_format_command_prepend() {
+        let sc = Shortcut {
+            command: "sudo ".into(),
+            description: None,
+            shortcut_type: ShortcutType::Prepend,
+        };
+        let encoding_strings = EncodingStrings::default();
+        assert_eq!(sc.format_command(&encoding_strings), "#PREPEND sudo ");
+    }
+
+    #[test]
+    fn test_format_command_append() {
+        let sc = Shortcut {
+            command: "file.txt".into(),
+            description: None,
+            shortcut_type: ShortcutType::Append,
+        };
+        let encoding_strings = EncodingStrings::default();
+        assert_eq!(sc.format_command(&encoding_strings), "#APPEND file.txt");
     }
 }

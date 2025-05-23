@@ -86,6 +86,7 @@ impl ShortcutHandler {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::types::ShortcutType;
 
     fn test_config() -> Config {
         let mut shortcuts = HashMap::new();
@@ -94,7 +95,7 @@ mod tests {
             Shortcut {
                 command: "git status".into(),
                 description: None,
-                execute: true,
+                shortcut_type: ShortcutType::Execute,
             },
         );
         shortcuts.insert(
@@ -102,7 +103,7 @@ mod tests {
             Shortcut {
                 command: "vim ".into(),
                 description: None,
-                execute: false,
+                shortcut_type: ShortcutType::Replace,
             },
         );
 
@@ -118,11 +119,11 @@ mod tests {
 
         let result = manager.match_sequence("gs");
         assert!(result.is_some());
-        assert!(result.unwrap().execute);
+        assert_eq!(result.unwrap().shortcut_type, ShortcutType::Execute);
 
         let result = manager.match_sequence("v");
         assert!(result.is_some());
-        assert!(!result.unwrap().execute);
+        assert_eq!(result.unwrap().shortcut_type, ShortcutType::Replace);
 
         let result = manager.match_sequence("x");
         assert!(result.is_none());

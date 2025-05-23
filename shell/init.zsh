@@ -1,6 +1,7 @@
 # === Configurable Variables ===
 LEADR_BIND_KEY='{{bind_key}}'
 LEADR_EXEC_PREFIX='{{exec_prefix}}'
+LEADR_CURSOR_POSITION_ENCODING='{{cursor_position_encoding}}'
 
 # === Style Variables ===
 LEADR_CMD_COLOR=$'\e[1;32m'   # Bold green
@@ -12,17 +13,38 @@ __leadr_invoke__() {
     cmd="$(leadr)"
 
     if [[ "$cmd" =~ "^${LEADR_EXEC_PREFIX}[[:space:]]+(.*)" ]]; then
+        # If using the exec prefix, run the command right away.
         actual_cmd=$match[1]
+
+        # Strip cursor placeholder if present
+        actual_cmd="${actual_cmd//$LEADR_CURSOR_POSITION_ENCODING/}"
+
         if [[ -n "$TMUX" ]]; then
+            # When using tmux, this is simple:
             tmux send-keys "$actual_cmd" Enter
         else
+            # Without tmux, there is no easy way to simulate a user pressing enter,
+            # so this is the best we can do without additional dependencies.
             printf "${LEADR_CMD_COLOR}%s${LEADR_RESET_COLOR}\n" "$actual_cmd"
             print -s -- "$actual_cmd"
             eval "$actual_cmd"
         fi
+        zle reset-prompt
+        return
+    fi
+
+    if [[ "$cmd" == *"$LEADR_CURSOR_POSITION_ENCODING"* ]]; then
+        # Get prefix before placeholder
+        local before_cursor="${cmd%%${LEADR_CURSOR_POSITION_ENCODING}*}"
+        local after_cursor="${cmd#*${LEADR_CURSOR_POSITION_ENCODING}}"
+        # Set command without the placeholder
+        BUFFER="${before_cursor}${after_cursor}"
+        CURSOR=${#before_cursor}
     else
+        # Default: insert entire command at cursor
         LBUFFER+="$cmd"
     fi
+
     zle reset-prompt
 }
 

@@ -19,7 +19,8 @@ pub fn init_zsh(config: &Config) -> Result<String, LeadrError> {
 
     Ok(ZSH_INIT_TEMPLATE
         .replace("{{bind_key}}", &leader_key)
-        .replace("{{exec_prefix}}", &config.encoding_strings.exec_prefix))
+        .replace("{{exec_prefix}}", &config.encoding_strings.exec_prefix)
+        .replace("{{cursor_position_encoding}}", &config.encoding_strings.cursor_position))
 }
 
 #[cfg(test)]
@@ -41,6 +42,7 @@ mod tests {
         let config = Config::default();
         let result = init_zsh(&config).unwrap();
         assert!(result.contains(&config.encoding_strings.exec_prefix));
+        assert!(result.contains(&config.encoding_strings.cursor_position));
         assert!(result.contains("\\x07"));
     }
 }

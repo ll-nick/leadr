@@ -1,12 +1,14 @@
 use std::collections::HashMap;
 
-use crate::types::Shortcut;
+use crate::types::{Shortcut, ShortcutType};
 
 #[derive(serde::Serialize, serde::Deserialize)]
 #[serde(default)]
 pub struct EncodingStrings {
     pub cursor_position: String,
     pub exec_prefix: String,
+    pub append_prefix: String,
+    pub prepend_prefix: String,
 }
 
 impl std::default::Default for EncodingStrings {
@@ -14,6 +16,8 @@ impl std::default::Default for EncodingStrings {
         Self {
             cursor_position: "#CURSOR".into(),
             exec_prefix: "#EXEC".into(),
+            append_prefix: "#APPEND".into(),
+            prepend_prefix: "#PREPEND".into(),
         }
     }
 }
@@ -65,11 +69,19 @@ impl ::std::default::Default for Config {
     fn default() -> Self {
         let mut shortcuts = HashMap::new();
         shortcuts.insert(
+            "c".into(),
+            Shortcut {
+                command: " | xclip -selection clipboard".into(),
+                description: Some("Append copy to clipboard".into()),
+                shortcut_type: ShortcutType::Append,
+            },
+        );
+        shortcuts.insert(
             "gs".into(),
             Shortcut {
                 command: "git status".into(),
                 description: Some("Git status".into()),
-                execute: true,
+                shortcut_type: ShortcutType::Execute,
             },
         );
         shortcuts.insert(
@@ -77,7 +89,7 @@ impl ::std::default::Default for Config {
             Shortcut {
                 command: "git add .".into(),
                 description: Some("Git add all".into()),
-                execute: true,
+                shortcut_type: ShortcutType::Execute,
             },
         );
         shortcuts.insert(
@@ -85,7 +97,7 @@ impl ::std::default::Default for Config {
             Shortcut {
                 command: "git commit -m \"#CURSOR\"".into(),
                 description: Some("Start a Git commit".into()),
-                execute: false,
+                shortcut_type: ShortcutType::Replace,
             },
         );
         shortcuts.insert(
@@ -93,7 +105,7 @@ impl ::std::default::Default for Config {
             Shortcut {
                 command: "git push".into(),
                 description: Some("Git push".into()),
-                execute: true,
+                shortcut_type: ShortcutType::Execute,
             },
         );
         shortcuts.insert(
@@ -101,7 +113,7 @@ impl ::std::default::Default for Config {
             Shortcut {
                 command: "git log --oneline".into(),
                 description: Some("Compact Git log".into()),
-                execute: true,
+                shortcut_type: ShortcutType::Execute,
             },
         );
         shortcuts.insert(
@@ -109,7 +121,7 @@ impl ::std::default::Default for Config {
             Shortcut {
                 command: "htop".into(),
                 description: Some("System monitor".into()),
-                execute: true,
+                shortcut_type: ShortcutType::Execute,
             },
         );
         shortcuts.insert(
@@ -117,7 +129,15 @@ impl ::std::default::Default for Config {
             Shortcut {
                 command: "ip addr show".into(),
                 description: Some("Show IP addresses".into()),
-                execute: true,
+                shortcut_type: ShortcutType::Execute,
+            },
+        );
+        shortcuts.insert(
+            "ps".into(),
+            Shortcut {
+                command: "sudo ".into(),
+                description: Some("Prepend sudo".into()),
+                shortcut_type: ShortcutType::Prepend,
             },
         );
         Self {
@@ -140,6 +160,8 @@ mod tests {
         assert_eq!(config.leadr_key, "<C-g>");
         assert_eq!(config.encoding_strings.exec_prefix, "#EXEC");
         assert_eq!(config.encoding_strings.cursor_position, "#CURSOR");
+        assert_eq!(config.encoding_strings.append_prefix, "#APPEND");
+        assert_eq!(config.encoding_strings.prepend_prefix, "#PREPEND");
         assert!(!config.print_sequence);
         assert_eq!(config.padding, 4);
         assert!(config.shortcuts.contains_key("gs"));

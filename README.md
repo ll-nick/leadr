@@ -69,23 +69,47 @@ After installing `leadr`, you can start using it by pressing the `leadr` keybind
 
 With the default config, you can e.g. execute `git status` by pressing `<Ctrl-g>` followed by `gs`.
 Similarly, you can pre-populate `git commit -m ""` by pressing `<Ctrl-g>` followed by `gc`.
-
 Notice how your cursor is placed in between the double quotes? Neat, right?
-You can define the cursor position in the configuration of your shortcuts by inserting `#CURSOR` in the command string.
-This is of course ignored when commands are set to be executed right away.
+But that's not all!
+`<Ctrl-g>s` will prepend `sudo` to your currently typed command, `<Ctrl-g>c` will append a pipe to the system clipboard.
 
 To list your currently configured shortcuts, run:
 ```bash
 leadr --list
 ```
 
+Consult the [Configuration](#-configuration) section to learn how to make `leadr` your own.
+
 ## 🛠️ Configuration
+
+### Configuration File
 
 `leadr` will automatically create a configuration file and fill it with some default shortcuts the first time you run it.
 See [confy's Readme](https://github.com/rust-cli/confy?tab=readme-ov-file#config-file-location) for the location of the configuration file.
 
 Modify the configuration file to add your own shortcuts or adjust the `leadr` keybinding.
+
+### Shortcuts
+
+Define new shortcuts by adding a new entry to the `shortcuts` section of the configuration file.
+The key will be the key sequence you want to use, `command` will be the command you want to execute or insert.
+Optionally, add a `description` for the `--list` command to show.
+
+Finally, you can specify a `type` to control how the command is executed or inserted.
+Here's an overview of the shortcut types that can be configured:
+
+| Type | Description | Cursor Position |
+| ---- | ----------- | ---------------- |
+| `Execute` (Default) | Execute the command right away | N/A |
+| `Replace` | Sets your current prompt to the command | At the end of the command unless `#CURSOR` is specified |
+| `Prepend` | Prepend the command to your current prompt | Where it was before adding the prefix |
+| `Append` | Append the command to your current prompt | At the end of the command |
+
+### Leadr Keybinding
+
 For a list of currently supported keybindings, see [src/keymap.rs](src/keymap.rs).
+
+### Visual Feedback
 
 You can print the currently typed key sequence at the bottom right of your terminal by setting `print_sequence = true`.
 Be aware though that this is somewhat experimental and might lead to issues.

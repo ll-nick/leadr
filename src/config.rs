@@ -2,18 +2,33 @@ use std::collections::HashMap;
 
 use crate::types::Shortcut;
 
-#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+#[derive(serde::Serialize, serde::Deserialize)]
+#[serde(default)]
+pub struct EncodingStrings {
+    pub cursor_position: String,
+    pub exec_prefix: String,
+}
+
+impl std::default::Default for EncodingStrings {
+    fn default() -> Self {
+        Self {
+            cursor_position: "#CURSOR".into(),
+            exec_prefix: "#EXEC".into(),
+        }
+    }
+}
+
+#[derive(serde::Serialize, serde::Deserialize)]
+#[serde(default)]
 pub struct Config {
+    /// String that will be injected into the command, the interpreted by the shell script.
+    /// These usually do not need to be changed unless they conflict with a shell command.
+    #[serde(skip_serializing)]
+    pub encoding_strings: EncodingStrings,
+
     /// The key binding to activate the shortcut handler.
     #[serde(default = "default_leadr_key")]
     pub leadr_key: String,
-
-    /// Prefix used for commands that should be executed right away.
-    #[serde(
-        default = "default_exec_prefix",
-        skip_serializing_if = "is_default_exec_prefix"
-    )]
-    pub exec_prefix: String,
 
     /// Whether or not to print the sequence of keys pressed at the bottom of the screen.
     #[serde(default = "default_print_sequence")]
@@ -137,6 +152,7 @@ impl ::std::default::Default for Config {
             exec_prefix: default_exec_prefix(),
             print_sequence: default_print_sequence(),
             padding: default_padding(),
+            encoding_strings: EncodingStrings::default(),
             shortcuts,
         }
     }
@@ -150,7 +166,8 @@ mod tests {
     fn test_config_defaults() {
         let config = Config::default();
         assert_eq!(config.leadr_key, "<C-Space>");
-        assert_eq!(config.exec_prefix, "#EXEC");
+        assert_eq!(config.encoding_strings.exec_prefix, "#EXEC");
+        assert_eq!(config.encoding_strings.cursor_position, "#CURSOR");
         assert!(!config.print_sequence);
         assert_eq!(config.padding, 4);
         assert!(config.shortcuts.contains_key("gs"));

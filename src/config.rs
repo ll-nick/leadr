@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 
+use crate::error::LeadrError;
 use crate::types::{Shortcut, ShortcutType};
 
 #[derive(serde::Serialize, serde::Deserialize)]
@@ -150,6 +151,25 @@ impl ::std::default::Default for Config {
     }
 }
 
+impl Config {
+    /// Validates that no shortcuts overlap or are prefixes of each other.
+    pub fn validate(&self) -> Result<(), LeadrError> {
+        let keys: Vec<&String> = self.shortcuts.keys().collect();
+
+        for (i, key1) in keys.iter().enumerate() {
+            for key2 in keys.iter().skip(i + 1) {
+                if key1.starts_with(*key2) || key2.starts_with(*key1) {
+                    return Err(LeadrError::ConflictingSequenceError(format!(
+                        "'{}' conflicts with '{}'",
+                        key1, key2
+                    )));
+                }
+            }
+        }
+        Ok(())
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -174,5 +194,73 @@ mod tests {
         assert!(table.contains("gs"));
         assert!(table.contains("git status"));
         assert!(table.contains("Description"));
+    }
+
+    #[test]
+    fn test_validate_shortcuts() {
+        // Create a config with conflicting shortcuts: "g" and "gs"
+        let mut shortcuts = HashMap::new();
+        shortcuts.insert(
+            "g".into(),
+            Shortcut {
+                command: "git".into(),
+                description: Some("Git command".into()),
+                shortcut_type: ShortcutType::Execute,
+            },
+        );
+        shortcuts.insert(
+            "gs".into(),
+            Shortcut {
+                command: "git status".into(),
+                description: Some("Git status".into()),
+                shortcut_type: ShortcutType::Execute,
+            },
+        );
+
+        let config = Config {
+            encoding_strings: EncodingStrings::default(),
+            leadr_key: "<C-g>".into(),
+            print_sequence: false,
+            padding: 4,
+            shortcuts,
+        };
+
+        // Validation should fail due to prefix conflict
+        let result = config.validate();
+        assert!(result.is_err());
+        assert!(matches!(
+            result,
+            Err(LeadrError::ConflictingSequenceError(_))
+        ));
+
+        // Now create a config with no conflicts
+        let mut shortcuts = HashMap::new();
+        shortcuts.insert(
+            "g".into(),
+            Shortcut {
+                command: "git".into(),
+                description: Some("Git command".into()),
+                shortcut_type: ShortcutType::Execute,
+            },
+        );
+        shortcuts.insert(
+            "x".into(),
+            Shortcut {
+                command: "exit".into(),
+                description: Some("Exit command".into()),
+                shortcut_type: ShortcutType::Execute,
+            },
+        );
+
+        let config = Config {
+            encoding_strings: EncodingStrings::default(),
+            leadr_key: "<C-g>".into(),
+            print_sequence: false,
+            padding: 4,
+            shortcuts,
+        };
+
+        // Validation should succeed with no conflicts
+        assert!(config.validate().is_ok());
     }
 }

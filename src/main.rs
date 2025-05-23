@@ -34,6 +34,10 @@ fn main() {
             std::process::exit(1);
         }
     };
+    if let Err(e) = config.validate() {
+        eprintln!("Error validating config: {}", e);
+        std::process::exit(1);
+    }
 
     if cli.bash {
         match leadr::init_bash(&config) {

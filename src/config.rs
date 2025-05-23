@@ -83,7 +83,7 @@ impl ::std::default::Default for Config {
         shortcuts.insert(
             "gc".into(),
             Shortcut {
-                command: "git commit -m \"".into(),
+                command: "git commit -m \"#CURSOR\"".into(),
                 description: Some("Start a Git commit".into()),
                 execute: false,
             },

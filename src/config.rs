@@ -114,7 +114,7 @@ impl Default for Config {
             },
         );
         shortcuts.insert(
-            "ps".into(),
+            "s".into(),
             Shortcut {
                 command: "sudo ".into(),
                 description: Some("Prepend sudo".into()),

@@ -49,19 +49,29 @@ impl Config {
     /// Renders the configured shortcuts as a formatted table.
     pub fn render_shortcut_table(&self) -> String {
         let mut output = String::new();
-        output.push_str(&format!(
-            "{:<8} {:<30} {}\n",
-            "Keys", "Command", "Description"
-        ));
-        output.push_str(&format!("{:-<8} {:-<30} {:-<}\n", "", "", ""));
+
+        // Define column headers
+        let header = format!(
+            "{:<8} {:<30} {:<15} {}\n",
+            "Sequence", "Command", "Type", "Description"
+        );
+        output.push_str(&header);
+
+        // Define separator line
+        let separator = format!("{:-<8} {:-<30} {:-<15} {:-<20}\n", "", "", "", "");
+        output.push_str(&separator);
+
+        // Write each shortcut entry
         for (key, shortcut) in &self.shortcuts {
             output.push_str(&format!(
-                "{:<8} {:<30} {}\n",
+                "{:<8} {:<30} {:<15} {}\n",
                 key,
                 shortcut.command,
+                format!("{:?}", shortcut.shortcut_type),
                 shortcut.description.clone().unwrap_or_default()
             ));
         }
+
         output
     }
 }

@@ -12,7 +12,7 @@ pub struct EncodingStrings {
     pub prepend_prefix: String,
 }
 
-impl std::default::Default for EncodingStrings {
+impl Default for EncodingStrings {
     fn default() -> Self {
         Self {
             cursor_position: "#CURSOR".into(),
@@ -45,38 +45,7 @@ pub struct Config {
     pub shortcuts: HashMap<String, Shortcut>,
 }
 
-impl Config {
-    /// Renders the configured shortcuts as a formatted table.
-    pub fn render_shortcut_table(&self) -> String {
-        let mut output = String::new();
-
-        // Define column headers
-        let header = format!(
-            "{:<8} {:<30} {:<15} {}\n",
-            "Sequence", "Command", "Type", "Description"
-        );
-        output.push_str(&header);
-
-        // Define separator line
-        let separator = format!("{:-<8} {:-<30} {:-<15} {:-<20}\n", "", "", "", "");
-        output.push_str(&separator);
-
-        // Write each shortcut entry
-        for (key, shortcut) in &self.shortcuts {
-            output.push_str(&format!(
-                "{:<8} {:<30} {:<15} {}\n",
-                key,
-                shortcut.command,
-                format!("{:?}", shortcut.shortcut_type),
-                shortcut.description.clone().unwrap_or_default()
-            ));
-        }
-
-        output
-    }
-}
-
-impl ::std::default::Default for Config {
+impl Default for Config {
     fn default() -> Self {
         let mut shortcuts = HashMap::new();
         shortcuts.insert(
@@ -162,6 +131,35 @@ impl ::std::default::Default for Config {
 }
 
 impl Config {
+    /// Renders the configured shortcuts as a formatted table.
+    pub fn render_shortcut_table(&self) -> String {
+        let mut output = String::new();
+
+        // Define column headers
+        let header = format!(
+            "{:<8} {:<30} {:<15} {}\n",
+            "Sequence", "Command", "Type", "Description"
+        );
+        output.push_str(&header);
+
+        // Define separator line
+        let separator = format!("{:-<8} {:-<30} {:-<15} {:-<20}\n", "", "", "", "");
+        output.push_str(&separator);
+
+        // Write each shortcut entry
+        for (key, shortcut) in &self.shortcuts {
+            output.push_str(&format!(
+                "{:<8} {:<30} {:<15} {}\n",
+                key,
+                shortcut.command,
+                format!("{:?}", shortcut.shortcut_type),
+                shortcut.description.clone().unwrap_or_default()
+            ));
+        }
+
+        output
+    }
+
     /// Validates that no shortcuts overlap or are prefixes of each other.
     pub fn validate(&self) -> Result<(), LeadrError> {
         let keys: Vec<&String> = self.shortcuts.keys().collect();

@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use crossterm::event::{Event, KeyCode, KeyEvent, read};
 
 use crate::{
-    Config, EncodingStrings, LeadrError, SequencePlotter,
+    Config, EncodingStrings, LeadrError, ui::SequencePlotter,
     input::RawModeGuard,
     types::{Shortcut, ShortcutResult},
 };

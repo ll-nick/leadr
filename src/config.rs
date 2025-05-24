@@ -137,6 +137,48 @@ struct ColumnLayout {
     description: usize,
 }
 
+fn render_header(layout: &ColumnLayout) -> String {
+    format!(
+        "{:<seq$} {:<cmd$} {:<typ$} {:<desc$}\n",
+        "Sequence",
+        "Command",
+        "Type",
+        "Description",
+        seq = layout.sequence,
+        cmd = layout.command,
+        typ = layout.shortcut_type,
+        desc = layout.description,
+    )
+}
+
+fn render_separator(layout: &ColumnLayout) -> String {
+    format!(
+        "{:-<seq$} {:-<cmd$} {:-<typ$} {:-<desc$}\n",
+        "",
+        "",
+        "",
+        "",
+        seq = layout.sequence,
+        cmd = layout.command,
+        typ = layout.shortcut_type,
+        desc = layout.description,
+    )
+}
+
+fn render_row(layout: &ColumnLayout, sequence: &str, shortcut: &Shortcut) -> String {
+    format!(
+        "{:<seq$} {:<cmd$} {:<typ$} {:<desc$}\n",
+        sequence,
+        shortcut.command,
+        format!("{:?}", shortcut.shortcut_type),
+        shortcut.description.clone().unwrap_or_default(),
+        seq = layout.sequence,
+        cmd = layout.command,
+        typ = layout.shortcut_type,
+        desc = layout.description,
+    )
+}
+
 impl Config {
     /// Renders the configured shortcuts as a formatted table.
     pub fn render_shortcut_table(&self) -> String {
@@ -148,40 +190,11 @@ impl Config {
         };
 
         let mut table = String::new();
-
-        let header = format!(
-            "{:<seq$} {:<cmd$} {:<typ$} {}\n",
-            "Sequence", "Command", "Type", "Description",
-            seq = layout.sequence,
-            cmd = layout.command,
-            typ = layout.shortcut_type,
-        );
-        table.push_str(&header);
-
-        let separator = format!(
-            "{:-<seq$} {:-<cmd$} {:-<typ$} {:-<desc$}\n",
-            "",
-            "",
-            "",
-            "",
-            seq = layout.sequence,
-            cmd = layout.command,
-            typ = layout.shortcut_type,
-            desc = layout.description,
-        );
-        table.push_str(&separator);
+        table.push_str(&render_header(&layout));
+        table.push_str(&render_separator(&layout));
 
         for (sequence, shortcut) in &self.shortcuts {
-            table.push_str(&format!(
-                "{:<seq$} {:<cmd$} {:<typ$} {}\n",
-                sequence,
-                shortcut.command,
-                format!("{:?}", shortcut.shortcut_type),
-                shortcut.description.clone().unwrap_or_default(),
-                seq = layout.sequence,
-                cmd = layout.command,
-                typ = layout.shortcut_type,
-            ));
+            table.push_str(&render_row(&layout, sequence, shortcut));
         }
 
         table

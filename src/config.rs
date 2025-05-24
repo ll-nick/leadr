@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 
 use crate::error::LeadrError;
+use crate::ui::table;
 use crate::types::{Shortcut, ShortcutType};
 
 #[derive(serde::Serialize, serde::Deserialize)]
@@ -130,59 +131,10 @@ impl Default for Config {
     }
 }
 
-struct ColumnLayout {
-    sequence: usize,
-    command: usize,
-    shortcut_type: usize,
-    description: usize,
-}
-
-fn render_header(layout: &ColumnLayout) -> String {
-    format!(
-        "{:<seq$} {:<cmd$} {:<typ$} {:<desc$}\n",
-        "Sequence",
-        "Command",
-        "Type",
-        "Description",
-        seq = layout.sequence,
-        cmd = layout.command,
-        typ = layout.shortcut_type,
-        desc = layout.description,
-    )
-}
-
-fn render_separator(layout: &ColumnLayout) -> String {
-    format!(
-        "{:-<seq$} {:-<cmd$} {:-<typ$} {:-<desc$}\n",
-        "",
-        "",
-        "",
-        "",
-        seq = layout.sequence,
-        cmd = layout.command,
-        typ = layout.shortcut_type,
-        desc = layout.description,
-    )
-}
-
-fn render_row(layout: &ColumnLayout, sequence: &str, shortcut: &Shortcut) -> String {
-    format!(
-        "{:<seq$} {:<cmd$} {:<typ$} {:<desc$}\n",
-        sequence,
-        shortcut.command,
-        format!("{:?}", shortcut.shortcut_type),
-        shortcut.description.clone().unwrap_or_default(),
-        seq = layout.sequence,
-        cmd = layout.command,
-        typ = layout.shortcut_type,
-        desc = layout.description,
-    )
-}
-
 impl Config {
     /// Renders the configured shortcuts as a formatted table.
     pub fn render_shortcut_table(&self) -> String {
-        let layout = ColumnLayout {
+        let layout = table::ColumnLayout {
             sequence: 8,
             command: 30,
             shortcut_type: 15,
@@ -190,11 +142,11 @@ impl Config {
         };
 
         let mut table = String::new();
-        table.push_str(&render_header(&layout));
-        table.push_str(&render_separator(&layout));
+        table.push_str(&table::render_header(&layout));
+        table.push_str(&table::render_separator(&layout));
 
         for (sequence, shortcut) in &self.shortcuts {
-            table.push_str(&render_row(&layout, sequence, shortcut));
+            table.push_str(&table::render_row(&layout, sequence, shortcut));
         }
 
         table

@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 
 use crate::error::LeadrError;
+use crate::ui::table;
 use crate::types::{Shortcut, ShortcutType};
 
 #[derive(serde::Serialize, serde::Deserialize)]
@@ -12,7 +13,7 @@ pub struct EncodingStrings {
     pub prepend_prefix: String,
 }
 
-impl std::default::Default for EncodingStrings {
+impl Default for EncodingStrings {
     fn default() -> Self {
         Self {
             cursor_position: "#CURSOR".into(),
@@ -45,28 +46,7 @@ pub struct Config {
     pub shortcuts: HashMap<String, Shortcut>,
 }
 
-impl Config {
-    /// Renders the configured shortcuts as a formatted table.
-    pub fn render_shortcut_table(&self) -> String {
-        let mut output = String::new();
-        output.push_str(&format!(
-            "{:<8} {:<30} {}\n",
-            "Keys", "Command", "Description"
-        ));
-        output.push_str(&format!("{:-<8} {:-<30} {:-<}\n", "", "", ""));
-        for (key, shortcut) in &self.shortcuts {
-            output.push_str(&format!(
-                "{:<8} {:<30} {}\n",
-                key,
-                shortcut.command,
-                shortcut.description.clone().unwrap_or_default()
-            ));
-        }
-        output
-    }
-}
-
-impl ::std::default::Default for Config {
+impl Default for Config {
     fn default() -> Self {
         let mut shortcuts = HashMap::new();
         shortcuts.insert(
@@ -134,7 +114,7 @@ impl ::std::default::Default for Config {
             },
         );
         shortcuts.insert(
-            "ps".into(),
+            "s".into(),
             Shortcut {
                 command: "sudo ".into(),
                 description: Some("Prepend sudo".into()),
@@ -152,6 +132,26 @@ impl ::std::default::Default for Config {
 }
 
 impl Config {
+    /// Renders the configured shortcuts as a formatted table.
+    pub fn render_shortcut_table(&self) -> String {
+        let layout = table::ColumnLayout {
+            sequence: 8,
+            command: 30,
+            shortcut_type: 15,
+            description: 40,
+        };
+
+        let mut table = String::new();
+        table.push_str(&table::render_header(&layout));
+        table.push_str(&table::render_separator(&layout));
+
+        for (sequence, shortcut) in &self.shortcuts {
+            table.push_str(&table::render_row(&layout, sequence, shortcut));
+        }
+
+        table
+    }
+
     /// Validates that no shortcuts overlap or are prefixes of each other.
     pub fn validate(&self) -> Result<(), LeadrError> {
         let keys: Vec<&String> = self.shortcuts.keys().collect();

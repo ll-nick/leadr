@@ -2,14 +2,14 @@ use std::io::Write;
 
 use crossterm::{QueueableCommand, cursor, terminal};
 
-pub struct Ui {
+pub struct SequencePlotter {
     pub print_sequence: bool,
     pub padding: usize,
 }
 
-impl Ui {
+impl SequencePlotter {
     pub fn new(print_sequence: bool, padding: usize) -> Self {
-        Ui {
+        SequencePlotter {
             print_sequence,
             padding,
         }
@@ -63,7 +63,7 @@ pub fn clear_bottom_line() -> std::io::Result<()> {
     Ok(())
 }
 
-impl Drop for Ui {
+impl Drop for SequencePlotter {
     fn drop(&mut self) {
         let _ = clear_bottom_line();
     }

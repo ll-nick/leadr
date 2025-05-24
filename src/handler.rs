@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use crossterm::event::{Event, KeyCode, KeyEvent, read};
 
 use crate::{
-    Config, EncodingStrings, LeadrError, Ui,
+    Config, EncodingStrings, LeadrError, ui::SequencePlotter,
     input::RawModeGuard,
     types::{Shortcut, ShortcutResult},
 };
@@ -13,7 +13,7 @@ pub struct ShortcutHandler {
     encoding_strings: EncodingStrings,
     shortcuts: HashMap<String, Shortcut>,
     sequence: String,
-    ui: Ui,
+    ui: SequencePlotter,
 }
 
 impl ShortcutHandler {
@@ -25,7 +25,7 @@ impl ShortcutHandler {
             encoding_strings: config.encoding_strings,
             shortcuts: config.shortcuts,
             sequence: String::new(),
-            ui: Ui::new(config.print_sequence, config.padding),
+            ui: SequencePlotter::new(config.print_sequence, config.padding),
         }
     }
 

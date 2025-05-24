@@ -38,7 +38,7 @@ impl Shortcut {
     pub fn format_command(&self, encoding_strings: &EncodingStrings) -> String {
         match self.shortcut_type {
             ShortcutType::Execute => format!("{} {}", encoding_strings.exec_prefix, self.command),
-            ShortcutType::Replace => format!("{}", self.command),
+            ShortcutType::Replace => self.command.to_string(),
             ShortcutType::Prepend => {
                 format!("{} {}", encoding_strings.prepend_prefix, self.command)
             }

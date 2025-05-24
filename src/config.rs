@@ -130,34 +130,61 @@ impl Default for Config {
     }
 }
 
+struct ColumnLayout {
+    sequence: usize,
+    command: usize,
+    shortcut_type: usize,
+    description: usize,
+}
+
 impl Config {
     /// Renders the configured shortcuts as a formatted table.
     pub fn render_shortcut_table(&self) -> String {
-        let mut output = String::new();
+        let layout = ColumnLayout {
+            sequence: 8,
+            command: 30,
+            shortcut_type: 15,
+            description: 40,
+        };
 
-        // Define column headers
+        let mut table = String::new();
+
         let header = format!(
-            "{:<8} {:<30} {:<15} {}\n",
-            "Sequence", "Command", "Type", "Description"
+            "{:<seq$} {:<cmd$} {:<typ$} {}\n",
+            "Sequence", "Command", "Type", "Description",
+            seq = layout.sequence,
+            cmd = layout.command,
+            typ = layout.shortcut_type,
         );
-        output.push_str(&header);
+        table.push_str(&header);
 
-        // Define separator line
-        let separator = format!("{:-<8} {:-<30} {:-<15} {:-<20}\n", "", "", "", "");
-        output.push_str(&separator);
+        let separator = format!(
+            "{:-<seq$} {:-<cmd$} {:-<typ$} {:-<desc$}\n",
+            "",
+            "",
+            "",
+            "",
+            seq = layout.sequence,
+            cmd = layout.command,
+            typ = layout.shortcut_type,
+            desc = layout.description,
+        );
+        table.push_str(&separator);
 
-        // Write each shortcut entry
-        for (key, shortcut) in &self.shortcuts {
-            output.push_str(&format!(
-                "{:<8} {:<30} {:<15} {}\n",
-                key,
+        for (sequence, shortcut) in &self.shortcuts {
+            table.push_str(&format!(
+                "{:<seq$} {:<cmd$} {:<typ$} {}\n",
+                sequence,
                 shortcut.command,
                 format!("{:?}", shortcut.shortcut_type),
-                shortcut.description.clone().unwrap_or_default()
+                shortcut.description.clone().unwrap_or_default(),
+                seq = layout.sequence,
+                cmd = layout.command,
+                typ = layout.shortcut_type,
             ));
         }
 
-        output
+        table
     }
 
     /// Validates that no shortcuts overlap or are prefixes of each other.

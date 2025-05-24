@@ -6,13 +6,67 @@ on:
 
 env:
   CARGO_TERM_COLOR: always
+
 jobs:
-  build:
+  # Cross-compiled Linux binaries using `cross`
+  build-linux:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        target: [
+          x86_64-unknown-linux-musl,
+          aarch64-unknown-linux-musl,
+          armv7-unknown-linux-musleabihf
+        ]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install cross
+        run: cargo install cross
+
+      - name: Build with cross
+        run: cross build --release --target ${{ matrix.target }}
+
+      - name: Rename binary
+        run: |
+          mkdir -p dist
+          cp target/${{ matrix.target }}/release/leadr dist/leadr-${{ github.ref_name }}-${{ matrix.target }}
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: leadr-${{ github.ref_name }}-${{ matrix.target }}
+          path: dist/leadr-${{ github.ref_name }}-${{ matrix.target }}
+
+  # Native macOS build
+  build-macos:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build (macOS)
+        run: cargo build --release
+
+      - name: Rename binary
+        run: |
+          mkdir -p dist
+          cp target/release/leadr dist/leadr-${{ github.ref_name }}-x86_64-apple-darwin
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: leadr-${{ github.ref_name }}-x86_64-apple-darwin
+          path: dist/leadr-${{ github.ref_name }}-x86_64-apple-darwin
+
+  # GitHub release job
+  release:
+    needs: [build-linux, build-macos]
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
-    - name: Build
-      run: cargo build --release --verbose
-    - uses: ncipollo/release-action@v1
-      with:
-        artifacts: "target/release/leadr"
+      - uses: actions/download-artifact@v4
+        with:
+          merge-multiple: true
+          path: dist
+
+      - uses: ncipollo/release-action@v1
+        with:
+          artifacts: "dist/*"
+

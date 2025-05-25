@@ -2,6 +2,7 @@
 LEADR_BIND_KEY='{{bind_key}}'
 LEADR_CURSOR_POSITION_ENCODING='{{cursor_position_encoding}}'
 LEADR_EXEC_PREFIX='{{exec_prefix}}'
+LEADR_INSERT_PREFIX='{{insert_prefix}}'
 LEADR_PREPEND_PREFIX='{{prepend_prefix}}'
 LEADR_APPEND_PREFIX='{{append_prefix}}'
 
@@ -31,6 +32,14 @@ __leadr_invoke__() {
             history -s "$actual_cmd"
             eval "$actual_cmd"
         fi
+        return
+    fi
+
+    if [[ "$cmd" =~ ^${LEADR_INSERT_PREFIX}\ (.*) ]]; then
+        local to_insert="${BASH_REMATCH[1]}"
+        local original_point=$READLINE_POINT
+        READLINE_LINE="${READLINE_LINE:0:original_point}${to_insert}${READLINE_LINE:original_point}"
+        READLINE_POINT=$((original_point + ${#to_insert}))
         return
     fi
 

@@ -12,6 +12,9 @@ pub enum InsertType {
 
     /// A shortcut that is appended to the currently typed command.
     Append,
+
+    /// Add a string before and after the currently typed command.
+    Surround,
 }
 
 /// Represents a user-defined command with additional metadata.

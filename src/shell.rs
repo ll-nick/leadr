@@ -37,6 +37,10 @@ pub fn init_zsh(config: &Config) -> Result<String, LeadrError> {
         )
         .replace("{{exec_prefix}}", &config.encoding_strings.exec_prefix)
         .replace(
+            "{{insert_prefix}}",
+            &config.encoding_strings.insert_prefix,
+        )
+        .replace(
             "{{prepend_prefix}}",
             &config.encoding_strings.prepend_prefix,
         )
@@ -66,6 +70,7 @@ mod tests {
         let result = init_zsh(&config).unwrap();
         assert!(result.contains(&config.encoding_strings.cursor_position));
         assert!(result.contains(&config.encoding_strings.exec_prefix));
+        assert!(result.contains(&config.encoding_strings.insert_prefix));
         assert!(result.contains(&config.encoding_strings.prepend_prefix));
         assert!(result.contains(&config.encoding_strings.append_prefix));
         assert!(result.contains("\\x07"));

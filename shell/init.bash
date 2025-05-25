@@ -1,4 +1,4 @@
-LEADR_BIND_KEY='\x07'
+LEADR_BIND_KEY='{{bind_key}}'
 
 __leadr_invoke__() {
     # === Config ===

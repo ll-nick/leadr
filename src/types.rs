@@ -144,5 +144,17 @@ mod tests {
         };
         assert_eq!(sc.format_command(), "INSERT dummy command");
     }
+
+    #[test]
+    fn test_format_surround() {
+        let sc = Shortcut {
+            command: "dummy command".into(),
+            description: None,
+            insert_type: InsertType::Surround,
+            evaluate: false,
+            execute: true,
+        };
+        assert_eq!(sc.format_command(), "SURROUND+EXEC dummy command");
+    }
 }
 

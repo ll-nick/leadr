@@ -65,6 +65,16 @@ impl Default for Config {
             },
         );
         shortcuts.insert(
+            "id".into(),
+            Shortcut {
+                command: "date +%Y%m%d".into(),
+                description: Some("Insert current date in YYYYMMDD format".into()),
+                insert_type: InsertType::Insert,
+                evaluate: true,
+                execute: false,
+            },
+        );  
+        shortcuts.insert(
             "y".into(),
             Shortcut {
                 command: " | xclip -selection clipboard".into(),

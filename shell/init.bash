@@ -97,16 +97,14 @@ __leadr_invoke__() {
     }
 
     leadr_main() {
-        local cmd output_flags to_insert insert_type eval_flag exec_flag
-        local cursor_pos
+        local cmd="$(leadr)"
+        local output_flags="${cmd%% *}"
+        local to_insert="${cmd#* }"
 
-        cmd="$(leadr)"
-        output_flags="${cmd%% *}"
-        to_insert="${cmd#* }"
-
+        local insert_type eval_flag exec_flag
         IFS='|' read -r insert_type eval_flag exec_flag <<< "$(leadr_parse_flags "$output_flags")"
 
-        cursor_pos="$(leadr_extract_cursor_pos "$to_insert" "$LEADR_CURSOR_POSITION_ENCODING")"
+        local cursor_pos="$(leadr_extract_cursor_pos "$to_insert" "$LEADR_CURSOR_POSITION_ENCODING")"
         to_insert="${to_insert//$LEADR_CURSOR_POSITION_ENCODING/}"
 
         if [[ "$eval_flag" == "true" ]]; then

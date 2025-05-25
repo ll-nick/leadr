@@ -13,7 +13,6 @@ pub mod types;
 pub mod ui;
 
 pub use config::Config;
-pub use config::EncodingStrings;
 pub use error::LeadrError;
 pub use handler::ShortcutHandler;
 pub use shell::init_bash;

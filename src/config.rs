@@ -25,26 +25,6 @@ impl Default for Config {
     fn default() -> Self {
         let mut shortcuts = HashMap::new();
         shortcuts.insert(
-            "y".into(),
-            Shortcut {
-                command: " | xclip -selection clipboard".into(),
-                description: Some("Append copy to clipboard".into()),
-                insert_type: InsertType::Append,
-                eval: false,
-                execute: false,
-            },
-        );
-        shortcuts.insert(
-            "gs".into(),
-            Shortcut {
-                command: "git status".into(),
-                description: Some("Git status".into()),
-                insert_type: InsertType::Replace,
-                eval: false,
-                execute: true,
-            },
-        );
-        shortcuts.insert(
             "ga".into(),
             Shortcut {
                 command: "git add .".into(),
@@ -65,11 +45,31 @@ impl Default for Config {
             },
         );
         shortcuts.insert(
+            "gs".into(),
+            Shortcut {
+                command: "git status".into(),
+                description: Some("Git status".into()),
+                insert_type: InsertType::Replace,
+                eval: false,
+                execute: true,
+            },
+        );
+        shortcuts.insert(
             "s".into(),
             Shortcut {
                 command: "sudo ".into(),
                 description: Some("Prepend sudo".into()),
                 insert_type: InsertType::Prepend,
+                eval: false,
+                execute: false,
+            },
+        );
+        shortcuts.insert(
+            "y".into(),
+            Shortcut {
+                command: " | xclip -selection clipboard".into(),
+                description: Some("Append copy to clipboard".into()),
+                insert_type: InsertType::Append,
                 eval: false,
                 execute: false,
             },

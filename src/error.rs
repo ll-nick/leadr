@@ -26,8 +26,8 @@ pub enum ShortcutResult {
 
 #[derive(Debug, Error)]
 pub enum LeadrError {
-    #[error("Failed to enable terminal raw mode: {0}")]
-    TerminalRawModeError(#[source] std::io::Error),
+    #[error("Conflicting sequence: {0}")]
+    ConflictingSequenceError(String),
 
     #[error("Failed to read user input: {0}")]
     InputReadError(#[source] std::io::Error),
@@ -35,6 +35,9 @@ pub enum LeadrError {
     #[error("Invalid keymap: {0}")]
     InvalidKeymapError(String),
 
-    #[error("Conflicting sequence: {0}")]
-    ConflictingSequenceError(String),
+    #[error("Invalid surround command: {0}")]
+    InvalidSurroundCommand(String),
+
+    #[error("Failed to enable terminal raw mode: {0}")]
+    TerminalRawModeError(#[source] std::io::Error),
 }

@@ -94,7 +94,7 @@ mod tests {
                 command: "git status".into(),
                 description: None,
                 insert_type: InsertType::Replace,
-                eval: false,
+                evaluate: false,
                 execute: false,
             },
         );
@@ -104,7 +104,7 @@ mod tests {
                 command: "sudo ".into(),
                 description: None,
                 insert_type: InsertType::Prepend,
-                eval: false,
+                evaluate: false,
                 execute: false,
             },
         );

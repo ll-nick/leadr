@@ -29,7 +29,7 @@ pub struct Shortcut {
     /// Whether this command should be evaluated before being inserted.
     // default is false, skip serialization if false
     #[serde(default, skip_serializing_if = "is_false")]
-    pub eval: bool,
+    pub evaluate: bool,
 
     /// Whether this command should be executed immediately after being inserted.
     #[serde(default, skip_serializing_if = "is_false")]
@@ -46,7 +46,7 @@ fn is_false(b: &bool) -> bool {
 impl Shortcut {
     fn flags_string(&self) -> String {
         let mut flags = vec![format!("{:?}", self.insert_type).to_uppercase()];
-        if self.eval {
+        if self.evaluate {
             flags.push("EVAL".into());
         }
         if self.execute {
@@ -76,7 +76,7 @@ mod tests {
             command: "dummy command".into(),
             description: None,
             insert_type: InsertType::Replace,
-            eval: false,
+            evaluate: false,
             execute: false,
         };
         assert_eq!(sc.format_command(), "REPLACE dummy command");
@@ -88,7 +88,7 @@ mod tests {
             command: "dummy command".into(),
             description: None,
             insert_type: InsertType::Insert,
-            eval: true,
+            evaluate: true,
             execute: true,
         };
         assert_eq!(sc.format_command(), "INSERT+EVAL+EXEC dummy command");
@@ -100,7 +100,7 @@ mod tests {
             command: "dummy command".into(),
             description: None,
             insert_type: InsertType::Append,
-            eval: false,
+            evaluate: false,
             execute: false,
         };
         assert_eq!(sc.format_command(), "APPEND dummy command");
@@ -112,7 +112,7 @@ mod tests {
             command: "dummy command".into(),
             description: None,
             insert_type: InsertType::Prepend,
-            eval: true,
+            evaluate: true,
             execute: false,
         };
         assert_eq!(sc.format_command(), "PREPEND+EVAL dummy command");
@@ -124,7 +124,7 @@ mod tests {
             command: "dummy command".into(),
             description: None,
             insert_type: InsertType::Replace,
-            eval: false,
+            evaluate: false,
             execute: true,
         };
         assert_eq!(sc.format_command(), "REPLACE+EXEC dummy command");
@@ -136,7 +136,7 @@ mod tests {
             command: "dummy command".into(),
             description: None,
             insert_type: InsertType::Insert,
-            eval: false,
+            evaluate: false,
             execute: false,
         };
         assert_eq!(sc.format_command(), "INSERT dummy command");

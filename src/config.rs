@@ -30,7 +30,7 @@ impl Default for Config {
                 command: "git add .".into(),
                 description: Some("Git add all".into()),
                 insert_type: InsertType::Replace,
-                eval: false,
+                evaluate: false,
                 execute: true,
             },
         );
@@ -40,7 +40,7 @@ impl Default for Config {
                 command: "git commit -m \"#CURSOR\"".into(),
                 description: Some("Start a Git commit".into()),
                 insert_type: InsertType::Replace,
-                eval: false,
+                evaluate: false,
                 execute: false,
             },
         );
@@ -50,7 +50,7 @@ impl Default for Config {
                 command: "git status".into(),
                 description: Some("Git status".into()),
                 insert_type: InsertType::Replace,
-                eval: false,
+                evaluate: false,
                 execute: true,
             },
         );
@@ -60,7 +60,7 @@ impl Default for Config {
                 command: "sudo ".into(),
                 description: Some("Prepend sudo".into()),
                 insert_type: InsertType::Prepend,
-                eval: false,
+                evaluate: false,
                 execute: false,
             },
         );
@@ -70,7 +70,7 @@ impl Default for Config {
                 command: " | xclip -selection clipboard".into(),
                 description: Some("Append copy to clipboard".into()),
                 insert_type: InsertType::Append,
-                eval: false,
+                evaluate: false,
                 execute: false,
             },
         );
@@ -90,8 +90,8 @@ impl Config {
             sequence: 8,
             command: 30,
             insert_type: 10,
-            eval: 5,
-            execute: 5,
+            evaluate: 9,
+            execute: 9,
             description: 40,
         };
 
@@ -156,7 +156,7 @@ mod tests {
                 command: "git".into(),
                 description: Some("Git command".into()),
                 insert_type: InsertType::Replace,
-                eval: false,
+                evaluate: false,
                 execute: true,
             },
         );
@@ -166,7 +166,7 @@ mod tests {
                 command: "git status".into(),
                 description: Some("Git status".into()),
                 insert_type: InsertType::Replace,
-                eval: false,
+                evaluate: false,
                 execute: true,
             },
         );
@@ -194,7 +194,7 @@ mod tests {
                 command: "git".into(),
                 description: Some("Git command".into()),
                 insert_type: InsertType::Replace,
-                eval: false,
+                evaluate: false,
                 execute: true,
             },
         );
@@ -204,7 +204,7 @@ mod tests {
                 command: "exit".into(),
                 description: Some("Exit command".into()),
                 insert_type: InsertType::Replace,
-                eval: false,
+                evaluate: false,
                 execute: true,
             },
         );

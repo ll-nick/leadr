@@ -3,14 +3,13 @@ use std::collections::HashMap;
 use crossterm::event::{Event, KeyCode, KeyEvent, read};
 
 use crate::{
-    Config, EncodingStrings, LeadrError, ui::SequencePlotter,
+    Config, LeadrError, ui::SequencePlotter,
     input::RawModeGuard,
     types::{Shortcut, ShortcutResult},
 };
 
 /// Handles keyboard input and matches sequences to configured shortcuts.
 pub struct ShortcutHandler {
-    encoding_strings: EncodingStrings,
     shortcuts: HashMap<String, Shortcut>,
     sequence: String,
     ui: SequencePlotter,
@@ -22,7 +21,6 @@ impl ShortcutHandler {
     /// `padding` controls how far from the right edge the input sequence is displayed.
     pub fn new(config: Config) -> Self {
         ShortcutHandler {
-            encoding_strings: config.encoding_strings,
             shortcuts: config.shortcuts,
             sequence: String::new(),
             ui: SequencePlotter::new(config.print_sequence, config.padding),
@@ -51,7 +49,7 @@ impl ShortcutHandler {
                         let _ = self.ui.update(&self.sequence);
                         if let Some(shortcut) = self.match_sequence(&self.sequence) {
                             return Ok(ShortcutResult::Shortcut(
-                                shortcut.format_command(&self.encoding_strings),
+                                shortcut.format_command(),
                             ));
                         }
 
@@ -86,7 +84,7 @@ impl ShortcutHandler {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::types::ShortcutType;
+    use crate::types::InsertType;
 
     fn test_config() -> Config {
         let mut shortcuts = HashMap::new();
@@ -95,15 +93,19 @@ mod tests {
             Shortcut {
                 command: "git status".into(),
                 description: None,
-                shortcut_type: ShortcutType::Execute,
+                insert_type: InsertType::Replace,
+                evaluate: false,
+                execute: false,
             },
         );
         shortcuts.insert(
-            "v".into(),
+            "s".into(),
             Shortcut {
-                command: "vim ".into(),
+                command: "sudo ".into(),
                 description: None,
-                shortcut_type: ShortcutType::Replace,
+                insert_type: InsertType::Prepend,
+                evaluate: false,
+                execute: false,
             },
         );
 
@@ -119,11 +121,11 @@ mod tests {
 
         let result = manager.match_sequence("gs");
         assert!(result.is_some());
-        assert_eq!(result.unwrap().shortcut_type, ShortcutType::Execute);
+        assert_eq!(result.unwrap().insert_type, InsertType::Replace);
 
-        let result = manager.match_sequence("v");
+        let result = manager.match_sequence("s");
         assert!(result.is_some());
-        assert_eq!(result.unwrap().shortcut_type, ShortcutType::Replace);
+        assert_eq!(result.unwrap().insert_type, InsertType::Prepend);
 
         let result = manager.match_sequence("x");
         assert!(result.is_none());

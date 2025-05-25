@@ -1,83 +1,122 @@
-# === Configurable Variables ===
 LEADR_BIND_KEY='{{bind_key}}'
-LEADR_CURSOR_POSITION_ENCODING='{{cursor_position_encoding}}'
-LEADR_EXEC_PREFIX='{{exec_prefix}}'
-LEADR_INSERT_PREFIX='{{insert_prefix}}'
-LEADR_PREPEND_PREFIX='{{prepend_prefix}}'
-LEADR_APPEND_PREFIX='{{append_prefix}}'
 
-
-# === Style Variables ===
-LEADR_CMD_COLOR=$'\e[1;32m'   # Bold green
-LEADR_RESET_COLOR=$'\e[0m'
-
-# === Handle leadr output ===
 __leadr_invoke__() {
-    local cmd
-    cmd="$(leadr)"
+    LEADR_CURSOR_POSITION_ENCODING="#CURSOR"
+    LEADR_CMD_COLOR=$'\e[1;32m'
+    LEADR_RESET_COLOR=$'\e[0m'
 
-    if [[ "$cmd" =~ "^${LEADR_EXEC_PREFIX} (.*)" ]]; then
-        # If using the exec prefix, run the command right away.
-        actual_cmd=$match[1]
+    leadr_parse_flags() {
+        local flag_str="$1"
+        local insert="" eval="false" exec="false"
+        local flag
 
-        # Strip cursor placeholder if present
-        actual_cmd="${actual_cmd//$LEADR_CURSOR_POSITION_ENCODING/}"
+        IFS='+' read -A flags_array <<< "$flag_str"
+        for flag in "${flags_array[@]}"; do
+            case "$flag" in
+                REPLACE|INSERT|PREPEND|APPEND) insert="$flag" ;;
+                EVAL) eval="true" ;;
+                EXEC) exec="true" ;;
+            esac
+        done
 
-        if [[ -n "$TMUX" ]]; then
-            # When using tmux, this is simple:
-            tmux send-keys "$actual_cmd" Enter
+        echo "$insert|$eval|$exec"
+    }
+
+    leadr_extract_cursor_pos() {
+        local input="$1"
+        local encoding="$2"
+        if [[ "$input" == *"$encoding"* ]]; then
+            local before="${input%%${encoding}*}"
+            echo "${#before}"
         else
-            # Without tmux, there is no easy way to simulate a user pressing enter,
-            # so this is the best we can do without additional dependencies.
-            printf "${LEADR_CMD_COLOR}%s${LEADR_RESET_COLOR}\n" "$actual_cmd"
-            print -s -- "$actual_cmd"
-            eval "$actual_cmd"
+            echo "-1"
         fi
+    }
+
+    leadr_insert_command() {
+        local insert_type="$1"
+        local to_insert="$2"
+        local cursor_pos="$3"
+
+        case "$insert_type" in
+            INSERT)
+                LBUFFER+="$to_insert"
+                if [[ $cursor_pos -ge 0 ]]; then
+                    CURSOR=$((CURSOR + cursor_pos))
+                else
+                    CURSOR=$((CURSOR + ${#to_insert}))
+                fi
+                ;;
+            PREPEND)
+                local original_cursor=$CURSOR
+                BUFFER="${to_insert}${BUFFER}"
+                if [[ $cursor_pos -ge 0 ]]; then
+                    CURSOR=$cursor_pos
+                else
+                    CURSOR=$((original_cursor + ${#to_insert}))
+                fi
+                ;;
+            APPEND)
+                BUFFER="${BUFFER}${to_insert}"
+                if [[ $cursor_pos -ge 0 ]]; then
+                    CURSOR=$((${#BUFFER} - ${#to_insert} + cursor_pos))
+                else
+                    CURSOR=${#BUFFER}
+                fi
+                ;;
+            *)
+                BUFFER="$to_insert"
+                if [[ $cursor_pos -ge 0 ]]; then
+                    CURSOR=$cursor_pos
+                else
+                    CURSOR=${#BUFFER}
+                fi
+                ;;
+        esac
+    }
+
+    leadr_execute_command() {
+        local cmd="$1"
+        BUFFER=""
+        CURSOR=0
+        if [[ -n "$TMUX" ]]; then
+            tmux send-keys "$cmd" Enter
+        else
+            printf "${LEADR_CMD_COLOR}%s${LEADR_RESET_COLOR}\n" "$cmd"
+            print -s -- "$cmd"
+            eval "$cmd"
+        fi
+    }
+
+    leadr_main() {
+        local cmd="$(leadr)"
+        local output_flags="${cmd%% *}"
+        local to_insert="${cmd#* }"
+
+        local insert_type eval_flag exec_flag
+        IFS='|' read -r insert_type eval_flag exec_flag <<< "$(leadr_parse_flags "$output_flags")"
+
+        local cursor_pos="$(leadr_extract_cursor_pos "$to_insert" "$LEADR_CURSOR_POSITION_ENCODING")"
+        to_insert="${to_insert//$LEADR_CURSOR_POSITION_ENCODING/}"
+
+        if [[ "$eval_flag" == "true" ]]; then
+            to_insert="$(eval "$to_insert")"
+            cursor_pos=-1
+        fi
+
+        leadr_insert_command "$insert_type" "$to_insert" "$cursor_pos"
+
+        if [[ "$exec_flag" == "true" ]]; then
+            leadr_execute_command "$BUFFER"
+        fi
+
         zle reset-prompt
-        return
-    fi
+    }
 
-    if [[ "$cmd" =~ "^${LEADR_INSERT_PREFIX} (.*)" ]]; then
-        local to_insert=$match[1]
-        LBUFFER="${LBUFFER}${to_insert}"
-        zle reset-prompt
-        return
-    fi
-
-    if [[ "$cmd" =~ "^${LEADR_PREPEND_PREFIX} (.*)" ]]; then
-        local to_prepend=$match[1]
-        local original_cursor=$CURSOR
-        BUFFER="${to_prepend}${BUFFER}"
-        CURSOR=$((original_cursor + ${#to_prepend}))
-        zle reset-prompt
-        return
-    fi
-
-    if [[ "$cmd" =~ "^${LEADR_APPEND_PREFIX} (.*)" ]]; then
-        local to_append=$match[1]
-        BUFFER="${BUFFER}${to_append}"
-        CURSOR=${#BUFFER}
-        # Cursor remains unchanged
-        zle reset-prompt
-        return
-    fi
-
-    if [[ "$cmd" == *"$LEADR_CURSOR_POSITION_ENCODING"* ]]; then
-        # Get prefix before placeholder
-        local before_cursor="${cmd%%${LEADR_CURSOR_POSITION_ENCODING}*}"
-        local after_cursor="${cmd#*${LEADR_CURSOR_POSITION_ENCODING}}"
-        # Set command without the placeholder
-        BUFFER="${before_cursor}${after_cursor}"
-        CURSOR=${#before_cursor}
-    else
-        # Default: insert entire command at cursor
-        LBUFFER+="$cmd"
-    fi
-
-    zle reset-prompt
+    leadr_main
 }
 
 # === Key Binding ===
 zle -N __leadr_invoke__
-bindkey "${LEADR_BIND_KEY}" __leadr_invoke__
+bindkey "$LEADR_BIND_KEY" __leadr_invoke__
 

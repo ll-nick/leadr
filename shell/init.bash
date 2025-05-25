@@ -1,78 +1,125 @@
-# === Configurable Variables ===
 LEADR_BIND_KEY='{{bind_key}}'
-LEADR_CURSOR_POSITION_ENCODING='{{cursor_position_encoding}}'
-LEADR_EXEC_PREFIX='{{exec_prefix}}'
-LEADR_INSERT_PREFIX='{{insert_prefix}}'
-LEADR_PREPEND_PREFIX='{{prepend_prefix}}'
-LEADR_APPEND_PREFIX='{{append_prefix}}'
 
-# === Style Variables ===
-LEADR_CMD_COLOR='\e[1;32m' # Bold green
-LEADR_RESET_COLOR='\e[0m'
-
-# === Handle leadr output ===
 __leadr_invoke__() {
-    local cmd
-    cmd="$(leadr)"
+    # === Config ===
+    LEADR_CURSOR_POSITION_ENCODING="#CURSOR"
+    LEADR_CMD_COLOR='\e[1;32m'
+    LEADR_RESET_COLOR='\e[0m'
 
-    if [[ "$cmd" =~ ^${LEADR_EXEC_PREFIX}\ (.*) ]]; then
-        # If using the exec prefix, run the command right away.
-        local actual_cmd="${BASH_REMATCH[1]}"
+    leadr_parse_flags() {
+        local flag_str="$1"
+        local insert="" eval="false" exec="false"
 
-        # Strip cursor placeholder if present
-        actual_cmd="${actual_cmd//$LEADR_CURSOR_POSITION_ENCODING/}"
+        IFS='+' read -r -a flags_array <<< "$flag_str"
+        for flag in "${flags_array[@]}"; do
+            case "$flag" in
+                REPLACE | INSERT | PREPEND | APPEND) insert="$flag" ;;
+                EVAL) eval="true" ;;
+                EXEC) exec="true" ;;
+            esac
+        done
 
-        if [[ -n "$TMUX" ]]; then
-            # When using tmux, this is simple:
-            tmux send-keys "$actual_cmd" Enter
+        echo "$insert|$eval|$exec"
+    }
+
+    leadr_extract_cursor_pos() {
+        local input="$1"
+        local encoding="$2"
+        if [[ "$input" == *"$encoding"* ]]; then
+            local before="${input%%$encoding*}"
+            echo "${#before}"
         else
-            # Without tmux, there is no easy way to simulate a user pressing enter,
-            # so this is the best we can do without additional dependencies.
-            printf "${LEADR_CMD_COLOR}%s${LEADR_RESET_COLOR}\n" "$actual_cmd"
-            history -s "$actual_cmd"
-            eval "$actual_cmd"
+            echo "-1"
         fi
-        return
-    fi
+    }
 
-    if [[ "$cmd" =~ ^${LEADR_INSERT_PREFIX}\ (.*) ]]; then
-        local to_insert="${BASH_REMATCH[1]}"
+    leadr_clean_cursor_marker() {
+        local input="$1"
+        local encoding="$2"
+        echo "${input//$encoding/}"
+    }
+
+    leadr_insert_command() {
+        local insert_type="$1"
+        local to_insert="$2"
+        local cursor_pos="$3"
+
         local original_point=$READLINE_POINT
-        READLINE_LINE="${READLINE_LINE:0:original_point}${to_insert}${READLINE_LINE:original_point}"
-        READLINE_POINT=$((original_point + ${#to_insert}))
-        return
-    fi
+        local original_line="$READLINE_LINE"
 
-    if [[ "$cmd" =~ ^${LEADR_PREPEND_PREFIX}\ (.*) ]]; then
-        local to_prepend="${BASH_REMATCH[1]}"
-        local original_point=$READLINE_POINT
-        READLINE_LINE="${to_prepend}${READLINE_LINE}"
-        READLINE_POINT=$((original_point + ${#to_prepend}))
-        return
-    fi
+        case "$insert_type" in
+            INSERT)
+                READLINE_LINE="${original_line:0:original_point}${to_insert}${original_line:original_point}"
+                if [[ $cursor_pos -ge 0 ]]; then
+                    READLINE_POINT=$((original_point + cursor_pos))
+                else
+                    READLINE_POINT=$((original_point + ${#to_insert}))
+                fi
+                ;;
+            PREPEND)
+                READLINE_LINE="${to_insert}${original_line}"
+                if [[ $cursor_pos -ge 0 ]]; then
+                    READLINE_POINT=$cursor_pos
+                else
+                    READLINE_POINT=$((original_point + ${#to_insert}))
+                fi
+                ;;
+            APPEND)
+                READLINE_LINE="${original_line}${to_insert}"
+                if [[ $cursor_pos -ge 0 ]]; then
+                    READLINE_POINT=$((${#original_line} + cursor_pos))
+                else
+                    READLINE_POINT=${#READLINE_LINE}
+                fi
+                ;;
+            *)
+                READLINE_LINE="$to_insert"
+                if [[ $cursor_pos -ge 0 ]]; then
+                    READLINE_POINT=$cursor_pos
+                else
+                    READLINE_POINT=${#READLINE_LINE}
+                fi
+                ;;
+        esac
+    }
 
-    if [[ "$cmd" =~ ^${LEADR_APPEND_PREFIX}\ (.*) ]]; then
-        local to_append="${BASH_REMATCH[1]}"
-        READLINE_LINE="${READLINE_LINE}${to_append}"
-        READLINE_POINT=${#READLINE_LINE}
-        return
-    fi
+    leadr_execute_command() {
+        local cmd="$1"
+        READLINE_LINE=""
+        READLINE_POINT=0
+        if [[ -n "$TMUX" ]]; then
+            tmux send-keys "$cmd" Enter
+        else
+            printf "${LEADR_CMD_COLOR}%s${LEADR_RESET_COLOR}\n" "$cmd"
+            history -s "$cmd"
+            eval "$cmd"
+        fi
+    }
 
-    if [[ "$cmd" == *"$LEADR_CURSOR_POSITION_ENCODING"* ]]; then
-        # Determine cursor position and prepare line for user
-        cursor_pos="${cmd%%$LEADR_CURSOR_POSITION_ENCODING*}"
-        # Everything before the cursor placeholder
-        # Length of the string before the cursor placeholder
-        cursor_pos=${#cursor_pos}
-        # Remove the cursor placeholder
-        cmd="${cmd//$LEADR_CURSOR_POSITION_ENCODING/}"
+    leadr_main() {
+        local cmd="$(leadr)"
+        local output_flags="${cmd%% *}"
+        local to_insert="${cmd#* }"
 
-        READLINE_LINE="$cmd"
-        READLINE_POINT=$cursor_pos
-    else
-        READLINE_LINE="$cmd"
-        READLINE_POINT=${#READLINE_LINE}
-    fi
+        local insert_type eval_flag exec_flag
+        IFS='|' read -r insert_type eval_flag exec_flag <<< "$(leadr_parse_flags "$output_flags")"
+
+        local cursor_pos="$(leadr_extract_cursor_pos "$to_insert" "$LEADR_CURSOR_POSITION_ENCODING")"
+        to_insert="${to_insert//$LEADR_CURSOR_POSITION_ENCODING/}"
+
+        if [[ "$eval_flag" == "true" ]]; then
+            to_insert="$(eval "$to_insert")"
+            cursor_pos=-1
+        fi
+
+        leadr_insert_command "$insert_type" "$to_insert" "$cursor_pos"
+
+        if [[ "$exec_flag" == "true" ]]; then
+            leadr_execute_command "$READLINE_LINE"
+        fi
+    }
+
+    leadr_main
 }
 
 # === Key Binding ===

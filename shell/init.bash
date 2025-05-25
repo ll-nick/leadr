@@ -13,7 +13,7 @@ __leadr_invoke__() {
         IFS='+' read -r -a flags_array <<< "$flag_str"
         for flag in "${flags_array[@]}"; do
             case "$flag" in
-                REPLACE | INSERT | PREPEND | APPEND) insert="$flag" ;;
+                REPLACE | INSERT | PREPEND | APPEND | SURROUND) insert="$flag" ;;
                 EVAL) eval="true" ;;
                 EXEC) exec="true" ;;
             esac
@@ -71,6 +71,13 @@ __leadr_invoke__() {
                 else
                     READLINE_POINT=${#READLINE_LINE}
                 fi
+                ;;
+            SURROUND)
+                # For SURROUND, we split to_insert into two parts by finding the part before and after the #COMMAND string
+                local before_command="${to_insert%%#COMMAND*}"
+                local after_command="${to_insert#*#COMMAND}"
+                READLINE_LINE="${before_command}${original_line}${after_command}"
+                READLINE_POINT=${#READLINE_LINE}
                 ;;
             *)
                 READLINE_LINE="$to_insert"

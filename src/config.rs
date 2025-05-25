@@ -89,7 +89,9 @@ impl Config {
         let layout = table::ColumnLayout {
             sequence: 8,
             command: 30,
-            shortcut_type: 15,
+            insert_type: 10,
+            eval: 5,
+            execute: 5,
             description: 40,
         };
 

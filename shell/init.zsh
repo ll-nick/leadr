@@ -2,6 +2,7 @@
 LEADR_BIND_KEY='{{bind_key}}'
 LEADR_CURSOR_POSITION_ENCODING='{{cursor_position_encoding}}'
 LEADR_EXEC_PREFIX='{{exec_prefix}}'
+LEADR_INSERT_PREFIX='{{insert_prefix}}'
 LEADR_PREPEND_PREFIX='{{prepend_prefix}}'
 LEADR_APPEND_PREFIX='{{append_prefix}}'
 
@@ -32,6 +33,13 @@ __leadr_invoke__() {
             print -s -- "$actual_cmd"
             eval "$actual_cmd"
         fi
+        zle reset-prompt
+        return
+    fi
+
+    if [[ "$cmd" =~ "^${LEADR_INSERT_PREFIX} (.*)" ]]; then
+        local to_insert=$match[1]
+        LBUFFER="${LBUFFER}${to_insert}"
         zle reset-prompt
         return
     fi

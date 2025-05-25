@@ -101,6 +101,7 @@ Here's an overview of the shortcut types that can be configured:
 | Type | Description | Cursor Position |
 | ---- | ----------- | ---------------- |
 | `Execute` (Default) | Execute the command right away | N/A |
+| `Insert` | Inserts the command at the current cursor position | At the end of the inserted command |
 | `Replace` | Sets your current prompt to the command | At the end of the command unless `#CURSOR` is specified |
 | `Prepend` | Prepend the command to your current prompt | Where it was before adding the prefix |
 | `Append` | Append the command to your current prompt | At the end of the command |

@@ -3,6 +3,31 @@
 **Leadr** is a customizable CLI shortcut manager inspired by the leader key concept in (Neo)Vim.
 Use memorable key sequences to quickly execute or insert commands in your terminal.
 
+## 💪 Features
+
+- **Customizable Shortcuts**: Define your own key sequences to set your prompt.
+- **Insert or Execute**: Immediately execute `git status` or just insert `git commit -m ""` ready for you to fill in.
+- **Prepend/Append**: Forgot `sudo`? Just prepend it to the your prompt and keep typing.
+- **Cursor Positioning**: Automatically place your cursor at the right position after inserting or replacing commands.
+- **Evaluate pre-insert**: Need the current date in your file name? Evaluate a command, then insert it.
+
+## 🎮 Usage
+
+After installing `leadr`, you can start using it by pressing the `leadr` keybinding followed by a shortcut.
+
+With the default config, you can e.g. execute `git status` by pressing `<Ctrl-g>` followed by `gs`.
+Similarly, you can pre-populate `git commit -m ""` by pressing `<Ctrl-g>` followed by `gc`.
+Notice how your cursor is placed in between the double quotes? Neat, right?
+But that's not all!
+`<Ctrl-g>s` will prepend `sudo` to your currently typed command, `<Ctrl-g>c` will append a pipe to the system clipboard.
+
+To list your currently configured shortcuts, run:
+```bash
+leadr --list
+```
+
+Consult the [Configuration](#-configuration) section to learn how to make `leadr` your own.
+
 ## ⚡️ Requirements
 
 - bash or zsh
@@ -63,23 +88,6 @@ source <(leadr --bash)
 source <(leadr --zsh)
 ```
 
-## 🎮 Usage
-
-After installing `leadr`, you can start using it by pressing the `leadr` keybinding followed by a shortcut.
-
-With the default config, you can e.g. execute `git status` by pressing `<Ctrl-g>` followed by `gs`.
-Similarly, you can pre-populate `git commit -m ""` by pressing `<Ctrl-g>` followed by `gc`.
-Notice how your cursor is placed in between the double quotes? Neat, right?
-But that's not all!
-`<Ctrl-g>s` will prepend `sudo` to your currently typed command, `<Ctrl-g>c` will append a pipe to the system clipboard.
-
-To list your currently configured shortcuts, run:
-```bash
-leadr --list
-```
-
-Consult the [Configuration](#-configuration) section to learn how to make `leadr` your own.
-
 ## 🛠️ Configuration
 
 ### Configuration File
@@ -95,16 +103,21 @@ Define new shortcuts by adding a new entry to the `shortcuts` section of the con
 The key will be the key sequence you want to use, `command` will be the command you want to execute or insert.
 Optionally, add a `description` for the `--list` command to show.
 
-Finally, you can specify a `type` to control how the command is executed or inserted.
-Here's an overview of the shortcut types that can be configured:
+Finally, you can customize the behavior of the shortcut by specifying `insert_type`, `evaluate`, and `execute` options.
+Here's an overview of the available options:
 
-| Type | Description | Cursor Position |
-| ---- | ----------- | ---------------- |
-| `Execute` (Default) | Execute the command right away | N/A |
-| `Insert` | Inserts the command at the current cursor position | At the end of the inserted command |
-| `Replace` | Sets your current prompt to the command | At the end of the command unless `#CURSOR` is specified |
-| `Prepend` | Prepend the command to your current prompt | Where it was before adding the prefix |
-| `Append` | Append the command to your current prompt | At the end of the command |
+| Setting | Options | Description |
+| ------- | ------- | ----------- |
+| `insert_type` | 'Replace' (default) | Clears the current prompt and replaces it with the command. Cursor will be placed at the end of the prompt. |
+|               | 'Insert' | Inserts the command at the current cursor position. Cursor will be placed at the end of the inserted command. |
+|               | 'Prepend' | Prepends the command to the current prompt. Cursor will be placed where it was before adding the prefix. |
+|               | 'Append' | Appends the command to the current prompt. Cursor will be placed at the end of the prompt. |
+| `evaluate` | `true` or `false` (default) | If `true`, the command will be evaluated before being inserted. |
+| `execute` | `true` or `false` (default) | If `true`, the command will be executed immediately. |
+
+The cursor position after inserting or replacing commands can be customized by adding `#CURSOR` to the command.
+For the `git commit -m ""` example, define the command as `git commit -m "#CURSOR"` to place the cursor between the double quotes after inserting the command.
+This works for all insert types but will have no effect if `evaluate` or `execute` is set to `true`.
 
 ### Leadr Keybinding
 

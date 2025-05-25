@@ -6,6 +6,9 @@ pub enum ShortcutType {
     #[default]
     Execute,
 
+    /// A shortcut that is inserted into the command line at the current cursor position.
+    Insert,
+
     /// A shortcut that is inserted into the command line, replacing existing text.
     Replace,
 
@@ -38,6 +41,7 @@ impl Shortcut {
     pub fn format_command(&self, encoding_strings: &EncodingStrings) -> String {
         match self.shortcut_type {
             ShortcutType::Execute => format!("{} {}", encoding_strings.exec_prefix, self.command),
+            ShortcutType::Insert => format!("{} {}", encoding_strings.insert_prefix, self.command),
             ShortcutType::Replace => self.command.to_string(),
             ShortcutType::Prepend => {
                 format!("{} {}", encoding_strings.prepend_prefix, self.command)
@@ -66,6 +70,17 @@ mod tests {
         };
         let encoding_strings = EncodingStrings::default();
         assert_eq!(sc.format_command(&encoding_strings), "#EXEC ls -la");
+    }
+
+    #[test]
+    fn test_format_command_insert() {
+        let sc = Shortcut {
+            command: "echo Hello".into(),
+            description: Some("Print a message".into()),
+            shortcut_type: ShortcutType::Insert,
+        };
+        let encoding_strings = EncodingStrings::default();
+        assert_eq!(sc.format_command(&encoding_strings), "#INSERT echo Hello");
     }
 
     #[test]

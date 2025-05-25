@@ -9,6 +9,7 @@ use crate::types::{Shortcut, ShortcutType};
 pub struct EncodingStrings {
     pub cursor_position: String,
     pub exec_prefix: String,
+    pub insert_prefix: String,
     pub append_prefix: String,
     pub prepend_prefix: String,
 }
@@ -18,6 +19,7 @@ impl Default for EncodingStrings {
         Self {
             cursor_position: "#CURSOR".into(),
             exec_prefix: "#EXEC".into(),
+            insert_prefix: "#INSERT".into(),
             append_prefix: "#APPEND".into(),
             prepend_prefix: "#PREPEND".into(),
         }
@@ -178,8 +180,9 @@ mod tests {
     fn test_config_defaults() {
         let config = Config::default();
         assert_eq!(config.leadr_key, "<C-g>");
-        assert_eq!(config.encoding_strings.exec_prefix, "#EXEC");
         assert_eq!(config.encoding_strings.cursor_position, "#CURSOR");
+        assert_eq!(config.encoding_strings.exec_prefix, "#EXEC");
+        assert_eq!(config.encoding_strings.insert_prefix, "#INSERT");
         assert_eq!(config.encoding_strings.append_prefix, "#APPEND");
         assert_eq!(config.encoding_strings.prepend_prefix, "#PREPEND");
         assert!(!config.print_sequence);

@@ -1,16 +1,11 @@
-use crate::EncodingStrings;
-
 #[derive(Clone, Debug, Default, PartialEq, serde::Serialize, serde::Deserialize)]
-pub enum ShortcutType {
-    /// A shortcut that is executed immediately.
+pub enum InsertType {
+    /// A shortcut that is inserted into the command line, replacing existing text.
     #[default]
-    Execute,
+    Replace,
 
     /// A shortcut that is inserted into the command line at the current cursor position.
     Insert,
-
-    /// A shortcut that is inserted into the command line, replacing existing text.
-    Replace,
 
     /// A shortcut that is prepended to the currently typed command.
     Prepend,
@@ -28,26 +23,40 @@ pub struct Shortcut {
     pub description: Option<String>,
 
     /// Whether this command should be executed automatically or just inserted.
-    #[serde(default, skip_serializing_if = "is_execute")]
-    pub shortcut_type: ShortcutType,
+    #[serde(default, skip_serializing_if = "is_replace")]
+    pub insert_type: InsertType,
+
+    /// Whether this command should be evaluated before being inserted.
+    // default is false, skip serialization if false
+    #[serde(default, skip_serializing_if = "is_false")]
+    pub eval: bool,
+
+    /// Whether this command should be executed immediately after being inserted.
+    #[serde(default, skip_serializing_if = "is_false")]
+    pub execute: bool,
 }
 
-fn is_execute(shortcut_type: &ShortcutType) -> bool {
-    matches!(shortcut_type, ShortcutType::Execute)
+fn is_replace(insert_type: &InsertType) -> bool {
+    matches!(insert_type, InsertType::Replace)
+}
+fn is_false(b: &bool) -> bool {
+    !*b
 }
 
 impl Shortcut {
-    /// Formats the command, by injecting the encoding strings into the command.
-    pub fn format_command(&self, encoding_strings: &EncodingStrings) -> String {
-        match self.shortcut_type {
-            ShortcutType::Execute => format!("{} {}", encoding_strings.exec_prefix, self.command),
-            ShortcutType::Insert => format!("{} {}", encoding_strings.insert_prefix, self.command),
-            ShortcutType::Replace => self.command.to_string(),
-            ShortcutType::Prepend => {
-                format!("{} {}", encoding_strings.prepend_prefix, self.command)
-            }
-            ShortcutType::Append => format!("{} {}", encoding_strings.append_prefix, self.command),
+    fn flags_string(&self) -> String {
+        let mut flags = vec![format!("{:?}", self.insert_type).to_uppercase()];
+        if self.eval {
+            flags.push("EVAL".into());
         }
+        if self.execute {
+            flags.push("EXEC".into());
+        }
+        flags.join("+")
+    }
+
+    pub fn format_command(&self) -> String {
+        format!("{} {}", self.flags_string(), self.command)
     }
 }
 
@@ -62,57 +71,75 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_format_command_exec() {
+    fn test_format_replace_no_flags() {
         let sc = Shortcut {
-            command: "ls -la".into(),
+            command: "dummy command".into(),
             description: None,
-            shortcut_type: ShortcutType::Execute,
+            insert_type: InsertType::Replace,
+            eval: false,
+            execute: false,
         };
-        let encoding_strings = EncodingStrings::default();
-        assert_eq!(sc.format_command(&encoding_strings), "#EXEC ls -la");
+        assert_eq!(sc.format_command(), "REPLACE dummy command");
     }
 
     #[test]
-    fn test_format_command_insert() {
+    fn test_format_insert_eval_exec() {
         let sc = Shortcut {
-            command: "echo Hello".into(),
-            description: Some("Print a message".into()),
-            shortcut_type: ShortcutType::Insert,
-        };
-        let encoding_strings = EncodingStrings::default();
-        assert_eq!(sc.format_command(&encoding_strings), "#INSERT echo Hello");
-    }
-
-    #[test]
-    fn test_format_command_replace() {
-        let sc = Shortcut {
-            command: "vim ".into(),
-            description: Some("Edit file".into()),
-            shortcut_type: ShortcutType::Replace,
-        };
-        let encoding_strings = EncodingStrings::default();
-        assert_eq!(sc.format_command(&encoding_strings), "vim ");
-    }
-
-    #[test]
-    fn test_format_command_prepend() {
-        let sc = Shortcut {
-            command: "sudo ".into(),
+            command: "dummy command".into(),
             description: None,
-            shortcut_type: ShortcutType::Prepend,
+            insert_type: InsertType::Insert,
+            eval: true,
+            execute: true,
         };
-        let encoding_strings = EncodingStrings::default();
-        assert_eq!(sc.format_command(&encoding_strings), "#PREPEND sudo ");
+        assert_eq!(sc.format_command(), "INSERT+EVAL+EXEC dummy command");
     }
 
     #[test]
-    fn test_format_command_append() {
+    fn test_format_append_only() {
         let sc = Shortcut {
-            command: "file.txt".into(),
+            command: "dummy command".into(),
             description: None,
-            shortcut_type: ShortcutType::Append,
+            insert_type: InsertType::Append,
+            eval: false,
+            execute: false,
         };
-        let encoding_strings = EncodingStrings::default();
-        assert_eq!(sc.format_command(&encoding_strings), "#APPEND file.txt");
+        assert_eq!(sc.format_command(), "APPEND dummy command");
+    }
+
+    #[test]
+    fn test_format_prepend_eval_only() {
+        let sc = Shortcut {
+            command: "dummy command".into(),
+            description: None,
+            insert_type: InsertType::Prepend,
+            eval: true,
+            execute: false,
+        };
+        assert_eq!(sc.format_command(), "PREPEND+EVAL dummy command");
+    }
+
+    #[test]
+    fn test_format_replace_exec_only() {
+        let sc = Shortcut {
+            command: "dummy command".into(),
+            description: None,
+            insert_type: InsertType::Replace,
+            eval: false,
+            execute: true,
+        };
+        assert_eq!(sc.format_command(), "REPLACE+EXEC dummy command");
+    }
+
+    #[test]
+    fn test_format_insert_only() {
+        let sc = Shortcut {
+            command: "dummy command".into(),
+            description: None,
+            insert_type: InsertType::Insert,
+            eval: false,
+            execute: false,
+        };
+        assert_eq!(sc.format_command(), "INSERT dummy command");
     }
 }
+

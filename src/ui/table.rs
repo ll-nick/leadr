@@ -45,15 +45,23 @@ pub fn render_separator(layout: &ColumnLayout) -> String {
     )
 }
 
+fn truncate_string(cmd: &str, max_len: usize) -> String {
+    if cmd.chars().count() > max_len {
+        cmd.chars().take(max_len.saturating_sub(3)).collect::<String>() + "..."
+    } else {
+        cmd.to_string()
+    }
+}
+
 pub fn render_row(layout: &ColumnLayout, sequence: &str, shortcut: &Shortcut) -> String {
     format!(
         "{:<seq$} {:<cmd$} {:<typ$} {:<eval$} {:<exec$} {:<desc$}\n",
         sequence,
-        shortcut.command,
+        truncate_string(&shortcut.command, layout.command),
         format!("{:?}", shortcut.insert_type),
         if shortcut.evaluate { "Yes" } else { "No" },
         if shortcut.execute { "Yes" } else { "No" },
-        shortcut.description.clone().unwrap_or_default(),
+        truncate_string(&shortcut.description.clone().unwrap_or_default(), layout.description),
         seq = layout.sequence,
         cmd = layout.command,
         typ = layout.insert_type,

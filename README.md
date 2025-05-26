@@ -19,13 +19,18 @@ After installing `leadr`, you can start using it by pressing the `leadr` keybind
 With the default config, you can e.g. execute `git status` by pressing `<Ctrl-g>` followed by `gs`.
 Similarly, you can pre-populate `git commit -m ""` by pressing `<Ctrl-g>` followed by `gc`.
 Notice how your cursor is placed in between the double quotes? Neat, right?
-But that's not all!
-`<Ctrl-g>s` will prepend `sudo` to your currently typed command, `<Ctrl-g>c` will append a pipe to the system clipboard.
 
-To list your currently configured shortcuts, run:
+But that's not all!
+`<Ctrl-g>ps` will prepend `sudo` to your currently typed command, `<Ctrl-g>y` will append a pipe to the system clipboard.
+
+Want me to continue?
+Alright: `<Ctrl-g>id` will insert the current date wherever your cursor is, `<Ctrl-g>sq` will surround your current command quotes.
+
+You can get the tl;dr of all this by running
 ```bash
 leadr --list
 ```
+which will show you a list of all available shortcuts and their descriptions.
 
 Consult the [Configuration](#-configuration) section to learn how to make `leadr` your own.
 

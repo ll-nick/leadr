@@ -64,7 +64,7 @@ impl Default for Config {
                 evaluate: true,
                 execute: false,
             },
-        );  
+        );
         shortcuts.insert(
             // Prepend Sudo
             "ps".into(),
@@ -147,7 +147,9 @@ impl Config {
 
         // Make sure that "Surround" type shortcuts contain "#COMMAND" in their command
         for shortcut in self.shortcuts.values() {
-            if shortcut.insert_type == InsertType::Surround && !shortcut.command.contains("#COMMAND") {
+            if shortcut.insert_type == InsertType::Surround
+                && !shortcut.command.contains("#COMMAND")
+            {
                 return Err(LeadrError::InvalidSurroundCommand(format!(
                     "Shortcut '{}' must contain '#COMMAND' in its command",
                     shortcut.command

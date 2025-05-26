@@ -157,4 +157,3 @@ mod tests {
         assert_eq!(sc.format_command(), "SURROUND+EXEC dummy command");
     }
 }
-

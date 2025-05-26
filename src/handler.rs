@@ -3,9 +3,10 @@ use std::collections::HashMap;
 use crossterm::event::{Event, KeyCode, KeyEvent, read};
 
 use crate::{
-    Config, LeadrError, ui::SequencePlotter,
+    Config, LeadrError,
     input::RawModeGuard,
     types::{Shortcut, ShortcutResult},
+    ui::SequencePlotter,
 };
 
 /// Handles keyboard input and matches sequences to configured shortcuts.
@@ -48,9 +49,7 @@ impl ShortcutHandler {
                         self.sequence.push(c);
                         let _ = self.ui.update(&self.sequence);
                         if let Some(shortcut) = self.match_sequence(&self.sequence) {
-                            return Ok(ShortcutResult::Shortcut(
-                                shortcut.format_command(),
-                            ));
+                            return Ok(ShortcutResult::Shortcut(shortcut.format_command()));
                         }
 
                         if !self.has_partial_match(&self.sequence) {

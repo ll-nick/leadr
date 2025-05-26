@@ -55,16 +55,7 @@ impl Default for Config {
             },
         );
         shortcuts.insert(
-            "s".into(),
-            Shortcut {
-                command: "sudo ".into(),
-                description: Some("Prepend sudo".into()),
-                insert_type: InsertType::Prepend,
-                evaluate: false,
-                execute: false,
-            },
-        );
-        shortcuts.insert(
+            // Insert Date
             "id".into(),
             Shortcut {
                 command: "date +%Y%m%d".into(),
@@ -75,6 +66,29 @@ impl Default for Config {
             },
         );  
         shortcuts.insert(
+            // Prepend Sudo
+            "ps".into(),
+            Shortcut {
+                command: "sudo ".into(),
+                description: Some("Prepend sudo".into()),
+                insert_type: InsertType::Prepend,
+                evaluate: false,
+                execute: false,
+            },
+        );
+        shortcuts.insert(
+            // Substitute Command
+            "sq".into(),
+            Shortcut {
+                command: "\"#COMMAND\"".into(),
+                description: Some("Surround with quotes".into()),
+                insert_type: InsertType::Surround,
+                evaluate: false,
+                execute: false,
+            },
+        );
+        shortcuts.insert(
+            // Yank to Clipboard
             "y".into(),
             Shortcut {
                 command: " | xclip -selection clipboard".into(),
@@ -130,6 +144,17 @@ impl Config {
                 }
             }
         }
+
+        // Make sure that "Surround" type shortcuts contain "#COMMAND" in their command
+        for shortcut in self.shortcuts.values() {
+            if shortcut.insert_type == InsertType::Surround && !shortcut.command.contains("#COMMAND") {
+                return Err(LeadrError::InvalidSurroundCommand(format!(
+                    "Shortcut '{}' must contain '#COMMAND' in its command",
+                    shortcut.command
+                )));
+            }
+        }
+
         Ok(())
     }
 }

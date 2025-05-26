@@ -8,6 +8,7 @@ Use memorable key sequences to quickly execute or insert commands in your termin
 - **Customizable Shortcuts**: Define your own key sequences to set your prompt.
 - **Insert or Execute**: Immediately execute `git status` or just insert `git commit -m ""` ready for you to fill in.
 - **Prepend/Append**: Forgot `sudo`? Just prepend it to the your prompt and keep typing.
+- **Surround**: Wrap your current command in quotes or use `$(command substitution)` in the blink of an eye.
 - **Cursor Positioning**: Automatically place your cursor at the right position after inserting or replacing commands.
 - **Evaluate pre-insert**: Need the current date in your file name? Evaluate a command, then insert it.
 
@@ -18,13 +19,18 @@ After installing `leadr`, you can start using it by pressing the `leadr` keybind
 With the default config, you can e.g. execute `git status` by pressing `<Ctrl-g>` followed by `gs`.
 Similarly, you can pre-populate `git commit -m ""` by pressing `<Ctrl-g>` followed by `gc`.
 Notice how your cursor is placed in between the double quotes? Neat, right?
-But that's not all!
-`<Ctrl-g>s` will prepend `sudo` to your currently typed command, `<Ctrl-g>c` will append a pipe to the system clipboard.
 
-To list your currently configured shortcuts, run:
+But that's not all!
+`<Ctrl-g>ps` will prepend `sudo` to your currently typed command, `<Ctrl-g>y` will append a pipe to the system clipboard.
+
+Want me to continue?
+Alright: `<Ctrl-g>id` will insert the current date wherever your cursor is, `<Ctrl-g>sq` will surround your current command quotes.
+
+You can get the tl;dr of all this by running
 ```bash
 leadr --list
 ```
+which will show you a list of all available shortcuts and their descriptions.
 
 Consult the [Configuration](#-configuration) section to learn how to make `leadr` your own.
 
@@ -112,6 +118,7 @@ Here's an overview of the available options:
 |               | 'Insert' | Inserts the command at the current cursor position. Cursor will be placed at the end of the inserted command. |
 |               | 'Prepend' | Prepends the command to the current prompt. Cursor will be placed where it was before adding the prefix. |
 |               | 'Append' | Appends the command to the current prompt. Cursor will be placed at the end of the prompt. |
+|               | 'Surround' | Surrounds the current prompt, i.e. adds a prefix and a suffix. The defined command has to contain `#COMMAND` which will be replaced by the current prompt. The cursor will be placed at the end of the prompt. |
 | `evaluate` | `true` or `false` (default) | If `true`, the command will be evaluated before being inserted. |
 | `execute` | `true` or `false` (default) | If `true`, the command will be executed immediately. |
 

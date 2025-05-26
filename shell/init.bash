@@ -1,19 +1,19 @@
 LEADR_BIND_KEY='{{bind_key}}'
 
 __leadr_invoke__() {
-    # === Config ===
+    LEADR_COMMAND_POSITION_ENCODING="#COMMAND"
     LEADR_CURSOR_POSITION_ENCODING="#CURSOR"
-    LEADR_CMD_COLOR='\e[1;32m'
-    LEADR_RESET_COLOR='\e[0m'
 
     leadr_parse_flags() {
         local flag_str="$1"
-        local insert="" eval="false" exec="false"
+        local insert=""
+        local eval="false"
+        local exec="false"
 
         IFS='+' read -r -a flags_array <<< "$flag_str"
         for flag in "${flags_array[@]}"; do
             case "$flag" in
-                REPLACE | INSERT | PREPEND | APPEND) insert="$flag" ;;
+                REPLACE | INSERT | PREPEND | APPEND | SURROUND) insert="$flag" ;;
                 EVAL) eval="true" ;;
                 EXEC) exec="true" ;;
             esac
@@ -24,19 +24,12 @@ __leadr_invoke__() {
 
     leadr_extract_cursor_pos() {
         local input="$1"
-        local encoding="$2"
-        if [[ "$input" == *"$encoding"* ]]; then
-            local before="${input%%$encoding*}"
+        if [[ "$input" == *"$LEADR_CURSOR_POSITION_ENCODING"* ]]; then
+            local before="${input%%$LEADR_CURSOR_POSITION_ENCODING*}"
             echo "${#before}"
         else
             echo "-1"
         fi
-    }
-
-    leadr_clean_cursor_marker() {
-        local input="$1"
-        local encoding="$2"
-        echo "${input//$encoding/}"
     }
 
     leadr_insert_command() {
@@ -72,6 +65,23 @@ __leadr_invoke__() {
                     READLINE_POINT=${#READLINE_LINE}
                 fi
                 ;;
+            SURROUND)
+                local before_command="${to_insert%%#COMMAND*}"
+                local after_command="${to_insert#*#COMMAND}"
+                READLINE_LINE="${before_command}${original_line}${after_command}"
+
+                if [[ $cursor_pos -ge 0 ]]; then
+                    if [[ $cursor_pos -le ${#before_command} ]]; then
+                        # If the cursor position is before the command, we can use it directly
+                        READLINE_POINT=$cursor_pos
+                    else
+                        # If the cursor position is after the command, we need to account for the command expansion
+                        READLINE_POINT=$((cursor_pos - ${#LEADR_COMMAND_POSITION_ENCODING} + ${#original_line}))
+                    fi
+                else
+                    READLINE_POINT=${#READLINE_LINE}
+                fi
+                ;;
             *)
                 READLINE_LINE="$to_insert"
                 if [[ $cursor_pos -ge 0 ]]; then
@@ -90,7 +100,7 @@ __leadr_invoke__() {
         if [[ -n "$TMUX" ]]; then
             tmux send-keys "$cmd" Enter
         else
-            printf "${LEADR_CMD_COLOR}%s${LEADR_RESET_COLOR}\n" "$cmd"
+            printf "%s\n" "$cmd"
             history -s "$cmd"
             eval "$cmd"
         fi
@@ -104,7 +114,7 @@ __leadr_invoke__() {
         local insert_type eval_flag exec_flag
         IFS='|' read -r insert_type eval_flag exec_flag <<< "$(leadr_parse_flags "$output_flags")"
 
-        local cursor_pos="$(leadr_extract_cursor_pos "$to_insert" "$LEADR_CURSOR_POSITION_ENCODING")"
+        local cursor_pos="$(leadr_extract_cursor_pos "$to_insert")"
         to_insert="${to_insert//$LEADR_CURSOR_POSITION_ENCODING/}"
 
         if [[ "$eval_flag" == "true" ]]; then

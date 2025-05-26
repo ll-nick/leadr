@@ -8,6 +8,7 @@ Use memorable key sequences to quickly execute or insert commands in your termin
 - **Customizable Shortcuts**: Define your own key sequences to set your prompt.
 - **Insert or Execute**: Immediately execute `git status` or just insert `git commit -m ""` ready for you to fill in.
 - **Prepend/Append**: Forgot `sudo`? Just prepend it to the your prompt and keep typing.
+- **Surround**: Wrap your current command in quotes or use `$(command substitution)` in the blink of an eye.
 - **Cursor Positioning**: Automatically place your cursor at the right position after inserting or replacing commands.
 - **Evaluate pre-insert**: Need the current date in your file name? Evaluate a command, then insert it.
 
@@ -112,6 +113,7 @@ Here's an overview of the available options:
 |               | 'Insert' | Inserts the command at the current cursor position. Cursor will be placed at the end of the inserted command. |
 |               | 'Prepend' | Prepends the command to the current prompt. Cursor will be placed where it was before adding the prefix. |
 |               | 'Append' | Appends the command to the current prompt. Cursor will be placed at the end of the prompt. |
+|               | 'Surround' | Surrounds the current prompt, i.e. adds a prefix and a suffix. The defined command has to contain `#COMMAND` which will be replaced by the current prompt. The cursor will be placed at the end of the prompt. |
 | `evaluate` | `true` or `false` (default) | If `true`, the command will be evaluated before being inserted. |
 | `execute` | `true` or `false` (default) | If `true`, the command will be executed immediately. |
 

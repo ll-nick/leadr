@@ -123,8 +123,12 @@ impl Config {
         table.push_str(&table::render_header(&layout));
         table.push_str(&table::render_separator(&layout));
 
-        for (sequence, shortcut) in &self.shortcuts {
-            table.push_str(&table::render_row(&layout, sequence, shortcut));
+        let mut keys: Vec<_> = self.shortcuts.keys().collect();
+        keys.sort(); // Sorts alphabetically (lexicographically)
+
+        for key in keys {
+            let shortcut = &self.shortcuts[key];
+            table.push_str(&table::render_row(&layout, key, shortcut));
         }
 
         table

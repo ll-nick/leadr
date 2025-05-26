@@ -1,15 +1,14 @@
 LEADR_BIND_KEY='{{bind_key}}'
 
 __leadr_invoke__() {
-    # === Config ===
     LEADR_COMMAND_POSITION_ENCODING="#COMMAND"
     LEADR_CURSOR_POSITION_ENCODING="#CURSOR"
-    LEADR_CMD_COLOR='\e[1;32m'
-    LEADR_RESET_COLOR='\e[0m'
 
     leadr_parse_flags() {
         local flag_str="$1"
-        local insert="" eval="false" exec="false"
+        local insert=""
+        local eval="false"
+        local exec="false"
 
         IFS='+' read -r -a flags_array <<< "$flag_str"
         for flag in "${flags_array[@]}"; do
@@ -29,7 +28,7 @@ __leadr_invoke__() {
             local before="${input%%$LEADR_CURSOR_POSITION_ENCODING*}"
             echo "${#before}"
         else
-            echo "-1|"
+            echo "-1"
         fi
     }
 
@@ -101,7 +100,7 @@ __leadr_invoke__() {
         if [[ -n "$TMUX" ]]; then
             tmux send-keys "$cmd" Enter
         else
-            printf "${LEADR_CMD_COLOR}%s${LEADR_RESET_COLOR}\n" "$cmd"
+            printf "%s\n" "$cmd"
             history -s "$cmd"
             eval "$cmd"
         fi

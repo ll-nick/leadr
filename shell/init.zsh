@@ -1,6 +1,7 @@
 LEADR_BIND_KEY='{{bind_key}}'
 
 __leadr_invoke__() {
+    LEADR_COMMAND_POSITION_ENCODING="#COMMAND"
     LEADR_CURSOR_POSITION_ENCODING="#CURSOR"
 
     leadr_parse_flags() {
@@ -14,7 +15,7 @@ __leadr_invoke__() {
         IFS='+' read -A flags_array <<< "$flag_str"
         for flag in "${flags_array[@]}"; do
             case "$flag" in
-                REPLACE|INSERT|PREPEND|APPEND) insert="$flag" ;;
+                REPLACE|INSERT|PREPEND|APPEND|SURROUND) insert="$flag" ;;
                 EVAL) eval="true" ;;
                 EXEC) exec="true" ;;
             esac
@@ -61,6 +62,22 @@ __leadr_invoke__() {
                 BUFFER="${BUFFER}${to_insert}"
                 if [[ $cursor_pos -ge 0 ]]; then
                     CURSOR=$((${#BUFFER} - ${#to_insert} + cursor_pos))
+                else
+                    CURSOR=${#BUFFER}
+                fi
+                ;;
+            SURROUND)
+                local before="${to_insert%%$LEADR_COMMAND_POSITION_ENCODING*}"
+                local after="${to_insert#*$LEADR_COMMAND_POSITION_ENCODING}"
+                local original_buffer="$BUFFER"
+                BUFFER="${before}${BUFFER}${after}"
+
+                if [[ $cursor_pos -ge 0 ]]; then
+                    if [[ $cursor_pos -le ${#before} ]]; then
+                        CURSOR=$cursor_pos
+                    else
+                        CURSOR=$(($cursor_pos - ${#LEADR_COMMAND_POSITION_ENCODING} + ${#original_buffer}))
+                    fi
                 else
                     CURSOR=${#BUFFER}
                 fi

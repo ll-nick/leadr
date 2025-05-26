@@ -64,7 +64,7 @@ impl Default for Config {
                 evaluate: true,
                 execute: false,
             },
-        );  
+        );
         shortcuts.insert(
             // Prepend Sudo
             "ps".into(),
@@ -123,8 +123,12 @@ impl Config {
         table.push_str(&table::render_header(&layout));
         table.push_str(&table::render_separator(&layout));
 
-        for (sequence, shortcut) in &self.shortcuts {
-            table.push_str(&table::render_row(&layout, sequence, shortcut));
+        let mut keys: Vec<_> = self.shortcuts.keys().collect();
+        keys.sort(); // Sorts alphabetically (lexicographically)
+
+        for key in keys {
+            let shortcut = &self.shortcuts[key];
+            table.push_str(&table::render_row(&layout, key, shortcut));
         }
 
         table
@@ -147,7 +151,9 @@ impl Config {
 
         // Make sure that "Surround" type shortcuts contain "#COMMAND" in their command
         for shortcut in self.shortcuts.values() {
-            if shortcut.insert_type == InsertType::Surround && !shortcut.command.contains("#COMMAND") {
+            if shortcut.insert_type == InsertType::Surround
+                && !shortcut.command.contains("#COMMAND")
+            {
                 return Err(LeadrError::InvalidSurroundCommand(format!(
                     "Shortcut '{}' must contain '#COMMAND' in its command",
                     shortcut.command

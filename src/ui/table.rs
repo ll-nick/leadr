@@ -47,7 +47,10 @@ pub fn render_separator(layout: &ColumnLayout) -> String {
 
 fn truncate_string(cmd: &str, max_len: usize) -> String {
     if cmd.chars().count() > max_len {
-        cmd.chars().take(max_len.saturating_sub(3)).collect::<String>() + "..."
+        cmd.chars()
+            .take(max_len.saturating_sub(3))
+            .collect::<String>()
+            + "..."
     } else {
         cmd.to_string()
     }
@@ -61,7 +64,10 @@ pub fn render_row(layout: &ColumnLayout, sequence: &str, shortcut: &Shortcut) ->
         format!("{:?}", shortcut.insert_type),
         if shortcut.evaluate { "Yes" } else { "No" },
         if shortcut.execute { "Yes" } else { "No" },
-        truncate_string(&shortcut.description.clone().unwrap_or_default(), layout.description),
+        truncate_string(
+            &shortcut.description.clone().unwrap_or_default(),
+            layout.description
+        ),
         seq = layout.sequence,
         cmd = layout.command,
         typ = layout.insert_type,
@@ -70,4 +76,3 @@ pub fn render_row(layout: &ColumnLayout, sequence: &str, shortcut: &Shortcut) ->
         desc = layout.description,
     )
 }
-

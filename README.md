@@ -3,6 +3,8 @@
 **Leadr** is a customizable CLI shortcut manager inspired by the leader key concept in (Neo)Vim.
 Use memorable key sequences to quickly execute or insert commands in your terminal.
 
+![Demo](assets/demo.gif)
+
 ## 💪 Features
 
 - **Customizable Shortcuts**: Define your own key sequences to set your prompt.

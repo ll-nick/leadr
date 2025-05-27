@@ -1,7 +1,11 @@
-# Leadr
+# leadr
 
-**Leadr** is a customizable CLI shortcut manager inspired by the leader key concept in (Neo)Vim.
+**leadr** is a customizable CLI shortcut manager inspired by the leader key concept in (Neo)Vim.
 Use memorable key sequences to quickly execute or insert commands in your terminal.
+
+## 🚀 Demo
+
+![Demo](assets/demo.gif)
 
 ## 💪 Features
 
@@ -24,7 +28,7 @@ But that's not all!
 `<Ctrl-g>ps` will prepend `sudo` to your currently typed command, `<Ctrl-g>y` will append a pipe to the system clipboard.
 
 Want me to continue?
-Alright: `<Ctrl-g>id` will insert the current date wherever your cursor is, `<Ctrl-g>sq` will surround your current command quotes.
+Alright: `<Ctrl-g>id` will insert the current date wherever your cursor is, `<Ctrl-g>sq` will surround your current command in quotes.
 
 You can get the tl;dr of all this by running
 ```bash
@@ -39,20 +43,15 @@ Consult the [Configuration](#-configuration) section to learn how to make `leadr
 - bash or zsh
 - [crossterm](https://docs.rs/crossterm/latest/crossterm/index.html) compatible terminal (see [their Readme for a list](https://github.com/crossterm-rs/crossterm?tab=readme-ov-file#tested-terminals))
 
-Note: `leadr` works best inside a `tmux` session since it can utilize `tmux`'s `send-keys` to execute commands.
-Outside of `tmux`, `leadr` will fallback to `eval` and manually appending the command to the shell's history.
-
 ## 📦 Installation
+
+> **Note**: This project is still in early development, expect some breaking changes every now and then.
 
 <details>
 <summary>From pre-built binaries</summary>
 
 You can download pre-built binaries from the [releases page](https://github.com/ll-nick/leadr/releases/latest).
-Just copy the binary to a directory in your `PATH`, e.g. using the following command:
-```bash
-curl -L https://github.com/ll-nick/leadr/releases/latest/download/leadr -o ~/.local/bin/leadr
-chmod +x ~/.local/bin/leadr
-```
+Just copy the binary to a directory in your `PATH` and make it executable.
 
 </details>
 
@@ -126,6 +125,10 @@ The cursor position after inserting or replacing commands can be customized by a
 For the `git commit -m ""` example, define the command as `git commit -m "#CURSOR"` to place the cursor between the double quotes after inserting the command.
 This works for all insert types but will have no effect if `evaluate` or `execute` is set to `true`.
 
+> **Note**: `execute` works best inside a `tmux` session since it can utilize `tmux`'s `send-keys` to execute commands.
+> Outside of `tmux`, `leadr` will fallback to `eval` and manually append the command to the shell's history.
+
+
 ### Leadr Keybinding
 
 For a list of currently supported keybindings, see [src/keymap.rs](src/keymap.rs).
@@ -133,4 +136,4 @@ For a list of currently supported keybindings, see [src/keymap.rs](src/keymap.rs
 ### Visual Feedback
 
 You can print the currently typed key sequence at the bottom right of your terminal by setting `print_sequence = true`.
-Be aware though that this is somewhat experimental and might lead to issues.
+This is somewhat experimental and therefore disabled by default.

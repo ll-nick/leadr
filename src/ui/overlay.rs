@@ -1,4 +1,4 @@
-use crossterm::{cursor, terminal, QueueableCommand};
+use crossterm::{QueueableCommand, cursor, terminal};
 use std::io::Write;
 
 use crate::error::LeadrError;

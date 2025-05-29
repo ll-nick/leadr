@@ -1,13 +1,13 @@
 use std::collections::HashMap;
 use std::time::{Duration, Instant};
 
-use crossterm::event::{poll, read, Event, KeyCode, KeyEvent};
+use crossterm::event::{Event, KeyCode, KeyEvent, poll, read};
 
 use crate::{
+    Config, LeadrError,
     input::RawModeGuard,
     types::{Shortcut, ShortcutResult},
-    ui::{overlay::Overlay, SequencePlotter},
-    Config, LeadrError,
+    ui::{SequencePlotter, overlay::Overlay},
 };
 
 /// Handles keyboard input and matches sequences to configured shortcuts.

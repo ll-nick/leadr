@@ -11,7 +11,7 @@ use crate::{
 
 /// Handles keyboard input and matches sequences to configured shortcuts.
 pub struct ShortcutHandler {
-    shortcuts: Shortcuts,
+    config: Config,
     sequence: String,
 }
 
@@ -21,7 +21,7 @@ impl ShortcutHandler {
     /// `padding` controls how far from the right edge the input sequence is displayed.
     pub fn new(config: Config) -> Self {
         ShortcutHandler {
-            shortcuts: config.shortcuts,
+            config,
             sequence: String::new(),
         }
     }
@@ -33,17 +33,12 @@ impl ShortcutHandler {
         let start_time = Instant::now();
         let mut overlay: Option<Overlay> = None;
 
-        // TODO: Add to config
-        let show_overlay = true;
-        let overlay_timeout = Duration::from_millis(500);
-        let overlay_height = 10;
-
         loop {
-            let timeout_reached = start_time.elapsed() >= overlay_timeout;
-            if show_overlay && overlay.is_none() && timeout_reached {
-                overlay = Overlay::try_new(overlay_height).ok();
+            let timeout_reached = start_time.elapsed() >= self.config.overlay_timeout;
+            if self.config.show_overlay && overlay.is_none() && timeout_reached {
+                overlay = Overlay::try_new(self.config.overlay_style.clone()).ok();
                 if let Some(overlay) = overlay.as_mut() {
-                    let _ = overlay.draw(&self.sequence, &self.shortcuts);
+                    let _ = overlay.draw(&self.sequence, &self.config.shortcuts);
                 }
             }
 
@@ -59,7 +54,7 @@ impl ShortcutHandler {
                         continue;
                     }
                     if let Some(overlay) = overlay.as_mut() {
-                        let _ = overlay.draw(&self.sequence, &self.shortcuts);
+                        let _ = overlay.draw(&self.sequence, &self.config.shortcuts);
                     }
                     match code {
                         KeyCode::Char(c) => {
@@ -87,12 +82,12 @@ impl ShortcutHandler {
 
     /// Returns an exact match for a given sequence, if one exists.
     fn match_sequence(&self, seq: &str) -> Option<&Shortcut> {
-        self.shortcuts.get(seq)
+        self.config.shortcuts.get(seq)
     }
 
     /// Returns true if any shortcut begins with the given sequence.
     fn has_partial_match(&self, seq: &str) -> bool {
-        self.shortcuts.keys().any(|k| k.starts_with(seq))
+        self.config.shortcuts.keys().any(|k| k.starts_with(seq))
     }
 }
 

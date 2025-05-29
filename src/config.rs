@@ -1,8 +1,10 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, time::Duration};
 
-use crate::error::LeadrError;
-use crate::types::{InsertType, Shortcut};
-use crate::ui::table;
+use crate::{
+    types::{InsertType, Shortcut},
+    ui::{overlay::Config as OverlayConfig, table},
+    LeadrError,
+};
 
 #[derive(serde::Serialize, serde::Deserialize)]
 #[serde(default)]
@@ -10,12 +12,15 @@ pub struct Config {
     /// The key binding to activate the shortcut handler.
     pub leadr_key: String,
 
-    /// Whether or not to print the sequence of keys pressed at the bottom of the screen.
-    pub print_sequence: bool,
+    /// Whether or not to print the ui overlay.
+    pub show_overlay: bool,
 
-    /// Padding from the right edge of the screen when rendering sequences.
+    /// The duration until the overlay appears.
+    pub overlay_timeout: Duration,
+
+    /// The overlay styling.
     #[serde(skip_serializing)]
-    pub padding: usize,
+    pub overlay_style: OverlayConfig,
 
     /// The shortcut mappings from key sequences to commands.
     pub shortcuts: HashMap<String, Shortcut>,
@@ -100,8 +105,9 @@ impl Default for Config {
         );
         Self {
             leadr_key: "<C-g>".into(),
-            print_sequence: false,
-            padding: 4,
+            show_overlay: true,
+            overlay_timeout: Duration::from_millis(500),
+            overlay_style: OverlayConfig::default(),
             shortcuts,
         }
     }

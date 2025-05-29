@@ -5,23 +5,69 @@ use crossterm::{
     style::{Color, Stylize},
     terminal, QueueableCommand,
 };
+use serde::{Deserialize, Serialize};
 
 use crate::{error::LeadrError, types::Shortcuts};
 
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+pub struct RgbColor {
+    pub r: u8,
+    pub g: u8,
+    pub b: u8,
+}
+
+impl From<RgbColor> for crossterm::style::Color {
+    fn from(rgb: RgbColor) -> Self {
+        crossterm::style::Color::Rgb {
+            r: rgb.r,
+            g: rgb.g,
+            b: rgb.b,
+        }
+    }
+}
+
+#[derive(Clone, Default, Debug, Serialize, Deserialize)]
+pub enum BorderType {
+    #[default]
+    Rounded,
+    Square,
+    Top,
+    None,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct Config {
+    pub height: u16,
+    pub bg_color: RgbColor,
+    pub frame_color: RgbColor,
+    pub border: BorderType,
+}
+
+impl std::default::Default for Config {
+    fn default() -> Self {
+        Self {
+            height: 10,
+            bg_color: RgbColor { r: 49, g: 50, b: 68 },
+            frame_color: RgbColor { r: 137, g: 180, b: 250 },
+            border: BorderType::Rounded,
+        }
+    }
+}
+
 pub struct Overlay {
-    height: u16,
+    pub config: Config,
     scroll_up: u16,
 }
 
 impl Overlay {
-    pub fn try_new(overlay_height: u16) -> Result<Self, LeadrError> {
+    pub fn try_new(config: Config) -> Result<Self, LeadrError> {
         let mut tty = std::fs::OpenOptions::new().write(true).open("/dev/tty")?;
 
         let (_cols, rows) = terminal::size()?;
         let cursor_line = std::env::var("LEADR_CURSOR_LINE")?.parse::<u16>()?;
 
         let lines_below = rows.saturating_sub(cursor_line);
-        let scroll_up = overlay_height.saturating_sub(lines_below);
+        let scroll_up = config.height.saturating_sub(lines_below);
 
         if scroll_up > 0 {
             tty.queue(terminal::ScrollUp(scroll_up))?
@@ -31,7 +77,7 @@ impl Overlay {
         tty.flush()?;
 
         Ok(Self {
-            height: overlay_height,
+            config,
             scroll_up,
         })
     }
@@ -39,7 +85,7 @@ impl Overlay {
     pub fn clear(&self) -> std::io::Result<()> {
         let mut stdout = std::fs::OpenOptions::new().write(true).open("/dev/tty")?;
         let (_cols, rows) = terminal::size()?;
-        let start_y = rows.saturating_sub(self.height);
+        let start_y = rows.saturating_sub(self.config.height);
 
         stdout
             .queue(cursor::SavePosition)?
@@ -58,7 +104,7 @@ impl Overlay {
     pub fn draw(&self, sequence: &str, shortcuts: &Shortcuts) -> Result<(), LeadrError> {
         let mut tty = std::fs::OpenOptions::new().write(true).open("/dev/tty")?;
         let (cols, rows) = terminal::size()?;
-        let start_y = rows.saturating_sub(self.height);
+        let start_y = rows.saturating_sub(self.config.height);
 
         tty.queue(cursor::SavePosition)?
             .queue(cursor::MoveTo(0, start_y))?;

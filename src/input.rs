@@ -2,7 +2,7 @@ use crossterm::terminal;
 
 use crate::LeadrError;
 
-/// Guard that enables raw mode on creation and disables it on drop while also clearing the bottom line.
+/// Guard that enables raw mode on creation and disables it on drop.
 pub struct RawModeGuard;
 
 impl RawModeGuard {
@@ -10,7 +10,7 @@ impl RawModeGuard {
     ///
     /// Used to capture keystrokes without requiring Enter.
     pub fn new() -> Result<Self, LeadrError> {
-        terminal::enable_raw_mode().map_err(LeadrError::TerminalRawModeError)?;
+        terminal::enable_raw_mode()?;
         Ok(Self)
     }
 }

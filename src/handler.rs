@@ -47,10 +47,10 @@ impl ShortcutHandler {
                 }
             }
 
-            if poll(Duration::from_millis(50)).map_err(LeadrError::InputReadError)? {
+            if poll(Duration::from_millis(50))? {
                 if let Event::Key(KeyEvent {
                     code, modifiers, ..
-                }) = read().map_err(LeadrError::InputReadError)?
+                }) = read()?
                 {
                     if modifiers == crossterm::event::KeyModifiers::CONTROL {
                         if code == KeyCode::Char('c') {

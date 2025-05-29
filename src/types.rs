@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 #[derive(Clone, Debug, Default, PartialEq, serde::Serialize, serde::Deserialize)]
 pub enum InsertType {
     /// A shortcut that is inserted into the command line, replacing existing text.
@@ -38,6 +40,8 @@ pub struct Shortcut {
     #[serde(default, skip_serializing_if = "is_false")]
     pub execute: bool,
 }
+
+pub type Shortcuts = HashMap<String, Shortcut>;
 
 fn is_replace(insert_type: &InsertType) -> bool {
     matches!(insert_type, InsertType::Replace)

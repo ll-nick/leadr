@@ -1,4 +1,3 @@
-use std::collections::HashMap;
 use std::time::{Duration, Instant};
 
 use crossterm::event::{Event, KeyCode, KeyEvent, poll, read};
@@ -6,13 +5,13 @@ use crossterm::event::{Event, KeyCode, KeyEvent, poll, read};
 use crate::{
     Config, LeadrError,
     input::RawModeGuard,
-    types::{Shortcut, ShortcutResult},
+    types::{Shortcut, ShortcutResult, Shortcuts},
     ui::{SequencePlotter, overlay::Overlay},
 };
 
 /// Handles keyboard input and matches sequences to configured shortcuts.
 pub struct ShortcutHandler {
-    shortcuts: HashMap<String, Shortcut>,
+    shortcuts: Shortcuts,
     sequence: String,
     ui: SequencePlotter,
 }
@@ -98,10 +97,10 @@ impl ShortcutHandler {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::types::InsertType;
+    use crate::types::{InsertType, Shortcuts};
 
     fn test_config() -> Config {
-        let mut shortcuts = HashMap::new();
+        let mut shortcuts = Shortcuts::new();
         shortcuts.insert(
             "gs".into(),
             Shortcut {

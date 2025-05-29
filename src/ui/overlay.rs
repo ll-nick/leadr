@@ -1,30 +1,37 @@
 use crossterm::{cursor, terminal, QueueableCommand};
 use std::io::Write;
 
+use crate::error::LeadrError;
+
 pub struct Overlay {
     height: u16,
     scroll_up: u16,
 }
 
 impl Overlay {
-    pub fn new(overlay_height: u16) -> std::io::Result<Self> {
-        let mut stdout = std::fs::OpenOptions::new().write(true).open("/dev/tty")?;
+    pub fn try_new(overlay_height: u16) -> Result<Self, LeadrError> {
+        let mut tty = std::fs::OpenOptions::new()
+            .write(true)
+            .open("/dev/tty")
+            .map_err(LeadrError::TtyError)?;
 
-        let (_cols, rows) = terminal::size()?;
+        let (_cols, rows) = terminal::size().map_err(LeadrError::TtyError)?;
         let cursor_line = std::env::var("LEADR_CURSOR_LINE")
-            .ok()
-            .and_then(|s| s.parse::<u16>().ok())
+            .map_err(LeadrError::EnvVarReadError)?
+            .parse::<u16>()
             .unwrap_or(rows.saturating_sub(1));
 
         let lines_below = rows.saturating_sub(cursor_line + 1);
         let scroll_up = overlay_height.saturating_sub(lines_below);
 
         if scroll_up > 0 {
-            stdout.queue(terminal::ScrollUp(scroll_up))?;
-            stdout.queue(cursor::MoveUp(scroll_up))?;
+            tty.queue(terminal::ScrollUp(scroll_up))
+                .map_err(LeadrError::TtyError)?
+                .queue(cursor::MoveUp(scroll_up))
+                .map_err(LeadrError::TtyError)?;
         }
 
-        stdout.flush()?;
+        tty.flush().map_err(LeadrError::TtyError)?;
         Ok(Self {
             height: overlay_height,
             scroll_up,
@@ -43,8 +50,9 @@ impl Overlay {
             .queue(cursor::RestorePosition)?;
 
         if self.scroll_up > 0 {
-            stdout.queue(terminal::ScrollDown(self.scroll_up))?
-            .queue(cursor::MoveDown(self.scroll_up))?;
+            stdout
+                .queue(terminal::ScrollDown(self.scroll_up))?
+                .queue(cursor::MoveDown(self.scroll_up))?;
         }
         stdout.flush()
     }

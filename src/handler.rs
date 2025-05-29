@@ -32,7 +32,7 @@ impl ShortcutHandler {
     /// cancelled, or an invalid sequence is entered.
     pub fn run(&mut self) -> Result<ShortcutResult, LeadrError> {
         let _guard = RawModeGuard::new()?;
-        let _overlay = Overlay::new(10).map_err(LeadrError::InputReadError)?;
+        let _overlay = Overlay::try_new(10)?;
 
         loop {
             if let Event::Key(KeyEvent {

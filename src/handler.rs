@@ -1,12 +1,13 @@
 use std::collections::HashMap;
+use std::time::{Duration, Instant};
 
-use crossterm::event::{Event, KeyCode, KeyEvent, read};
+use crossterm::event::{poll, read, Event, KeyCode, KeyEvent};
 
 use crate::{
-    Config, LeadrError,
     input::RawModeGuard,
     types::{Shortcut, ShortcutResult},
     ui::{overlay::Overlay, SequencePlotter},
+    Config, LeadrError,
 };
 
 /// Handles keyboard input and matches sequences to configured shortcuts.
@@ -32,39 +33,52 @@ impl ShortcutHandler {
     /// cancelled, or an invalid sequence is entered.
     pub fn run(&mut self) -> Result<ShortcutResult, LeadrError> {
         let _guard = RawModeGuard::new()?;
-        let _overlay = Overlay::try_new(10)?;
+        let start_time = Instant::now();
+        let mut overlay: Option<Overlay> = None;
+
+        // TODO: Add to config
+        let show_overlay = true;
+        let overlay_timeout = Duration::from_millis(500);
+        let overlay_height = 10;
 
         loop {
-            if let Event::Key(KeyEvent {
-                code, modifiers, ..
-            }) = read().map_err(LeadrError::InputReadError)?
-            {
-                if modifiers == crossterm::event::KeyModifiers::CONTROL {
-                    if code == KeyCode::Char('c') {
-                        return Ok(ShortcutResult::Cancelled);
-                    }
-                    continue;
-                }
-                match code {
-                    KeyCode::Char(c) => {
-                        self.sequence.push(c);
-                        let _ = self.ui.update(&self.sequence);
-                        if let Some(shortcut) = self.match_sequence(&self.sequence) {
-                            return Ok(ShortcutResult::Shortcut(shortcut.format_command()));
-                        }
+            let timeout_reached = start_time.elapsed() >= overlay_timeout;
+            if show_overlay && overlay.is_none() && timeout_reached {
+                overlay = Overlay::try_new(overlay_height).ok();
+            }
 
-                        if !self.has_partial_match(&self.sequence) {
-                            return Ok(ShortcutResult::NoMatch);
+            if poll(Duration::from_millis(50)).map_err(LeadrError::InputReadError)? {
+                if let Event::Key(KeyEvent {
+                    code, modifiers, ..
+                }) = read().map_err(LeadrError::InputReadError)?
+                {
+                    if modifiers == crossterm::event::KeyModifiers::CONTROL {
+                        if code == KeyCode::Char('c') {
+                            return Ok(ShortcutResult::Cancelled);
                         }
+                        continue;
                     }
-                    KeyCode::Backspace => {
-                        self.sequence.pop();
-                        let _ = self.ui.update(&self.sequence);
+                    match code {
+                        KeyCode::Char(c) => {
+                            self.sequence.push(c);
+                            let _ = self.ui.update(&self.sequence);
+                            if let Some(shortcut) = self.match_sequence(&self.sequence) {
+                                return Ok(ShortcutResult::Shortcut(shortcut.format_command()));
+                            }
+
+                            if !self.has_partial_match(&self.sequence) {
+                                return Ok(ShortcutResult::NoMatch);
+                            }
+                        }
+                        KeyCode::Backspace => {
+                            self.sequence.pop();
+                            let _ = self.ui.update(&self.sequence);
+                        }
+                        KeyCode::Esc => {
+                            return Ok(ShortcutResult::Cancelled);
+                        }
+                        _ => {}
                     }
-                    KeyCode::Esc => {
-                        return Ok(ShortcutResult::Cancelled);
-                    }
-                    _ => {}
                 }
             }
         }

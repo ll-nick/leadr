@@ -1,3 +1,4 @@
+pub mod overlay;
 pub mod sequence_plotter;
 pub mod table;
 

@@ -6,7 +6,7 @@ use crate::{
     Config, LeadrError,
     input::RawModeGuard,
     types::{Shortcut, ShortcutResult},
-    ui::SequencePlotter,
+    ui::{overlay::Overlay, SequencePlotter},
 };
 
 /// Handles keyboard input and matches sequences to configured shortcuts.
@@ -32,6 +32,7 @@ impl ShortcutHandler {
     /// cancelled, or an invalid sequence is entered.
     pub fn run(&mut self) -> Result<ShortcutResult, LeadrError> {
         let _guard = RawModeGuard::new()?;
+        let _overlay = Overlay::new(10).map_err(LeadrError::InputReadError)?;
 
         loop {
             if let Event::Key(KeyEvent {

@@ -41,6 +41,9 @@ pub enum LeadrError {
     #[error("Invalid surround command: {0}")]
     InvalidSurroundCommand(String),
 
+    #[error("Failed parsing: {0}")]
+    ParseIntError(#[from] std::num::ParseIntError),
+
     #[error("Failed to enable terminal raw mode: {0}")]
     TerminalRawModeError(#[source] std::io::Error),
 

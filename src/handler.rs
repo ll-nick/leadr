@@ -1,19 +1,18 @@
 use std::time::{Duration, Instant};
 
-use crossterm::event::{Event, KeyCode, KeyEvent, poll, read};
+use crossterm::event::{poll, read, Event, KeyCode, KeyEvent};
 
 use crate::{
-    Config, LeadrError,
     input::RawModeGuard,
     types::{Shortcut, ShortcutResult, Shortcuts},
-    ui::{SequencePlotter, overlay::Overlay},
+    ui::overlay::Overlay,
+    Config, LeadrError,
 };
 
 /// Handles keyboard input and matches sequences to configured shortcuts.
 pub struct ShortcutHandler {
     shortcuts: Shortcuts,
     sequence: String,
-    ui: SequencePlotter,
 }
 
 impl ShortcutHandler {
@@ -24,7 +23,6 @@ impl ShortcutHandler {
         ShortcutHandler {
             shortcuts: config.shortcuts,
             sequence: String::new(),
-            ui: SequencePlotter::new(config.print_sequence, config.padding),
         }
     }
 
@@ -44,6 +42,9 @@ impl ShortcutHandler {
             let timeout_reached = start_time.elapsed() >= overlay_timeout;
             if show_overlay && overlay.is_none() && timeout_reached {
                 overlay = Overlay::try_new(overlay_height).ok();
+                if let Some(overlay) = overlay.as_mut() {
+                    let _ = overlay.draw(&self.sequence, &self.shortcuts);
+                }
             }
 
             if poll(Duration::from_millis(50)).map_err(LeadrError::InputReadError)? {
@@ -57,10 +58,12 @@ impl ShortcutHandler {
                         }
                         continue;
                     }
+                    if let Some(overlay) = overlay.as_mut() {
+                        let _ = overlay.draw(&self.sequence, &self.shortcuts);
+                    }
                     match code {
                         KeyCode::Char(c) => {
                             self.sequence.push(c);
-                            let _ = self.ui.update(&self.sequence);
                             if let Some(shortcut) = self.match_sequence(&self.sequence) {
                                 return Ok(ShortcutResult::Shortcut(shortcut.format_command()));
                             }
@@ -71,7 +74,6 @@ impl ShortcutHandler {
                         }
                         KeyCode::Backspace => {
                             self.sequence.pop();
-                            let _ = self.ui.update(&self.sequence);
                         }
                         KeyCode::Esc => {
                             return Ok(ShortcutResult::Cancelled);

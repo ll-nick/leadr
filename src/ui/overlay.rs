@@ -1,5 +1,10 @@
-use crossterm::{cursor, terminal, QueueableCommand};
 use std::io::Write;
+
+use crossterm::{
+    cursor,
+    style::{Color, Stylize},
+    terminal, QueueableCommand,
+};
 
 use crate::{error::LeadrError, types::Shortcuts};
 
@@ -58,22 +63,34 @@ impl Overlay {
         tty.queue(cursor::SavePosition)?
             .queue(cursor::MoveTo(0, start_y))?;
 
-        write!(
-            tty,
-            "╭{:─<col$}╮",
-            "",
-            col = cols.saturating_sub(2) as usize
-        )?;
+        let top = format!("╭{:─<col$}╮", "", col = cols.saturating_sub(2) as usize)
+            .with(Color::Rgb {
+                r: 0,
+                g: 128,
+                b: 255,
+            })
+            .on(Color::Rgb {
+                r: 10,
+                g: 10,
+                b: 50,
+            });
+        write!(tty, "{}", top)?;
 
         tty.queue(cursor::SavePosition)?
             .queue(cursor::MoveTo(0, rows.saturating_sub(1)))?;
 
-        write!(
-            tty,
-            "╰{:─<col$}╯",
-            "",
-            col = cols.saturating_sub(2) as usize
-        )?;
+        let bottom = format!("╰{:─<col$}╯", "", col = cols.saturating_sub(2) as usize)
+            .with(Color::Rgb {
+                r: 0,
+                g: 128,
+                b: 255,
+            })
+            .on(Color::Rgb {
+                r: 10,
+                g: 10,
+                b: 50,
+            });
+        write!(tty, "{}", bottom)?;
 
         tty.queue(cursor::RestorePosition)?;
 

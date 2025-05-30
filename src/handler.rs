@@ -4,7 +4,7 @@ use crossterm::event::{poll, read, Event, KeyCode, KeyEvent};
 
 use crate::{
     input::RawModeGuard,
-    types::{Shortcut, ShortcutResult, Shortcuts},
+    types::{Shortcut, ShortcutResult},
     ui::overlay::Overlay,
     Config, LeadrError,
 };
@@ -53,9 +53,6 @@ impl ShortcutHandler {
                         }
                         continue;
                     }
-                    if let Some(overlay) = overlay.as_mut() {
-                        let _ = overlay.draw(&self.sequence, &self.config.shortcuts);
-                    }
                     match code {
                         KeyCode::Char(c) => {
                             self.sequence.push(c);
@@ -74,6 +71,9 @@ impl ShortcutHandler {
                             return Ok(ShortcutResult::Cancelled);
                         }
                         _ => {}
+                    }
+                    if let Some(overlay) = overlay.as_mut() {
+                        let _ = overlay.draw(&self.sequence, &self.config.shortcuts);
                     }
                 }
             }

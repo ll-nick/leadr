@@ -1,13 +1,9 @@
-use std::io::Write;
+use std::{collections::HashMap, io::Write};
 
-use crossterm::{
-    cursor,
-    style::{Color, Stylize},
-    terminal, QueueableCommand,
-};
+use crossterm::{cursor, style::Stylize, terminal, QueueableCommand};
 use serde::{Deserialize, Serialize};
 
-use crate::{error::LeadrError, types::Shortcuts};
+use crate::{error::LeadrError, Shortcut, Shortcuts};
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct RgbColor {
@@ -63,6 +59,13 @@ impl std::default::Default for Config {
     }
 }
 
+pub struct Area {
+    pub x: u16,
+    pub y: u16,
+    pub width: u16,
+    pub height: u16,
+}
+
 pub struct Overlay {
     pub config: Config,
     scroll_up: u16,
@@ -113,6 +116,17 @@ impl Overlay {
         let start_y = rows.saturating_sub(self.config.height);
 
         self.draw_border(&mut tty, cols, start_y)?;
+
+        let next_options = group_next_options(sequence, shortcuts);
+        let inner_area = Area {
+            x: self.config.padding + 2,
+            y: start_y + 1,
+            width: cols.saturating_sub(2 * self.config.padding + 4),
+            height: self.config.height.saturating_sub(2),
+        };
+
+        self.draw_entries(&mut tty, inner_area, &next_options)?;
+
 
         Ok(())
     }
@@ -180,10 +194,80 @@ impl Overlay {
 
         Ok(())
     }
+
+    pub fn draw_entries(
+        &self,
+        tty: &mut std::fs::File,
+        area: Area,
+        next_options_map: &HashMap<String, Vec<&Shortcut>>,
+    ) -> std::io::Result<()> {
+        let mut line = area.y + 1; // start below border top
+
+        let mut keys: Vec<_> = next_options_map.keys().collect();
+        keys.sort();
+
+        for key in keys {
+            if line >= area.y + area.height {
+                break; // stop if no more vertical space
+            }
+
+            let shortcuts = &next_options_map[key];
+            let shortcut = shortcuts.first().unwrap();
+
+            if shortcuts.len() > 1 {
+                // If there are multiple shortcuts, we display the first one
+                // and indicate that there are more options.
+            }
+            let label = if shortcuts.len() > 1 {
+                format!(" ({} options)", shortcuts.len())
+            } else {
+                shortcut
+                    .description
+                    .as_deref()
+                    .unwrap_or(&shortcut.command)
+                    .to_string()
+            };
+
+            let text = format!("[{}] -> {}", key, label);
+
+            // TODO: Truncate text if it exceeds the available width
+
+            tty.queue(cursor::MoveTo(area.x, line))?;
+            write!(
+                tty,
+                "{}",
+                text.with(self.config.border_color.into())
+                    .on(self.config.bg_color.into())
+            )?;
+
+            line += 1;
+        }
+
+        Ok(())
+    }
 }
 
 impl Drop for Overlay {
     fn drop(&mut self) {
         let _ = self.clear();
     }
+}
+
+pub fn group_next_options<'a>(
+    sequence: &str,
+    shortcuts: &'a Shortcuts,
+) -> HashMap<String, Vec<&'a Shortcut>> {
+    let mut map: HashMap<String, Vec<&Shortcut>> = HashMap::new();
+
+    for (key, shortcut) in shortcuts.iter() {
+        if key.starts_with(&sequence) {
+            if let Some((_, char)) = key[sequence.len()..].char_indices().next() {
+                // next_key is this character (handle utf-8)
+                let next_key = char.to_string();
+                map.entry(next_key).or_default().push(shortcut);
+            }
+        }
+    }
+
+    map
 }

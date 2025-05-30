@@ -1,7 +1,7 @@
 use std::{collections::HashMap, time::Duration};
 
 use crate::{
-    types::{InsertType, Shortcut},
+    types::{InsertType, Shortcut, Shortcuts},
     ui::{overlay::Config as OverlayConfig, table},
     LeadrError,
 };
@@ -23,7 +23,7 @@ pub struct Config {
     pub overlay_style: OverlayConfig,
 
     /// The shortcut mappings from key sequences to commands.
-    pub shortcuts: HashMap<String, Shortcut>,
+    pub shortcuts: Shortcuts,
 }
 
 impl Default for Config {

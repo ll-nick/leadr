@@ -26,7 +26,7 @@ impl std::default::Default for ColumnLayout {
 }
 
 impl Area {
-    pub fn split_horizontally(&self, column_layout: &ColumnLayout) -> Vec<Area> {
+    pub fn split_horizontally(&self, column_layout: &ColumnLayout, max_num_columns: &u16) -> Vec<Area> {
         let mut areas = Vec::new();
 
         if column_layout.width == 0 {
@@ -34,7 +34,7 @@ impl Area {
         }
 
         let total_column_space = column_layout.width + column_layout.spacing;
-        let num_columns = (self.width + column_layout.spacing) / total_column_space;
+        let num_columns = ((self.width + column_layout.spacing) / total_column_space).min(*max_num_columns);
 
         if num_columns == 0 {
             return areas;
@@ -78,7 +78,7 @@ mod tests {
             spacing: 2,
             centred: false,
         };
-        let result = area.split_horizontally(&layout);
+        let result = area.split_horizontally(&layout, &10);
         assert_eq!(result.len(), 4);
         assert_eq!(result[0].x, 0);
         assert_eq!(result[1].x, 12);
@@ -99,7 +99,7 @@ mod tests {
             spacing: 2,
             centred: true,
         };
-        let result = area.split_horizontally(&layout);
+        let result = area.split_horizontally(&layout, &10);
         assert_eq!(result.len(), 4);
         // The total width of all columns including spacing is 46 (4 * 10 + 3 * 2)
         // The area is 52, so the padding on each side is (52 - 46) / 2 = 3
@@ -119,7 +119,7 @@ mod tests {
             spacing: 2,
             centred: false,
         };
-        let result = area.split_horizontally(&layout);
+        let result = area.split_horizontally(&layout, &10);
         assert!(result.is_empty());
     }
 
@@ -136,7 +136,47 @@ mod tests {
             spacing: 2,
             centred: false,
         };
-        let result = area.split_horizontally(&layout);
+        let result = area.split_horizontally(&layout, &10);
         assert!(result.is_empty());
+    }
+
+    #[test]
+    fn test_max_columns() {
+        let area = Area {
+            x: 0,
+            y: 0,
+            width: 100,
+            height: 10,
+        };
+        let layout = ColumnLayout {
+            width: 20,
+            spacing: 5,
+            centred: false,
+        };
+        let result = area.split_horizontally(&layout, &3);
+        assert_eq!(result.len(), 3);
+        assert_eq!(result[0].x, 0);
+        assert_eq!(result[1].x, 25);
+        assert_eq!(result[2].x, 50);
+    }
+
+    #[test]
+    fn test_max_columns_centred() {
+        let area = Area {
+            x: 0,
+            y: 0,
+            width: 100,
+            height: 10,
+        };
+        let layout = ColumnLayout {
+            width: 20,
+            spacing: 5,
+            centred: true,
+        };
+        let result = area.split_horizontally(&layout, &3);
+        assert_eq!(result.len(), 3);
+        // The total width of all columns including spacing is 70 (3 * 20 + 2 * 5)
+        // The area is 100, so the padding on each side is (100 - 70) / 2 = 15
+        assert_eq!(result[0].x, 15);
     }
 }

@@ -161,7 +161,8 @@ impl Overlay {
             height: outer_area.height.saturating_sub(2),
         };
 
-        let columns = split_horizontally(&inner_area, &self.config.column_layout);
+        let required_num_columns = (keys.len() as f64 / inner_area.height as f64).ceil() as u16;
+        let columns = inner_area.split_horizontally(&self.config.column_layout, &required_num_columns);
         for (i, column) in columns.iter().enumerate() {
             let column_keys = keys
                 .iter()
@@ -357,29 +358,4 @@ pub fn group_next_options<'a>(
     }
 
     map
-}
-
-fn split_horizontally(area: &Area, column_layout: &ColumnLayout) -> Vec<Area> {
-    let mut areas = Vec::new();
-    let num_columns =
-        (area.width + column_layout.spacing) / (column_layout.width + column_layout.spacing);
-
-    let mut x = area.x;
-    if column_layout.centred {
-        x += (area.width
-            - num_columns * column_layout.width
-            - (num_columns - 1) * column_layout.spacing)
-            / 2;
-    }
-
-    for _ in 0..num_columns {
-        areas.push(Area {
-            x,
-            y: area.y,
-            width: column_layout.width,
-            height: area.height,
-        });
-        x += column_layout.width + column_layout.spacing;
-    }
-    areas
 }

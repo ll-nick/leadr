@@ -18,8 +18,8 @@ pub struct ColumnLayout {
 impl std::default::Default for ColumnLayout {
     fn default() -> Self {
         Self {
-            width: 20,
-            spacing: 3,
+            width: 40,
+            spacing: 5,
             centred: true,
         }
     }

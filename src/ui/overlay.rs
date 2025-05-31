@@ -121,7 +121,14 @@ impl Overlay {
         let (cols, rows) = terminal::size()?;
         let start_y = rows.saturating_sub(self.config.height);
 
-        self.draw_border(&mut tty, cols, start_y)?;
+        let outer_area = Area {
+            x: self.config.padding,
+            y: rows.saturating_sub(self.config.height),
+            width: cols.saturating_sub(2 * self.config.padding),
+            height: self.config.height,
+        };
+
+        self.draw_border(&mut tty, &outer_area)?;
 
         let next_options = group_next_options(sequence, shortcuts);
         let inner_area = Area {
@@ -133,11 +140,10 @@ impl Overlay {
 
         self.draw_entries(&mut tty, inner_area, &next_options)?;
 
-
         Ok(())
     }
 
-    fn draw_border(&self, tty: &mut std::fs::File, cols: u16, start_y: u16) -> std::io::Result<()> {
+    fn draw_border(&self, tty: &mut std::fs::File, area: &Area) -> std::io::Result<()> {
         let (top_left, top_right, bottom_left, bottom_right, horizontal, vertical) =
             match self.config.border {
                 BorderType::Rounded => ('╭', '╮', '╰', '╯', '─', '│'),
@@ -146,13 +152,11 @@ impl Overlay {
                 BorderType::None => (' ', ' ', ' ', ' ', ' ', ' '),
             };
 
-        let padding = self.config.padding as usize;
-        let total_width = cols.saturating_sub(2) as usize;
-        let content_width = total_width.saturating_sub(padding * 2);
-        let horizontal_line = horizontal.to_string().repeat(content_width);
+        let inner_width = area.width.saturating_sub(2);
+        let horizontal_line = horizontal.to_string().repeat(inner_width.into());
 
         tty.queue(cursor::SavePosition)?
-            .queue(cursor::MoveTo(padding as u16, start_y))?;
+            .queue(cursor::MoveTo(area.x, area.y))?;
 
         // Top border
         if !matches!(self.config.border, BorderType::None) {
@@ -169,10 +173,10 @@ impl Overlay {
 
         // Vertical sides
         for i in 1..self.config.height {
-            tty.queue(cursor::MoveTo(padding as u16, start_y + i))?;
+            tty.queue(cursor::MoveTo(area.x, area.y + i))?;
             let line = format!(
                 "{vl}{space}{vr}",
-                space = " ".repeat(content_width),
+                space = " ".repeat(inner_width.into()),
                 vl = vertical,
                 vr = vertical
             )
@@ -183,7 +187,7 @@ impl Overlay {
 
         // Bottom border
         if matches!(self.config.border, BorderType::Rounded | BorderType::Square) {
-            tty.queue(cursor::MoveTo(padding as u16, start_y + self.config.height))?;
+            tty.queue(cursor::MoveTo(area.x, area.y + area.height))?;
             let bottom = format!(
                 "{bl}{line}{br}",
                 line = horizontal_line,

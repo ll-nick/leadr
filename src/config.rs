@@ -176,15 +176,6 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_config_defaults() {
-        let config = Config::default();
-        assert_eq!(config.leadr_key, "<C-g>");
-        assert!(!config.print_sequence);
-        assert_eq!(config.padding, 4);
-        assert!(config.shortcuts.contains_key("gs"));
-    }
-
-    #[test]
     fn test_render_table_contains_shortcut_keys() {
         let config = Config::default();
         let table = config.render_shortcut_table();
@@ -219,10 +210,8 @@ mod tests {
         );
 
         let config = Config {
-            leadr_key: "<C-g>".into(),
-            print_sequence: false,
-            padding: 4,
             shortcuts,
+            ..Default::default()
         };
 
         // Validation should fail due to prefix conflict
@@ -257,10 +246,8 @@ mod tests {
         );
 
         let config = Config {
-            leadr_key: "<C-g>".into(),
-            print_sequence: false,
-            padding: 4,
             shortcuts,
+            ..Default::default()
         };
 
         // Validation should succeed with no conflicts

@@ -265,13 +265,16 @@ impl Overlay {
             };
 
             let flags = self.format_flags(shortcut);
-            let lhs = format!("[{}] → ", key);
+            let lhs = format!("{} → ", key);
 
             let entry_width = lhs.chars().count() + label.chars().count() + flags.chars().count();
             let label = if entry_width > area.width.into() {
+                let max_label_length = area
+                    .width
+                    .saturating_sub(lhs.chars().count() as u16 + flags.chars().count() as u16 + 1);
                 label
                     .chars()
-                    .take(area.width.saturating_sub(1) as usize)
+                    .take(max_label_length as usize)
                     .collect::<String>()
                     + "…"
             } else {

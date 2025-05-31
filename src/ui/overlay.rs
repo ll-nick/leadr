@@ -3,7 +3,12 @@ use std::{collections::HashMap, io::Write};
 use crossterm::{cursor, style::Stylize, terminal, QueueableCommand};
 use serde::{Deserialize, Serialize};
 
-use crate::{error::LeadrError, types::InsertType, Shortcut, Shortcuts};
+use crate::{
+    error::LeadrError,
+    types::InsertType,
+    ui::area::{Area, ColumnLayout},
+    Shortcut, Shortcuts,
+};
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct RgbColor {
@@ -18,23 +23,6 @@ impl From<RgbColor> for crossterm::style::Color {
             r: rgb.r,
             g: rgb.g,
             b: rgb.b,
-        }
-    }
-}
-
-#[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct ColumnLayout {
-    pub width: u16,
-    pub spacing: u16,
-    pub centred: bool,
-}
-
-impl std::default::Default for ColumnLayout {
-    fn default() -> Self {
-        Self {
-            width: 20,
-            spacing: 3,
-            centred: true,
         }
     }
 }
@@ -103,13 +91,6 @@ impl std::default::Default for Config {
             flag_symbols: FlagSymbols::default(),
         }
     }
-}
-
-pub struct Area {
-    pub x: u16,
-    pub y: u16,
-    pub width: u16,
-    pub height: u16,
 }
 
 pub struct Overlay {

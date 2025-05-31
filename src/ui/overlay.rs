@@ -123,7 +123,7 @@ impl Overlay {
 
         let outer_area = Area {
             x: self.config.padding,
-            y: rows.saturating_sub(self.config.height),
+            y: start_y,
             width: cols.saturating_sub(2 * self.config.padding),
             height: self.config.height,
         };
@@ -132,10 +132,10 @@ impl Overlay {
 
         let next_options = group_next_options(sequence, shortcuts);
         let inner_area = Area {
-            x: self.config.padding + 2,
-            y: start_y + 1,
-            width: cols.saturating_sub(2 * self.config.padding + 4),
-            height: self.config.height.saturating_sub(2),
+            x: outer_area.x + 1,
+            y: outer_area.y + 1,
+            width: outer_area.width.saturating_sub(2),
+            height: outer_area.height.saturating_sub(2),
         };
 
         self.draw_entries(&mut tty, inner_area, &next_options)?;
@@ -211,7 +211,7 @@ impl Overlay {
         area: Area,
         next_options_map: &HashMap<String, Vec<&Shortcut>>,
     ) -> std::io::Result<()> {
-        let mut line = area.y + 1; // start below border top
+        let mut line = area.y; // start below border top
 
         let mut keys: Vec<_> = next_options_map.keys().collect();
         keys.sort();

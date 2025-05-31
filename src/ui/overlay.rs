@@ -37,6 +37,9 @@ pub struct Config {
     pub border_color: RgbColor,
     pub border: BorderType,
     pub padding: u16,
+    pub entry_width: u16,
+    pub entry_spacing: u16,
+    pub entries_centered: bool,
 }
 
 impl std::default::Default for Config {
@@ -55,6 +58,9 @@ impl std::default::Default for Config {
             },
             border: BorderType::Rounded,
             padding: 2,
+            entry_width: 20,
+            entry_spacing: 1,
+            entries_centered: true,
         }
     }
 }
@@ -214,12 +220,8 @@ impl Overlay {
             let shortcuts = &next_options_map[key];
             let shortcut = shortcuts.first().unwrap();
 
-            if shortcuts.len() > 1 {
-                // If there are multiple shortcuts, we display the first one
-                // and indicate that there are more options.
-            }
             let label = if shortcuts.len() > 1 {
-                format!(" ({} options)", shortcuts.len())
+                format!("+{} options", shortcuts.len())
             } else {
                 shortcut
                     .description
@@ -230,7 +232,15 @@ impl Overlay {
 
             let text = format!("[{}] -> {}", key, label);
 
-            // TODO: Truncate text if it exceeds the available width
+            let text_width = text.chars().count() as u16;
+            let text = if text_width > area.width {
+                text.chars()
+                    .take(area.width.saturating_sub(1) as usize)
+                    .collect::<String>()
+                    + "…"
+            } else {
+                text
+            };
 
             tty.queue(cursor::MoveTo(area.x, line))?;
             write!(

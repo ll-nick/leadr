@@ -265,7 +265,12 @@ impl Overlay {
                     .to_string()
             };
 
-            let flags = self.format_flags(shortcut);
+            let flags = if shortcuts.len() > 1 {
+                " ".repeat(5) // make sure to take up space that flags would take
+            } else {
+                self.format_flags(shortcut)
+            };
+            self.format_flags(shortcut);
             let lhs = format!("{} → ", key);
 
             let entry_width = lhs.chars().count() + label.chars().count() + flags.chars().count();

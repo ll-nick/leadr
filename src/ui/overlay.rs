@@ -3,7 +3,7 @@ use std::{collections::HashMap, io::Write};
 use crossterm::{cursor, style::Stylize, terminal, QueueableCommand};
 use serde::{Deserialize, Serialize};
 
-use crate::{error::LeadrError, Shortcut, Shortcuts};
+use crate::{error::LeadrError, types::InsertType, Shortcut, Shortcuts};
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct RgbColor {
@@ -31,6 +31,31 @@ pub enum BorderType {
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct FlagSymbols {
+    pub replace: String,
+    pub insert: String,
+    pub append: String,
+    pub prepend: String,
+    pub surround: String,
+    pub evaluate: String,
+    pub execute: String,
+}
+
+impl std::default::Default for FlagSymbols {
+    fn default() -> Self {
+        Self {
+            replace: " ".into(),
+            insert: "".into(),
+            append: "󰌒".into(),
+            prepend: "󰌥".into(),
+            surround: "󰅪".into(),
+            evaluate: "󰊕".into(),
+            execute: "󰌑".into(),
+        }
+    }
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Config {
     pub height: u16,
     pub bg_color: RgbColor,
@@ -40,6 +65,7 @@ pub struct Config {
     pub entry_width: u16,
     pub entry_spacing: u16,
     pub entries_centered: bool,
+    pub flag_symbols: FlagSymbols,
 }
 
 impl std::default::Default for Config {
@@ -61,6 +87,7 @@ impl std::default::Default for Config {
             entry_width: 20,
             entry_spacing: 1,
             entries_centered: true,
+            flag_symbols: FlagSymbols::default(),
         }
     }
 }
@@ -234,23 +261,35 @@ impl Overlay {
                     .to_string()
             };
 
-            let text = format!("[{}] -> {}", key, label);
+            let flags = self.format_flags(shortcut);
+            let lhs = format!("[{}] → ", key);
 
-            let text_width = text.chars().count() as u16;
-            let text = if text_width > area.width {
-                text.chars()
+            let entry_width = lhs.chars().count() + label.chars().count() + flags.chars().count();
+            let label = if entry_width > area.width.into() {
+                label
+                    .chars()
                     .take(area.width.saturating_sub(1) as usize)
                     .collect::<String>()
                     + "…"
             } else {
-                text
+                label
             };
+            let entry_width = lhs.chars().count() + label.chars().count() + flags.chars().count();
+            let spacing_width = area.width.saturating_sub(entry_width as u16);
+            let spacing = " ".repeat(spacing_width.into());
+            let entry = format!(
+                "{lhs}{label}{spacing}{flags}",
+                lhs = lhs,
+                label = label,
+                spacing = spacing,
+                flags = flags
+            );
 
             tty.queue(cursor::MoveTo(area.x, line))?;
             write!(
                 tty,
                 "{}",
-                text.with(self.config.border_color.into())
+                entry.with(self.config.border_color.into())
                     .on(self.config.bg_color.into())
             )?;
 
@@ -258,6 +297,33 @@ impl Overlay {
         }
 
         Ok(())
+    }
+
+    fn format_flags(&self, shortcut: &Shortcut) -> String {
+        let mut flags: Vec<&str> = vec![];
+
+        flags.push(" ");
+        match shortcut.insert_type {
+            InsertType::Replace => flags.push(&self.config.flag_symbols.replace),
+            InsertType::Insert => flags.push(&self.config.flag_symbols.insert),
+            InsertType::Append => flags.push(&self.config.flag_symbols.append),
+            InsertType::Prepend => flags.push(&self.config.flag_symbols.prepend),
+            InsertType::Surround => flags.push(&self.config.flag_symbols.surround),
+        }
+
+        if shortcut.evaluate {
+            flags.push(&self.config.flag_symbols.evaluate);
+        } else {
+            flags.push(" ");
+        }
+
+        if shortcut.execute {
+            flags.push(&self.config.flag_symbols.execute);
+        } else {
+            flags.push(" ");
+        }
+
+        flags.join(" ")
     }
 }
 

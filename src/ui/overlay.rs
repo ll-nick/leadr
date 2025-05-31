@@ -23,6 +23,23 @@ impl From<RgbColor> for crossterm::style::Color {
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct ColumnLayout {
+    pub width: u16,
+    pub spacing: u16,
+    pub centred: bool,
+}
+
+impl std::default::Default for ColumnLayout {
+    fn default() -> Self {
+        Self {
+            width: 20,
+            spacing: 3,
+            centred: true,
+        }
+    }
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub enum BorderType {
     Rounded,
     Square,
@@ -62,9 +79,7 @@ pub struct Config {
     pub border_color: RgbColor,
     pub border: BorderType,
     pub padding: u16,
-    pub entry_width: u16,
-    pub entry_spacing: u16,
-    pub entries_centered: bool,
+    pub column_layout: ColumnLayout,
     pub flag_symbols: FlagSymbols,
 }
 
@@ -84,9 +99,7 @@ impl std::default::Default for Config {
             },
             border: BorderType::Rounded,
             padding: 2,
-            entry_width: 20,
-            entry_spacing: 1,
-            entries_centered: true,
+            column_layout: ColumnLayout::default(),
             flag_symbols: FlagSymbols::default(),
         }
     }
@@ -158,6 +171,8 @@ impl Overlay {
         self.draw_border(&mut tty, &outer_area)?;
 
         let next_options = group_next_options(sequence, shortcuts);
+        let mut keys: Vec<_> = next_options.keys().collect();
+        keys.sort();
         let inner_area = Area {
             x: outer_area.x + 1,
             y: outer_area.y + 1,
@@ -165,7 +180,16 @@ impl Overlay {
             height: outer_area.height.saturating_sub(2),
         };
 
-        self.draw_entries(&mut tty, inner_area, &next_options)?;
+        let columns = split_horizontally(&inner_area, &self.config.column_layout);
+        for (i, column) in columns.iter().enumerate() {
+            let column_keys = keys
+                .iter()
+                .skip(i * self.config.column_layout.width as usize)
+                .take(self.config.column_layout.width as usize)
+                .cloned()
+                .collect::<Vec<_>>();
+            self.draw_entries(&mut tty, column, &next_options, &column_keys)?;
+        }
 
         Ok(())
     }
@@ -235,20 +259,18 @@ impl Overlay {
     pub fn draw_entries(
         &self,
         tty: &mut std::fs::File,
-        area: Area,
+        area: &Area,
         next_options_map: &HashMap<String, Vec<&Shortcut>>,
+        keys: &Vec<&String>,
     ) -> std::io::Result<()> {
-        let mut line = area.y; // start below border top
-
-        let mut keys: Vec<_> = next_options_map.keys().collect();
-        keys.sort();
+        let mut line = area.y;
 
         for key in keys {
             if line >= area.y + area.height {
                 break; // stop if no more vertical space
             }
 
-            let shortcuts = &next_options_map[key];
+            let shortcuts = &next_options_map[*key];
             let shortcut = shortcuts.first().unwrap();
 
             let label = if shortcuts.len() > 1 {
@@ -289,7 +311,8 @@ impl Overlay {
             write!(
                 tty,
                 "{}",
-                entry.with(self.config.border_color.into())
+                entry
+                    .with(self.config.border_color.into())
                     .on(self.config.bg_color.into())
             )?;
 
@@ -350,4 +373,29 @@ pub fn group_next_options<'a>(
     }
 
     map
+}
+
+fn split_horizontally(area: &Area, column_layout: &ColumnLayout) -> Vec<Area> {
+    let mut areas = Vec::new();
+    let num_columns =
+        (area.width + column_layout.spacing) / (column_layout.width + column_layout.spacing);
+
+    let mut x = area.x;
+    if column_layout.centred {
+        x += (area.width
+            - num_columns * column_layout.width
+            - (num_columns - 1) * column_layout.spacing)
+            / 2;
+    }
+
+    for _ in 0..num_columns {
+        areas.push(Area {
+            x,
+            y: area.y,
+            width: column_layout.width,
+            height: area.height,
+        });
+        x += column_layout.width + column_layout.spacing;
+    }
+    areas
 }

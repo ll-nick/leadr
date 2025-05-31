@@ -165,8 +165,8 @@ impl Overlay {
         for (i, column) in columns.iter().enumerate() {
             let column_keys = keys
                 .iter()
-                .skip(i * self.config.column_layout.width as usize)
-                .take(self.config.column_layout.width as usize)
+                .skip(i * column.height as usize)
+                .take(column.height as usize)
                 .cloned()
                 .collect::<Vec<_>>();
             self.draw_entries(&mut tty, column, &next_options, &column_keys)?;

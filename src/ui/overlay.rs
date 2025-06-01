@@ -1,16 +1,16 @@
 use std::{collections::HashMap, io::Write};
 
-use crossterm::{QueueableCommand, cursor, style::Stylize, terminal};
+use crossterm::{cursor, style::Stylize, terminal, QueueableCommand};
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    Shortcut, Shortcuts,
     error::LeadrError,
     ui::{
         area::{Area, ColumnLayout},
         color::RgbColor,
         entry::{Config as EntryConfig, Entry},
     },
+    Shortcut, Shortcuts,
 };
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -22,34 +22,79 @@ pub enum BorderType {
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct ContainerConfig {
+    pub bg_color: RgbColor,
+    pub border_type: BorderType,
+    pub border_color: RgbColor,
+}
+
+impl std::default::Default for ContainerConfig {
+    fn default() -> Self {
+        Self {
+            bg_color: RgbColor {
+                r: 16,
+                g: 16,
+                b: 26,
+            },
+            border_type: BorderType::Rounded,
+            border_color: RgbColor {
+                r: 137,
+                g: 180,
+                b: 250,
+            },
+        }
+    }
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct FooterConfig {
+    pub arrow_color: RgbColor,
+    pub sequence_color: RgbColor,
+    pub help_text_color: RgbColor,
+}
+
+impl std::default::Default for FooterConfig {
+    fn default() -> Self {
+        Self {
+            arrow_color: RgbColor {
+                r: 108,
+                g: 113,
+                b: 196,
+            },
+            sequence_color: RgbColor {
+                r: 137,
+                g: 180,
+                b: 250,
+            },
+            help_text_color: RgbColor {
+                r: 137,
+                g: 180,
+                b: 250,
+            },
+        }
+    }
+}
+
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Config {
     pub height: u16,
-    pub bg_color: RgbColor,
-    pub border_color: RgbColor,
-    pub border: BorderType,
     pub padding: u16,
+    pub container: ContainerConfig,
     pub column_layout: ColumnLayout,
-    pub entry_config: EntryConfig,
+    pub entry: EntryConfig,
+    pub footer: FooterConfig,
 }
 
 impl std::default::Default for Config {
     fn default() -> Self {
         Self {
             height: 10,
-            bg_color: RgbColor {
-                r: 16,
-                g: 16,
-                b: 26,
-            },
-            border_color: RgbColor {
-                r: 137,
-                g: 180,
-                b: 250,
-            },
-            border: BorderType::Rounded,
             padding: 2,
+            container: ContainerConfig::default(),
             column_layout: ColumnLayout::default(),
-            entry_config: EntryConfig::default(),
+            entry: EntryConfig::default(),
+            footer: FooterConfig::default(),
         }
     }
 }
@@ -121,7 +166,9 @@ impl Overlay {
             x: outer_area.x + 1,
             y: outer_area.y + 1,
             width: outer_area.width.saturating_sub(2 * border_width),
-            height: outer_area.height.saturating_sub(2 * border_width + footer_height),
+            height: outer_area
+                .height
+                .saturating_sub(2 * border_width + footer_height),
         };
 
         let required_num_columns = (keys.len() as f64 / entry_area.height as f64).ceil() as u16;
@@ -137,12 +184,20 @@ impl Overlay {
             self.draw_entries(&mut tty, column, &next_options, &column_keys)?;
         }
 
+        let footer_area = Area {
+            x: outer_area.x + 1,
+            y: outer_area.y + outer_area.height - footer_height,
+            width: outer_area.width.saturating_sub(2 * border_width),
+            height: footer_height,
+        };
+        self.draw_footer(&mut tty, &footer_area, sequence)?;
+
         Ok(())
     }
 
     fn draw_border(&self, tty: &mut std::fs::File, area: &Area) -> std::io::Result<()> {
         let (top_left, top_right, bottom_left, bottom_right, horizontal, vertical) =
-            match self.config.border {
+            match self.config.container.border_type {
                 BorderType::Rounded => ('╭', '╮', '╰', '╯', '─', '│'),
                 BorderType::Square => ('┌', '┐', '└', '┘', '─', '│'),
                 BorderType::Top => ('─', '─', ' ', ' ', '─', ' '),
@@ -156,15 +211,15 @@ impl Overlay {
             .queue(cursor::MoveTo(area.x, area.y))?;
 
         // Top border
-        if !matches!(self.config.border, BorderType::None) {
+        if !matches!(self.config.container.border_type, BorderType::None) {
             let top = format!(
                 "{tl}{line}{tr}",
                 line = horizontal_line,
                 tl = top_left,
                 tr = top_right,
             )
-            .with(self.config.border_color.into())
-            .on(self.config.bg_color.into());
+            .with(self.config.container.border_color.into())
+            .on(self.config.container.bg_color.into());
             write!(tty, "{}", top)?;
         }
 
@@ -177,13 +232,13 @@ impl Overlay {
                 vl = vertical,
                 vr = vertical
             )
-            .with(self.config.border_color.into())
-            .on(self.config.bg_color.into());
+            .with(self.config.container.border_color.into())
+            .on(self.config.container.bg_color.into());
             write!(tty, "{}", line)?;
         }
 
         // Bottom border
-        if matches!(self.config.border, BorderType::Rounded | BorderType::Square) {
+        if matches!(self.config.container.border_type, BorderType::Rounded | BorderType::Square) {
             tty.queue(cursor::MoveTo(area.x, area.y + area.height))?;
             let bottom = format!(
                 "{bl}{line}{br}",
@@ -191,8 +246,8 @@ impl Overlay {
                 bl = bottom_left,
                 br = bottom_right
             )
-            .with(self.config.border_color.into())
-            .on(self.config.bg_color.into());
+            .with(self.config.container.border_color.into())
+            .on(self.config.container.bg_color.into());
             write!(tty, "{}", bottom)?;
         }
 
@@ -218,11 +273,40 @@ impl Overlay {
             tty.queue(cursor::MoveTo(area.x, line))?;
 
             let shortcuts = &next_options_map[*key];
-            let stylized_entry = Entry::new(key, shortcuts, area.width, &self.config.entry_config);
+            let stylized_entry = Entry::new(key, shortcuts, area.width, &self.config.entry);
             stylized_entry.to_tty(tty)?;
 
             line += 1;
         }
+
+        Ok(())
+    }
+
+    pub fn draw_footer(
+        &self,
+        tty: &mut std::fs::File,
+        area: &Area,
+        sequence: &str,
+    ) -> std::io::Result<()> {
+
+        let help_text = "󱊷  close  󰁮  back";
+        let styled_help_text = help_text
+            .with(self.config.footer.help_text_color.into())
+            .on(self.config.container.bg_color.into());
+        let center_x = area.x + (area.width.saturating_sub(help_text.chars().count() as u16)) / 2;
+        tty.queue(cursor::MoveTo(center_x, area.y))?;
+        write!(tty, "{}", styled_help_text)?;
+
+        tty.queue(cursor::MoveTo(area.x, area.y))?;
+        let arrow = ">> "
+            .with(self.config.footer.arrow_color.into())
+            .on(self.config.container.bg_color.into());
+        write!(tty, "{}", arrow)?;
+        let sequence_text = sequence
+            .to_string()
+            .with(self.config.footer.sequence_color.into())
+            .on(self.config.container.bg_color.into());
+        write!(tty, "{}", sequence_text)?;
 
         Ok(())
     }

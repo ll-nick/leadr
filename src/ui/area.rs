@@ -20,7 +20,7 @@ impl std::default::Default for ColumnLayout {
         Self {
             width: 40,
             spacing: 5,
-            centred: true,
+            centred: false,
         }
     }
 }

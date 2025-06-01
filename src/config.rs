@@ -1,9 +1,9 @@
 use std::{collections::HashMap, time::Duration};
 
 use crate::{
+    LeadrError,
     types::{InsertType, Shortcut, Shortcuts},
     ui::{overlay::Config as OverlayConfig, table},
-    LeadrError,
 };
 
 #[derive(serde::Serialize, serde::Deserialize)]

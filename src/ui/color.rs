@@ -16,4 +16,3 @@ impl From<RgbColor> for crossterm::style::Color {
         }
     }
 }
-

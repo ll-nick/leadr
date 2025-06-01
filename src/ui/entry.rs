@@ -150,9 +150,7 @@ impl Entry {
                 .with(config.colors.flags_color.into())
                 .on(config.colors.bg_color.into()),
         ];
-        Self {
-            styled_parts,
-        }
+        Self { styled_parts }
     }
 
     pub fn to_tty(&self, tty: &mut std::fs::File) -> std::io::Result<()> {

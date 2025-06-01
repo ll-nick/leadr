@@ -17,4 +17,4 @@ pub use error::LeadrError;
 pub use handler::ShortcutHandler;
 pub use shell::init_bash;
 pub use shell::init_zsh;
-pub use types::{Shortcut, Shortcuts, ShortcutResult};
+pub use types::{Shortcut, ShortcutResult, Shortcuts};

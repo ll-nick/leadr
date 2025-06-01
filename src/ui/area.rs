@@ -26,7 +26,11 @@ impl std::default::Default for ColumnLayout {
 }
 
 impl Area {
-    pub fn split_horizontally(&self, column_layout: &ColumnLayout, max_num_columns: &u16) -> Vec<Area> {
+    pub fn split_horizontally(
+        &self,
+        column_layout: &ColumnLayout,
+        max_num_columns: &u16,
+    ) -> Vec<Area> {
         let mut areas = Vec::new();
 
         if column_layout.width == 0 {
@@ -34,7 +38,8 @@ impl Area {
         }
 
         let total_column_space = column_layout.width + column_layout.spacing;
-        let num_columns = ((self.width + column_layout.spacing) / total_column_space).min(*max_num_columns);
+        let num_columns =
+            ((self.width + column_layout.spacing) / total_column_space).min(*max_num_columns);
 
         if num_columns == 0 {
             return areas;

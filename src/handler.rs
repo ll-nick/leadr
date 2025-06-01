@@ -1,12 +1,12 @@
 use std::time::{Duration, Instant};
 
-use crossterm::event::{poll, read, Event, KeyCode, KeyEvent};
+use crossterm::event::{Event, KeyCode, KeyEvent, poll, read};
 
 use crate::{
+    Config, LeadrError,
     input::RawModeGuard,
     types::{Shortcut, ShortcutResult},
     ui::overlay::Overlay,
-    Config, LeadrError,
 };
 
 /// Handles keyboard input and matches sequences to configured shortcuts.

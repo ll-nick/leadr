@@ -1,16 +1,16 @@
 use std::{collections::HashMap, io::Write};
 
-use crossterm::{cursor, style::Stylize, terminal, QueueableCommand};
+use crossterm::{QueueableCommand, cursor, style::Stylize, terminal};
 use serde::{Deserialize, Serialize};
 
 use crate::{
+    Shortcut, Shortcuts,
     error::LeadrError,
     ui::{
         area::{Area, ColumnLayout},
         color::RgbColor,
         entry::{Config as EntryConfig, Entry},
     },
-    Shortcut, Shortcuts,
 };
 
 #[derive(Clone, Debug, Serialize, Deserialize)]

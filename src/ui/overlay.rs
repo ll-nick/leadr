@@ -155,6 +155,7 @@ impl Overlay {
             height: self.config.height,
         };
 
+        tty.queue(cursor::SavePosition)?;
         self.draw_border(&mut tty, &outer_area)?;
         let border_width = 1;
         let footer_height = 2;
@@ -191,6 +192,7 @@ impl Overlay {
             height: footer_height,
         };
         self.draw_footer(&mut tty, &footer_area, sequence)?;
+        tty.queue(cursor::RestorePosition)?;
 
         Ok(())
     }
@@ -207,8 +209,7 @@ impl Overlay {
         let inner_width = area.width.saturating_sub(2);
         let horizontal_line = horizontal.to_string().repeat(inner_width.into());
 
-        tty.queue(cursor::SavePosition)?
-            .queue(cursor::MoveTo(area.x, area.y))?;
+            tty.queue(cursor::MoveTo(area.x, area.y))?;
 
         // Top border
         if !matches!(self.config.container.border_type, BorderType::None) {
@@ -251,7 +252,6 @@ impl Overlay {
             write!(tty, "{}", bottom)?;
         }
 
-        tty.queue(cursor::RestorePosition)?;
         tty.flush()?;
 
         Ok(())

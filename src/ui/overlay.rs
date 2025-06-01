@@ -5,8 +5,10 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     error::LeadrError,
-    types::InsertType,
-    ui::area::{Area, ColumnLayout},
+    ui::{
+        area::{Area, ColumnLayout},
+        entry::{Entry, FlagSymbols, Config as EntryConfig},
+    },
     Shortcut, Shortcuts,
 };
 
@@ -33,31 +35,6 @@ pub enum BorderType {
     Square,
     Top,
     None,
-}
-
-#[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct FlagSymbols {
-    pub replace: String,
-    pub insert: String,
-    pub append: String,
-    pub prepend: String,
-    pub surround: String,
-    pub evaluate: String,
-    pub execute: String,
-}
-
-impl std::default::Default for FlagSymbols {
-    fn default() -> Self {
-        Self {
-            replace: " ".into(),
-            insert: "".into(),
-            append: "󰌒".into(),
-            prepend: "󰌥".into(),
-            surround: "󰅪".into(),
-            evaluate: "󰊕".into(),
-            execute: "󰌑".into(),
-        }
-    }
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -162,7 +139,8 @@ impl Overlay {
         };
 
         let required_num_columns = (keys.len() as f64 / inner_area.height as f64).ceil() as u16;
-        let columns = inner_area.split_horizontally(&self.config.column_layout, &required_num_columns);
+        let columns =
+            inner_area.split_horizontally(&self.config.column_layout, &required_num_columns);
         for (i, column) in columns.iter().enumerate() {
             let column_keys = keys
                 .iter()
@@ -247,96 +225,33 @@ impl Overlay {
     ) -> std::io::Result<()> {
         let mut line = area.y;
 
+        let entry_config = EntryConfig {
+            flag_symbols: self.config.flag_symbols.clone(),
+        };
         for key in keys {
             if line >= area.y + area.height {
                 break; // stop if no more vertical space
             }
 
             let shortcuts = &next_options_map[*key];
-            let shortcut = shortcuts.first().unwrap();
 
-            let label = if shortcuts.len() > 1 {
-                format!("+{} options", shortcuts.len())
-            } else {
-                shortcut
-                    .description
-                    .as_deref()
-                    .unwrap_or(&shortcut.command)
-                    .to_string()
-            };
-
-            let flags = if shortcuts.len() > 1 {
-                " ".repeat(5) // make sure to take up space that flags would take
-            } else {
-                self.format_flags(shortcut)
-            };
-            self.format_flags(shortcut);
-            let lhs = format!("{} → ", key);
-
-            let entry_width = lhs.chars().count() + label.chars().count() + flags.chars().count();
-            let label = if entry_width > area.width.into() {
-                let max_label_length = area
-                    .width
-                    .saturating_sub(lhs.chars().count() as u16 + flags.chars().count() as u16 + 1);
-                label
-                    .chars()
-                    .take(max_label_length as usize)
-                    .collect::<String>()
-                    + "…"
-            } else {
-                label
-            };
-            let entry_width = lhs.chars().count() + label.chars().count() + flags.chars().count();
-            let spacing_width = area.width.saturating_sub(entry_width as u16);
-            let spacing = " ".repeat(spacing_width.into());
-            let entry = format!(
-                "{lhs}{label}{spacing}{flags}",
-                lhs = lhs,
-                label = label,
-                spacing = spacing,
-                flags = flags
+            let entry = Entry::new(
+                key,
+                shortcuts,
+                area.width,
+                entry_config.clone(),
             );
-
             tty.queue(cursor::MoveTo(area.x, line))?;
             write!(
                 tty,
                 "{}",
-                entry
-                    .with(self.config.border_color.into())
-                    .on(self.config.bg_color.into())
+                entry,
             )?;
 
             line += 1;
         }
 
         Ok(())
-    }
-
-    fn format_flags(&self, shortcut: &Shortcut) -> String {
-        let mut flags: Vec<&str> = vec![];
-
-        flags.push(" ");
-        match shortcut.insert_type {
-            InsertType::Replace => flags.push(&self.config.flag_symbols.replace),
-            InsertType::Insert => flags.push(&self.config.flag_symbols.insert),
-            InsertType::Append => flags.push(&self.config.flag_symbols.append),
-            InsertType::Prepend => flags.push(&self.config.flag_symbols.prepend),
-            InsertType::Surround => flags.push(&self.config.flag_symbols.surround),
-        }
-
-        if shortcut.evaluate {
-            flags.push(&self.config.flag_symbols.evaluate);
-        } else {
-            flags.push(" ");
-        }
-
-        if shortcut.execute {
-            flags.push(&self.config.flag_symbols.execute);
-        } else {
-            flags.push(" ");
-        }
-
-        flags.join(" ")
     }
 }
 

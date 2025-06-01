@@ -7,27 +7,11 @@ use crate::{
     error::LeadrError,
     ui::{
         area::{Area, ColumnLayout},
-        entry::{Entry, FlagSymbols, Config as EntryConfig},
+        color::RgbColor,
+        entry::{Config as EntryConfig, Entry},
     },
     Shortcut, Shortcuts,
 };
-
-#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
-pub struct RgbColor {
-    pub r: u8,
-    pub g: u8,
-    pub b: u8,
-}
-
-impl From<RgbColor> for crossterm::style::Color {
-    fn from(rgb: RgbColor) -> Self {
-        crossterm::style::Color::Rgb {
-            r: rgb.r,
-            g: rgb.g,
-            b: rgb.b,
-        }
-    }
-}
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub enum BorderType {
@@ -45,7 +29,7 @@ pub struct Config {
     pub border: BorderType,
     pub padding: u16,
     pub column_layout: ColumnLayout,
-    pub flag_symbols: FlagSymbols,
+    pub entry_config: EntryConfig,
 }
 
 impl std::default::Default for Config {
@@ -65,7 +49,7 @@ impl std::default::Default for Config {
             border: BorderType::Rounded,
             padding: 2,
             column_layout: ColumnLayout::default(),
-            flag_symbols: FlagSymbols::default(),
+            entry_config: EntryConfig::default(),
         }
     }
 }
@@ -225,28 +209,15 @@ impl Overlay {
     ) -> std::io::Result<()> {
         let mut line = area.y;
 
-        let entry_config = EntryConfig {
-            flag_symbols: self.config.flag_symbols.clone(),
-        };
         for key in keys {
             if line >= area.y + area.height {
                 break; // stop if no more vertical space
             }
+            tty.queue(cursor::MoveTo(area.x, line))?;
 
             let shortcuts = &next_options_map[*key];
-
-            let entry = Entry::new(
-                key,
-                shortcuts,
-                area.width,
-                entry_config.clone(),
-            );
-            tty.queue(cursor::MoveTo(area.x, line))?;
-            write!(
-                tty,
-                "{}",
-                entry,
-            )?;
+            let stylized_entry = Entry::new(key, shortcuts, area.width, &self.config.entry_config);
+            stylized_entry.to_tty(tty)?;
 
             line += 1;
         }

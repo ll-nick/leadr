@@ -111,20 +111,22 @@ impl Overlay {
         };
 
         self.draw_border(&mut tty, &outer_area)?;
+        let border_width = 1;
+        let footer_height = 2;
 
         let next_options = group_next_options(sequence, shortcuts);
         let mut keys: Vec<_> = next_options.keys().collect();
         keys.sort();
-        let inner_area = Area {
+        let entry_area = Area {
             x: outer_area.x + 1,
             y: outer_area.y + 1,
-            width: outer_area.width.saturating_sub(2),
-            height: outer_area.height.saturating_sub(2),
+            width: outer_area.width.saturating_sub(2 * border_width),
+            height: outer_area.height.saturating_sub(2 * border_width + footer_height),
         };
 
-        let required_num_columns = (keys.len() as f64 / inner_area.height as f64).ceil() as u16;
+        let required_num_columns = (keys.len() as f64 / entry_area.height as f64).ceil() as u16;
         let columns =
-            inner_area.split_horizontally(&self.config.column_layout, &required_num_columns);
+            entry_area.split_horizontally(&self.config.column_layout, &required_num_columns);
         for (i, column) in columns.iter().enumerate() {
             let column_keys = keys
                 .iter()

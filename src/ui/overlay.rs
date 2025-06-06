@@ -1,16 +1,17 @@
 use std::{collections::HashMap, io::Write};
 
-use crossterm::{cursor, style::Stylize, terminal, QueueableCommand};
+use crossterm::{QueueableCommand, cursor, style::Stylize, terminal};
 use serde::{Deserialize, Serialize};
 
 use crate::{
+    Shortcut, Shortcuts,
     error::LeadrError,
     ui::{
         area::{Area, ColumnLayout},
-        color::RgbColor,
-        entry::{Config as EntryConfig, Entry},
+        entry::Entry,
+        symbols::Symbols,
+        theme::Theme,
     },
-    Shortcut, Shortcuts,
 };
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -22,90 +23,34 @@ pub enum BorderType {
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct ContainerConfig {
-    pub bg_color: RgbColor,
-    pub border_type: BorderType,
-    pub border_color: RgbColor,
-}
-
-impl std::default::Default for ContainerConfig {
-    fn default() -> Self {
-        Self {
-            bg_color: RgbColor {
-                r: 16,
-                g: 16,
-                b: 26,
-            },
-            border_type: BorderType::Rounded,
-            border_color: RgbColor {
-                r: 137,
-                g: 180,
-                b: 250,
-            },
-        }
-    }
-}
-
-#[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct FooterConfig {
-    pub arrow_color: RgbColor,
-    pub sequence_color: RgbColor,
-    pub help_text_color: RgbColor,
-}
-
-impl std::default::Default for FooterConfig {
-    fn default() -> Self {
-        Self {
-            arrow_color: RgbColor {
-                r: 108,
-                g: 113,
-                b: 196,
-            },
-            sequence_color: RgbColor {
-                r: 137,
-                g: 180,
-                b: 250,
-            },
-            help_text_color: RgbColor {
-                r: 137,
-                g: 180,
-                b: 250,
-            },
-        }
-    }
-}
-
-
-#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Config {
+    pub border_type: BorderType,
+    pub column_layout: ColumnLayout,
     pub height: u16,
     pub padding: u16,
-    pub container: ContainerConfig,
-    pub column_layout: ColumnLayout,
-    pub entry: EntryConfig,
-    pub footer: FooterConfig,
+    pub symbols: Symbols,
 }
 
 impl std::default::Default for Config {
     fn default() -> Self {
         Self {
+            border_type: BorderType::Rounded,
+            column_layout: ColumnLayout::default(),
             height: 10,
             padding: 2,
-            container: ContainerConfig::default(),
-            column_layout: ColumnLayout::default(),
-            entry: EntryConfig::default(),
-            footer: FooterConfig::default(),
+            symbols: Symbols::default(),
         }
     }
 }
 
 pub struct Overlay {
     pub config: Config,
+    pub theme: Theme,
     scroll_up: u16,
 }
 
 impl Overlay {
-    pub fn try_new(config: Config) -> Result<Self, LeadrError> {
+    pub fn try_new(config: Config, theme: Theme) -> Result<Self, LeadrError> {
         let mut tty = std::fs::OpenOptions::new().write(true).open("/dev/tty")?;
 
         let (_cols, rows) = terminal::size()?;
@@ -121,7 +66,11 @@ impl Overlay {
 
         tty.flush()?;
 
-        Ok(Self { config, scroll_up })
+        Ok(Self {
+            config,
+            theme,
+            scroll_up,
+        })
     }
 
     pub fn clear(&self) -> std::io::Result<()> {
@@ -199,7 +148,7 @@ impl Overlay {
 
     fn draw_border(&self, tty: &mut std::fs::File, area: &Area) -> std::io::Result<()> {
         let (top_left, top_right, bottom_left, bottom_right, horizontal, vertical) =
-            match self.config.container.border_type {
+            match self.config.border_type {
                 BorderType::Rounded => ('╭', '╮', '╰', '╯', '─', '│'),
                 BorderType::Square => ('┌', '┐', '└', '┘', '─', '│'),
                 BorderType::Top => ('─', '─', ' ', ' ', '─', ' '),
@@ -209,18 +158,18 @@ impl Overlay {
         let inner_width = area.width.saturating_sub(2);
         let horizontal_line = horizontal.to_string().repeat(inner_width.into());
 
-            tty.queue(cursor::MoveTo(area.x, area.y))?;
+        tty.queue(cursor::MoveTo(area.x, area.y))?;
 
         // Top border
-        if !matches!(self.config.container.border_type, BorderType::None) {
+        if !matches!(self.config.border_type, BorderType::None) {
             let top = format!(
                 "{tl}{line}{tr}",
                 line = horizontal_line,
                 tl = top_left,
                 tr = top_right,
             )
-            .with(self.config.container.border_color.into())
-            .on(self.config.container.bg_color.into());
+            .with(self.theme.accent.into())
+            .on(self.theme.background.into());
             write!(tty, "{}", top)?;
         }
 
@@ -233,13 +182,16 @@ impl Overlay {
                 vl = vertical,
                 vr = vertical
             )
-            .with(self.config.container.border_color.into())
-            .on(self.config.container.bg_color.into());
+            .with(self.theme.accent.into())
+            .on(self.theme.background.into());
             write!(tty, "{}", line)?;
         }
 
         // Bottom border
-        if matches!(self.config.container.border_type, BorderType::Rounded | BorderType::Square) {
+        if matches!(
+            self.config.border_type,
+            BorderType::Rounded | BorderType::Square
+        ) {
             tty.queue(cursor::MoveTo(area.x, area.y + area.height))?;
             let bottom = format!(
                 "{bl}{line}{br}",
@@ -247,8 +199,8 @@ impl Overlay {
                 bl = bottom_left,
                 br = bottom_right
             )
-            .with(self.config.container.border_color.into())
-            .on(self.config.container.bg_color.into());
+            .with(self.theme.accent.into())
+            .on(self.theme.background.into());
             write!(tty, "{}", bottom)?;
         }
 
@@ -273,7 +225,13 @@ impl Overlay {
             tty.queue(cursor::MoveTo(area.x, line))?;
 
             let shortcuts = &next_options_map[*key];
-            let stylized_entry = Entry::new(key, shortcuts, area.width, &self.config.entry);
+            let stylized_entry = Entry::new(
+                key,
+                shortcuts,
+                area.width,
+                &self.config.symbols,
+                &self.theme,
+            );
             stylized_entry.to_tty(tty)?;
 
             line += 1;
@@ -288,24 +246,27 @@ impl Overlay {
         area: &Area,
         sequence: &str,
     ) -> std::io::Result<()> {
-
         let help_text = "󱊷  close  󰁮  back";
         let styled_help_text = help_text
-            .with(self.config.footer.help_text_color.into())
-            .on(self.config.container.bg_color.into());
+            .with(self.theme.text_primary.into())
+            .on(self.theme.background.into());
         let center_x = area.x + (area.width.saturating_sub(help_text.chars().count() as u16)) / 2;
         tty.queue(cursor::MoveTo(center_x, area.y))?;
         write!(tty, "{}", styled_help_text)?;
 
         tty.queue(cursor::MoveTo(area.x, area.y))?;
-        let arrow = ">> "
-            .with(self.config.footer.arrow_color.into())
-            .on(self.config.container.bg_color.into());
+        let arrow = self
+            .config
+            .symbols
+            .sequence_begin
+            .to_string()
+            .with(self.theme.text_secondary.into())
+            .on(self.theme.background.into());
         write!(tty, "{}", arrow)?;
         let sequence_text = sequence
             .to_string()
-            .with(self.config.footer.sequence_color.into())
-            .on(self.config.container.bg_color.into());
+            .with(self.theme.text_primary.into())
+            .on(self.theme.background.into());
         write!(tty, "{}", sequence_text)?;
 
         Ok(())

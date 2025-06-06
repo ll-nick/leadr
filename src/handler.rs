@@ -3,7 +3,7 @@ use std::time::{Duration, Instant};
 use crossterm::event::{Event, KeyCode, KeyEvent, poll, read};
 
 use crate::{
-    Config, LeadrError,
+    Config, LeadrError, Theme,
     input::RawModeGuard,
     types::{Shortcut, ShortcutResult},
     ui::overlay::Overlay,
@@ -12,6 +12,7 @@ use crate::{
 /// Handles keyboard input and matches sequences to configured shortcuts.
 pub struct ShortcutHandler {
     config: Config,
+    theme: Theme,
     sequence: String,
 }
 
@@ -19,9 +20,10 @@ impl ShortcutHandler {
     /// Creates a new `ShortcutHandler` with given shortcuts and padding.
     ///
     /// `padding` controls how far from the right edge the input sequence is displayed.
-    pub fn new(config: Config) -> Self {
+    pub fn new(config: Config, theme: Theme) -> Self {
         ShortcutHandler {
             config,
+            theme,
             sequence: String::new(),
         }
     }
@@ -36,7 +38,8 @@ impl ShortcutHandler {
         loop {
             let timeout_reached = start_time.elapsed() >= self.config.overlay_timeout;
             if self.config.show_overlay && overlay.is_none() && timeout_reached {
-                overlay = Overlay::try_new(self.config.overlay_style.clone()).ok();
+                overlay =
+                    Overlay::try_new(self.config.overlay_style.clone(), self.theme.clone()).ok();
                 if let Some(overlay) = overlay.as_mut() {
                     let _ = overlay.draw(&self.sequence, &self.config.shortcuts);
                 }
@@ -127,7 +130,7 @@ mod tests {
 
     #[test]
     fn test_exact_match() {
-        let manager = ShortcutHandler::new(test_config());
+        let manager = ShortcutHandler::new(test_config(), Theme::default());
 
         let result = manager.match_sequence("gs");
         assert!(result.is_some());
@@ -146,7 +149,7 @@ mod tests {
 
     #[test]
     fn test_partial_match() {
-        let manager = ShortcutHandler::new(test_config());
+        let manager = ShortcutHandler::new(test_config(), Theme::default());
 
         assert!(manager.has_partial_match("g"));
         assert!(!manager.has_partial_match("x"));

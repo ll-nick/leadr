@@ -19,7 +19,6 @@ pub struct Config {
     pub overlay_timeout: Duration,
 
     /// The overlay styling.
-    #[serde(skip_serializing)]
     pub overlay_style: OverlayConfig,
 
     /// The shortcut mappings from key sequences to commands.

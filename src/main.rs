@@ -5,7 +5,7 @@
 
 use clap::Parser;
 
-use leadr::{Config, ShortcutHandler, ShortcutResult};
+use leadr::{Config, ShortcutHandler, ShortcutResult, Theme};
 
 #[derive(Parser)]
 #[command(about, version)]
@@ -38,6 +38,7 @@ fn main() {
         eprintln!("Error validating config: {}", e);
         std::process::exit(1);
     }
+    let theme = Theme::default();
 
     if cli.bash {
         match leadr::init_bash(&config) {
@@ -69,7 +70,7 @@ fn main() {
         return;
     }
 
-    let mut handler = ShortcutHandler::new(config);
+    let mut handler = ShortcutHandler::new(config, theme);
 
     match handler.run() {
         Ok(ShortcutResult::Shortcut(shortcut)) => {

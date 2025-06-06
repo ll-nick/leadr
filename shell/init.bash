@@ -4,6 +4,11 @@ __leadr_invoke__() {
     LEADR_COMMAND_POSITION_ENCODING="#COMMAND"
     LEADR_CURSOR_POSITION_ENCODING="#CURSOR"
 
+    leadr_cursor_line() {
+        IFS='[;' read -sdR -p $'\E[6n' _ row col
+        echo "$row"
+    }
+
     leadr_parse_flags() {
         local flag_str="$1"
         local insert=""
@@ -107,7 +112,7 @@ __leadr_invoke__() {
     }
 
     leadr_main() {
-        local cmd="$(leadr)"
+        local cmd="$(LEADR_CURSOR_LINE=$(leadr_cursor_line) leadr)"
         local output_flags="${cmd%% *}"
         local to_insert="${cmd#* }"
 

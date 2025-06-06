@@ -1,8 +1,10 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, time::Duration};
 
-use crate::error::LeadrError;
-use crate::types::{InsertType, Shortcut};
-use crate::ui::table;
+use crate::{
+    LeadrError,
+    types::{InsertType, Shortcut, Shortcuts},
+    ui::{overlay::Config as OverlayConfig, table},
+};
 
 #[derive(serde::Serialize, serde::Deserialize)]
 #[serde(default)]
@@ -10,15 +12,17 @@ pub struct Config {
     /// The key binding to activate the shortcut handler.
     pub leadr_key: String,
 
-    /// Whether or not to print the sequence of keys pressed at the bottom of the screen.
-    pub print_sequence: bool,
+    /// Whether or not to print the ui overlay.
+    pub show_overlay: bool,
 
-    /// Padding from the right edge of the screen when rendering sequences.
-    #[serde(skip_serializing)]
-    pub padding: usize,
+    /// The duration until the overlay appears.
+    pub overlay_timeout: Duration,
+
+    /// The overlay styling.
+    pub overlay_style: OverlayConfig,
 
     /// The shortcut mappings from key sequences to commands.
-    pub shortcuts: HashMap<String, Shortcut>,
+    pub shortcuts: Shortcuts,
 }
 
 impl Default for Config {
@@ -100,8 +104,9 @@ impl Default for Config {
         );
         Self {
             leadr_key: "<C-g>".into(),
-            print_sequence: false,
-            padding: 4,
+            show_overlay: true,
+            overlay_timeout: Duration::from_millis(500),
+            overlay_style: OverlayConfig::default(),
             shortcuts,
         }
     }
@@ -170,15 +175,6 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_config_defaults() {
-        let config = Config::default();
-        assert_eq!(config.leadr_key, "<C-g>");
-        assert!(!config.print_sequence);
-        assert_eq!(config.padding, 4);
-        assert!(config.shortcuts.contains_key("gs"));
-    }
-
-    #[test]
     fn test_render_table_contains_shortcut_keys() {
         let config = Config::default();
         let table = config.render_shortcut_table();
@@ -213,10 +209,8 @@ mod tests {
         );
 
         let config = Config {
-            leadr_key: "<C-g>".into(),
-            print_sequence: false,
-            padding: 4,
             shortcuts,
+            ..Default::default()
         };
 
         // Validation should fail due to prefix conflict
@@ -251,10 +245,8 @@ mod tests {
         );
 
         let config = Config {
-            leadr_key: "<C-g>".into(),
-            print_sequence: false,
-            padding: 4,
             shortcuts,
+            ..Default::default()
         };
 
         // Validation should succeed with no conflicts

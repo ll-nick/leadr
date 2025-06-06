@@ -15,6 +15,7 @@ Use memorable key sequences to quickly execute or insert commands in your termin
 - **Surround**: Wrap your current command in quotes or use `$(command substitution)` in the blink of an eye.
 - **Cursor Positioning**: Automatically place your cursor at the right position after inserting or replacing commands.
 - **Evaluate pre-insert**: Need the current date in your file name? Evaluate a command, then insert it.
+- **Keybinding Overlay**: In case they slipped your mind, see available shortcuts in a fancy looking overlay.
 
 ## 🎮 Usage
 
@@ -133,7 +134,7 @@ This works for all insert types but will have no effect if `evaluate` or `execut
 
 For a list of currently supported keybindings, see [src/keymap.rs](src/keymap.rs).
 
-### Visual Feedback
+### User Interface
 
-You can print the currently typed key sequence at the bottom right of your terminal by setting `print_sequence = true`.
-This is somewhat experimental and therefore disabled by default.
+Leadr comes with a user interface that looks suspiciously similar to [which-key](https://github.com/folke/which-key.nvim).
+It is activated by default an will pop up after a short delay after pressing the `leadr` keybinding.

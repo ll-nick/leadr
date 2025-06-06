@@ -1,4 +1,7 @@
-pub mod sequence_plotter;
+pub mod overlay;
+pub mod symbols;
 pub mod table;
+pub mod theme;
 
-pub use sequence_plotter::SequencePlotter;
+mod area;
+mod entry;

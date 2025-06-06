@@ -1,30 +1,30 @@
-use std::collections::HashMap;
+use std::time::{Duration, Instant};
 
-use crossterm::event::{Event, KeyCode, KeyEvent, read};
+use crossterm::event::{Event, KeyCode, KeyEvent, poll, read};
 
 use crate::{
-    Config, LeadrError,
+    Config, LeadrError, Theme,
     input::RawModeGuard,
     types::{Shortcut, ShortcutResult},
-    ui::SequencePlotter,
+    ui::overlay::Overlay,
 };
 
 /// Handles keyboard input and matches sequences to configured shortcuts.
 pub struct ShortcutHandler {
-    shortcuts: HashMap<String, Shortcut>,
+    config: Config,
+    theme: Theme,
     sequence: String,
-    ui: SequencePlotter,
 }
 
 impl ShortcutHandler {
     /// Creates a new `ShortcutHandler` with given shortcuts and padding.
     ///
     /// `padding` controls how far from the right edge the input sequence is displayed.
-    pub fn new(config: Config) -> Self {
+    pub fn new(config: Config, theme: Theme) -> Self {
         ShortcutHandler {
-            shortcuts: config.shortcuts,
+            config,
+            theme,
             sequence: String::new(),
-            ui: SequencePlotter::new(config.print_sequence, config.padding),
         }
     }
 
@@ -32,38 +32,52 @@ impl ShortcutHandler {
     /// cancelled, or an invalid sequence is entered.
     pub fn run(&mut self) -> Result<ShortcutResult, LeadrError> {
         let _guard = RawModeGuard::new()?;
+        let start_time = Instant::now();
+        let mut overlay: Option<Overlay> = None;
 
         loop {
-            if let Event::Key(KeyEvent {
-                code, modifiers, ..
-            }) = read().map_err(LeadrError::InputReadError)?
-            {
-                if modifiers == crossterm::event::KeyModifiers::CONTROL {
-                    if code == KeyCode::Char('c') {
-                        return Ok(ShortcutResult::Cancelled);
-                    }
-                    continue;
+            let timeout_reached = start_time.elapsed() >= self.config.overlay_timeout;
+            if self.config.show_overlay && overlay.is_none() && timeout_reached {
+                overlay =
+                    Overlay::try_new(self.config.overlay_style.clone(), self.theme.clone()).ok();
+                if let Some(overlay) = overlay.as_mut() {
+                    let _ = overlay.draw(&self.sequence, &self.config.shortcuts);
                 }
-                match code {
-                    KeyCode::Char(c) => {
-                        self.sequence.push(c);
-                        let _ = self.ui.update(&self.sequence);
-                        if let Some(shortcut) = self.match_sequence(&self.sequence) {
-                            return Ok(ShortcutResult::Shortcut(shortcut.format_command()));
-                        }
+            }
 
-                        if !self.has_partial_match(&self.sequence) {
-                            return Ok(ShortcutResult::NoMatch);
+            if poll(Duration::from_millis(50))? {
+                if let Event::Key(KeyEvent {
+                    code, modifiers, ..
+                }) = read()?
+                {
+                    if modifiers == crossterm::event::KeyModifiers::CONTROL {
+                        if code == KeyCode::Char('c') {
+                            return Ok(ShortcutResult::Cancelled);
                         }
+                        continue;
                     }
-                    KeyCode::Backspace => {
-                        self.sequence.pop();
-                        let _ = self.ui.update(&self.sequence);
+                    match code {
+                        KeyCode::Char(c) => {
+                            self.sequence.push(c);
+                            if let Some(shortcut) = self.match_sequence(&self.sequence) {
+                                return Ok(ShortcutResult::Shortcut(shortcut.format_command()));
+                            }
+
+                            if !self.has_partial_match(&self.sequence) {
+                                return Ok(ShortcutResult::NoMatch);
+                            }
+                        }
+                        KeyCode::Backspace => {
+                            self.sequence.pop();
+                        }
+                        KeyCode::Esc => {
+                            return Ok(ShortcutResult::Cancelled);
+                        }
+                        _ => {}
                     }
-                    KeyCode::Esc => {
-                        return Ok(ShortcutResult::Cancelled);
+                    if let Some(overlay) = overlay.as_mut() {
+                        let _ = overlay.draw(&self.sequence, &self.config.shortcuts);
                     }
-                    _ => {}
                 }
             }
         }
@@ -71,22 +85,22 @@ impl ShortcutHandler {
 
     /// Returns an exact match for a given sequence, if one exists.
     fn match_sequence(&self, seq: &str) -> Option<&Shortcut> {
-        self.shortcuts.get(seq)
+        self.config.shortcuts.get(seq)
     }
 
     /// Returns true if any shortcut begins with the given sequence.
     fn has_partial_match(&self, seq: &str) -> bool {
-        self.shortcuts.keys().any(|k| k.starts_with(seq))
+        self.config.shortcuts.keys().any(|k| k.starts_with(seq))
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::types::InsertType;
+    use crate::types::{InsertType, Shortcuts};
 
     fn test_config() -> Config {
-        let mut shortcuts = HashMap::new();
+        let mut shortcuts = Shortcuts::new();
         shortcuts.insert(
             "gs".into(),
             Shortcut {
@@ -116,7 +130,7 @@ mod tests {
 
     #[test]
     fn test_exact_match() {
-        let manager = ShortcutHandler::new(test_config());
+        let manager = ShortcutHandler::new(test_config(), Theme::default());
 
         let result = manager.match_sequence("gs");
         assert!(result.is_some());
@@ -135,7 +149,7 @@ mod tests {
 
     #[test]
     fn test_partial_match() {
-        let manager = ShortcutHandler::new(test_config());
+        let manager = ShortcutHandler::new(test_config(), Theme::default());
 
         assert!(manager.has_partial_match("g"));
         assert!(!manager.has_partial_match("x"));

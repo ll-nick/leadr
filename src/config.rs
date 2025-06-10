@@ -1,9 +1,9 @@
-use std::{collections::HashMap, time::Duration};
+use std::{collections::HashMap, path::Path, time::Duration};
 
 use crate::{
-    LeadrError,
     types::{InsertType, Mapping, Mappings},
     ui::{overlay::Config as OverlayConfig, table},
+    LeadrError,
 };
 
 #[derive(serde::Serialize, serde::Deserialize)]
@@ -113,6 +113,17 @@ impl Default for Config {
 }
 
 impl Config {
+    pub fn load(config_dir: &Path) -> Result<Self, LeadrError> {
+        let config_path = config_dir.join("config.toml");
+        if config_path.exists() {
+            let contents = std::fs::read_to_string(&config_path)?;
+            let config = toml::from_str(&contents)?;
+            Ok(config)
+        } else {
+            Ok(Config::default())
+        }
+    }
+
     /// Renders the configured mappings as a formatted table.
     pub fn render_mapping_table(&self) -> String {
         let layout = table::ColumnLayout {
@@ -156,8 +167,7 @@ impl Config {
 
         // Make sure that "Surround" type mappings contain "#COMMAND" in their command
         for mapping in self.mappings.values() {
-            if mapping.insert_type == InsertType::Surround
-                && !mapping.command.contains("#COMMAND")
+            if mapping.insert_type == InsertType::Surround && !mapping.command.contains("#COMMAND")
             {
                 return Err(LeadrError::InvalidSurroundCommand(format!(
                     "Surround-type mapping '{}' must contain '#COMMAND' in its command",

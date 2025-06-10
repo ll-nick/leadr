@@ -1,9 +1,8 @@
 use std::{collections::HashMap, path::Path, time::Duration};
 
 use crate::{
-    types::{InsertType, Mapping, Mappings},
     ui::{overlay::Config as OverlayConfig, table},
-    LeadrError,
+    InsertType, LeadrError, Mapping, Mappings,
 };
 
 #[derive(serde::Serialize, serde::Deserialize)]

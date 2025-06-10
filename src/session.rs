@@ -1,13 +1,8 @@
 use std::time::{Duration, Instant};
 
-use crossterm::event::{Event, KeyCode, KeyEvent, poll, read};
+use crossterm::event::{poll, read, Event, KeyCode, KeyEvent};
 
-use crate::{
-    Config, LeadrError, Theme,
-    input::RawModeGuard,
-    types::Mapping,
-    ui::overlay::Overlay,
-};
+use crate::{input::RawModeGuard, Config, LeadrError, Mapping, Overlay, Theme};
 
 pub enum SessionResult {
     Command(String),
@@ -100,7 +95,7 @@ impl LeadrSession {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::types::{InsertType, Mappings};
+    use crate::{InsertType, Mappings};
 
     fn test_config() -> Config {
         let mut mappings = Mappings::new();

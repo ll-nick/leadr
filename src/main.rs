@@ -5,14 +5,14 @@
 
 use clap::Parser;
 
-use leadr::{Config, ShortcutHandler, ShortcutResult, Theme};
+use leadr::{Config, LeadrSession, LeadrResult, Theme};
 
 #[derive(Parser)]
 #[command(about, version)]
 struct Cli {
     #[arg(long)]
     bash: bool,
-    #[arg(long, short = 'l', help = "List all shortcuts")]
+    #[arg(long, short = 'l', help = "List all mappings")]
     list: bool,
     #[arg(long)]
     zsh: bool,
@@ -66,17 +66,17 @@ fn main() {
     }
 
     if cli.list {
-        println!("{}", config.render_shortcut_table());
+        println!("{}", config.render_mapping_table());
         return;
     }
 
-    let mut handler = ShortcutHandler::new(config, theme);
+    let mut handler = LeadrSession::new(config, theme);
 
     match handler.run() {
-        Ok(ShortcutResult::Shortcut(shortcut)) => {
-            print!("{}", shortcut);
+        Ok(LeadrResult::Command(command)) => {
+            print!("{}", command);
         }
-        Ok(ShortcutResult::NoMatch | ShortcutResult::Cancelled) => {}
+        Ok(LeadrResult::NoMatch | LeadrResult::Cancelled) => {}
         Err(e) => {
             eprintln!("Fatal error: {}", e);
             std::process::exit(1);

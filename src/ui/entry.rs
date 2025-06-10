@@ -3,7 +3,7 @@ use std::io::Write;
 use crossterm::style::Stylize;
 
 use crate::{
-    types::{InsertType, Shortcut},
+    types::{InsertType, Mapping},
     ui::{symbols::Symbols, theme::Theme},
 };
 
@@ -14,28 +14,28 @@ pub struct Entry {
 impl Entry {
     pub fn new(
         key: &str,
-        shortcuts: &Vec<&Shortcut>,
+        mappings: &Vec<&Mapping>,
         width: u16,
         symbols: &Symbols,
         theme: &Theme,
     ) -> Self {
-        let more_options = shortcuts.len() != 1;
+        let more_options = mappings.len() != 1;
         let mut label = if more_options {
-            format!("+{} shortcuts", shortcuts.len())
+            format!("+{} mappings", mappings.len())
         } else {
-            let shortcut = &shortcuts.first().unwrap();
-            shortcut
+            let mapping = &mappings.first().unwrap();
+            mapping
                 .description
                 .as_deref()
-                .unwrap_or(&shortcut.command)
+                .unwrap_or(&mapping.command)
                 .to_string()
         };
 
         let flags = if more_options {
             " ".repeat(5) // make sure to take up space that flags would take
         } else {
-            let shortcut = &shortcuts.first().unwrap();
-            format_flags(shortcut, symbols)
+            let mapping = &mappings.first().unwrap();
+            format_flags(mapping, symbols)
         };
 
         let raw_entry = format!("{} → {} {}", key, label, flags);
@@ -88,10 +88,10 @@ impl Entry {
     }
 }
 
-fn format_flags(shortcut: &Shortcut, symbols: &Symbols) -> String {
+fn format_flags(mapping: &Mapping, symbols: &Symbols) -> String {
     let mut flags: Vec<&str> = vec![];
 
-    match shortcut.insert_type {
+    match mapping.insert_type {
         InsertType::Replace => flags.push(&symbols.replace),
         InsertType::Insert => flags.push(&symbols.insert),
         InsertType::Append => flags.push(&symbols.append),
@@ -99,13 +99,13 @@ fn format_flags(shortcut: &Shortcut, symbols: &Symbols) -> String {
         InsertType::Surround => flags.push(&symbols.surround),
     }
 
-    if shortcut.evaluate {
+    if mapping.evaluate {
         flags.push(&symbols.evaluate);
     } else {
         flags.push(" ");
     }
 
-    if shortcut.execute {
+    if mapping.execute {
         flags.push(&symbols.execute);
     } else {
         flags.push(" ");

@@ -1,4 +1,4 @@
-use crate::Shortcut;
+use crate::Mapping;
 
 pub struct ColumnLayout {
     pub sequence: usize,
@@ -56,16 +56,16 @@ fn truncate_string(cmd: &str, max_len: usize) -> String {
     }
 }
 
-pub fn render_row(layout: &ColumnLayout, sequence: &str, shortcut: &Shortcut) -> String {
+pub fn render_row(layout: &ColumnLayout, sequence: &str, mapping: &Mapping) -> String {
     format!(
         "{:<seq$} {:<cmd$} {:<typ$} {:<eval$} {:<exec$} {:<desc$}\n",
         sequence,
-        truncate_string(&shortcut.command, layout.command),
-        format!("{:?}", shortcut.insert_type),
-        if shortcut.evaluate { "Yes" } else { "No" },
-        if shortcut.execute { "Yes" } else { "No" },
+        truncate_string(&mapping.command, layout.command),
+        format!("{:?}", mapping.insert_type),
+        if mapping.evaluate { "Yes" } else { "No" },
+        if mapping.execute { "Yes" } else { "No" },
         truncate_string(
-            &shortcut.description.clone().unwrap_or_default(),
+            &mapping.description.clone().unwrap_or_default(),
             layout.description
         ),
         seq = layout.sequence,

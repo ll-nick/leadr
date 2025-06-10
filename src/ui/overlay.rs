@@ -4,7 +4,7 @@ use crossterm::{QueueableCommand, cursor, style::Stylize, terminal};
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    Shortcut, Shortcuts,
+    Mapping, Mappings,
     error::LeadrError,
     ui::{
         area::{Area, ColumnLayout},
@@ -92,7 +92,7 @@ impl Overlay {
         stdout.flush()
     }
 
-    pub fn draw(&self, sequence: &str, shortcuts: &Shortcuts) -> Result<(), LeadrError> {
+    pub fn draw(&self, sequence: &str, mappings: &Mappings) -> Result<(), LeadrError> {
         let mut tty = std::fs::OpenOptions::new().write(true).open("/dev/tty")?;
         let (cols, rows) = terminal::size()?;
         let start_y = rows.saturating_sub(self.config.height);
@@ -109,7 +109,7 @@ impl Overlay {
         let border_width = 1;
         let footer_height = 2;
 
-        let next_options = group_next_options(sequence, shortcuts);
+        let next_options = group_next_options(sequence, mappings);
         let mut keys: Vec<_> = next_options.keys().collect();
         keys.sort();
         let entry_area = Area {
@@ -213,7 +213,7 @@ impl Overlay {
         &self,
         tty: &mut std::fs::File,
         area: &Area,
-        next_options_map: &HashMap<String, Vec<&Shortcut>>,
+        next_options_map: &HashMap<String, Vec<&Mapping>>,
         keys: &Vec<&String>,
     ) -> std::io::Result<()> {
         let mut line = area.y;
@@ -224,10 +224,10 @@ impl Overlay {
             }
             tty.queue(cursor::MoveTo(area.x, line))?;
 
-            let shortcuts = &next_options_map[*key];
+            let mappings = &next_options_map[*key];
             let stylized_entry = Entry::new(
                 key,
-                shortcuts,
+                mappings,
                 area.width,
                 &self.config.symbols,
                 &self.theme,
@@ -281,16 +281,16 @@ impl Drop for Overlay {
 
 pub fn group_next_options<'a>(
     sequence: &str,
-    shortcuts: &'a Shortcuts,
-) -> HashMap<String, Vec<&'a Shortcut>> {
-    let mut map: HashMap<String, Vec<&Shortcut>> = HashMap::new();
+    mappings: &'a Mappings,
+) -> HashMap<String, Vec<&'a Mapping>> {
+    let mut map: HashMap<String, Vec<&Mapping>> = HashMap::new();
 
-    for (key, shortcut) in shortcuts.iter() {
+    for (key, mapping) in mappings.iter() {
         if key.starts_with(&sequence) {
             if let Some((_, char)) = key[sequence.len()..].char_indices().next() {
                 // next_key is this character (handle utf-8)
                 let next_key = char.to_string();
-                map.entry(next_key).or_default().push(shortcut);
+                map.entry(next_key).or_default().push(mapping);
             }
         }
     }

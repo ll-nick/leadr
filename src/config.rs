@@ -2,14 +2,14 @@ use std::{collections::HashMap, time::Duration};
 
 use crate::{
     LeadrError,
-    types::{InsertType, Shortcut, Shortcuts},
+    types::{InsertType, Mapping, Mappings},
     ui::{overlay::Config as OverlayConfig, table},
 };
 
 #[derive(serde::Serialize, serde::Deserialize)]
 #[serde(default)]
 pub struct Config {
-    /// The key binding to activate the shortcut handler.
+    /// The key binding to activate leadr.
     pub leadr_key: String,
 
     /// Whether or not to print the ui overlay.
@@ -21,16 +21,16 @@ pub struct Config {
     /// The overlay styling.
     pub overlay_style: OverlayConfig,
 
-    /// The shortcut mappings from key sequences to commands.
-    pub shortcuts: Shortcuts,
+    /// The mappings from key sequences to commands.
+    pub mappings: Mappings,
 }
 
 impl Default for Config {
     fn default() -> Self {
-        let mut shortcuts = HashMap::new();
-        shortcuts.insert(
+        let mut mappings = HashMap::new();
+        mappings.insert(
             "ga".into(),
-            Shortcut {
+            Mapping {
                 command: "git add .".into(),
                 description: Some("Git add all".into()),
                 insert_type: InsertType::Replace,
@@ -38,9 +38,9 @@ impl Default for Config {
                 execute: true,
             },
         );
-        shortcuts.insert(
+        mappings.insert(
             "gc".into(),
-            Shortcut {
+            Mapping {
                 command: "git commit -m \"#CURSOR\"".into(),
                 description: Some("Start a Git commit".into()),
                 insert_type: InsertType::Replace,
@@ -48,9 +48,9 @@ impl Default for Config {
                 execute: false,
             },
         );
-        shortcuts.insert(
+        mappings.insert(
             "gs".into(),
-            Shortcut {
+            Mapping {
                 command: "git status".into(),
                 description: Some("Git status".into()),
                 insert_type: InsertType::Replace,
@@ -58,10 +58,10 @@ impl Default for Config {
                 execute: true,
             },
         );
-        shortcuts.insert(
+        mappings.insert(
             // Insert Date
             "id".into(),
-            Shortcut {
+            Mapping {
                 command: "date +%Y%m%d".into(),
                 description: Some("Insert current date in YYYYMMDD format".into()),
                 insert_type: InsertType::Insert,
@@ -69,10 +69,10 @@ impl Default for Config {
                 execute: false,
             },
         );
-        shortcuts.insert(
+        mappings.insert(
             // Prepend Sudo
             "ps".into(),
-            Shortcut {
+            Mapping {
                 command: "sudo ".into(),
                 description: Some("Prepend sudo".into()),
                 insert_type: InsertType::Prepend,
@@ -80,10 +80,10 @@ impl Default for Config {
                 execute: false,
             },
         );
-        shortcuts.insert(
+        mappings.insert(
             // Substitute Command
             "sq".into(),
-            Shortcut {
+            Mapping {
                 command: "\"#COMMAND\"".into(),
                 description: Some("Surround with quotes".into()),
                 insert_type: InsertType::Surround,
@@ -91,10 +91,10 @@ impl Default for Config {
                 execute: false,
             },
         );
-        shortcuts.insert(
+        mappings.insert(
             // Yank to Clipboard
             "y".into(),
-            Shortcut {
+            Mapping {
                 command: " | xclip -selection clipboard".into(),
                 description: Some("Append copy to clipboard".into()),
                 insert_type: InsertType::Append,
@@ -107,14 +107,14 @@ impl Default for Config {
             show_overlay: true,
             overlay_timeout: Duration::from_millis(500),
             overlay_style: OverlayConfig::default(),
-            shortcuts,
+            mappings,
         }
     }
 }
 
 impl Config {
-    /// Renders the configured shortcuts as a formatted table.
-    pub fn render_shortcut_table(&self) -> String {
+    /// Renders the configured mappings as a formatted table.
+    pub fn render_mapping_table(&self) -> String {
         let layout = table::ColumnLayout {
             sequence: 8,
             command: 30,
@@ -128,20 +128,20 @@ impl Config {
         table.push_str(&table::render_header(&layout));
         table.push_str(&table::render_separator(&layout));
 
-        let mut keys: Vec<_> = self.shortcuts.keys().collect();
+        let mut keys: Vec<_> = self.mappings.keys().collect();
         keys.sort(); // Sorts alphabetically (lexicographically)
 
         for key in keys {
-            let shortcut = &self.shortcuts[key];
-            table.push_str(&table::render_row(&layout, key, shortcut));
+            let mapping = &self.mappings[key];
+            table.push_str(&table::render_row(&layout, key, mapping));
         }
 
         table
     }
 
-    /// Validates that no shortcuts overlap or are prefixes of each other.
+    /// Validates that no mappings overlap or are prefixes of each other.
     pub fn validate(&self) -> Result<(), LeadrError> {
-        let keys: Vec<&String> = self.shortcuts.keys().collect();
+        let keys: Vec<&String> = self.mappings.keys().collect();
 
         for (i, key1) in keys.iter().enumerate() {
             for key2 in keys.iter().skip(i + 1) {
@@ -154,14 +154,14 @@ impl Config {
             }
         }
 
-        // Make sure that "Surround" type shortcuts contain "#COMMAND" in their command
-        for shortcut in self.shortcuts.values() {
-            if shortcut.insert_type == InsertType::Surround
-                && !shortcut.command.contains("#COMMAND")
+        // Make sure that "Surround" type mappings contain "#COMMAND" in their command
+        for mapping in self.mappings.values() {
+            if mapping.insert_type == InsertType::Surround
+                && !mapping.command.contains("#COMMAND")
             {
                 return Err(LeadrError::InvalidSurroundCommand(format!(
-                    "Shortcut '{}' must contain '#COMMAND' in its command",
-                    shortcut.command
+                    "Surround-type mapping '{}' must contain '#COMMAND' in its command",
+                    mapping.command
                 )));
             }
         }
@@ -175,21 +175,21 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_render_table_contains_shortcut_keys() {
+    fn test_render_table_contains_mapping_keys() {
         let config = Config::default();
-        let table = config.render_shortcut_table();
+        let table = config.render_mapping_table();
         assert!(table.contains("gs"));
         assert!(table.contains("git status"));
         assert!(table.contains("Description"));
     }
 
     #[test]
-    fn test_validate_shortcuts() {
-        // Create a config with conflicting shortcuts: "g" and "gs"
-        let mut shortcuts = HashMap::new();
-        shortcuts.insert(
+    fn test_validate_mappings() {
+        // Create a config with conflicting mappings: "g" and "gs"
+        let mut mappings = HashMap::new();
+        mappings.insert(
             "g".into(),
-            Shortcut {
+            Mapping {
                 command: "git".into(),
                 description: Some("Git command".into()),
                 insert_type: InsertType::Replace,
@@ -197,9 +197,9 @@ mod tests {
                 execute: true,
             },
         );
-        shortcuts.insert(
+        mappings.insert(
             "gs".into(),
-            Shortcut {
+            Mapping {
                 command: "git status".into(),
                 description: Some("Git status".into()),
                 insert_type: InsertType::Replace,
@@ -209,7 +209,7 @@ mod tests {
         );
 
         let config = Config {
-            shortcuts,
+            mappings,
             ..Default::default()
         };
 
@@ -222,10 +222,10 @@ mod tests {
         ));
 
         // Now create a config with no conflicts
-        let mut shortcuts = HashMap::new();
-        shortcuts.insert(
+        let mut mappings = HashMap::new();
+        mappings.insert(
             "g".into(),
-            Shortcut {
+            Mapping {
                 command: "git".into(),
                 description: Some("Git command".into()),
                 insert_type: InsertType::Replace,
@@ -233,9 +233,9 @@ mod tests {
                 execute: true,
             },
         );
-        shortcuts.insert(
+        mappings.insert(
             "x".into(),
-            Shortcut {
+            Mapping {
                 command: "exit".into(),
                 description: Some("Exit command".into()),
                 insert_type: InsertType::Replace,
@@ -245,7 +245,7 @@ mod tests {
         );
 
         let config = Config {
-            shortcuts,
+            mappings,
             ..Default::default()
         };
 

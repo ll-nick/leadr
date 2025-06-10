@@ -14,8 +14,8 @@ pub mod ui;
 
 pub use config::Config;
 pub use error::LeadrError;
-pub use handler::ShortcutHandler;
+pub use handler::LeadrSession;
 pub use shell::init_bash;
 pub use shell::init_zsh;
-pub use types::{Shortcut, ShortcutResult, Shortcuts};
+pub use types::{Mapping, LeadrResult, Mappings};
 pub use ui::theme::Theme;

@@ -5,32 +5,29 @@ use crossterm::event::{Event, KeyCode, KeyEvent, poll, read};
 use crate::{
     Config, LeadrError, Theme,
     input::RawModeGuard,
-    types::{Shortcut, ShortcutResult},
+    types::{Mapping, LeadrResult},
     ui::overlay::Overlay,
 };
 
-/// Handles keyboard input and matches sequences to configured shortcuts.
-pub struct ShortcutHandler {
+/// Handles keyboard input and matches sequences to mapped commands.
+pub struct LeadrSession {
     config: Config,
     theme: Theme,
     sequence: String,
 }
 
-impl ShortcutHandler {
-    /// Creates a new `ShortcutHandler` with given shortcuts and padding.
-    ///
-    /// `padding` controls how far from the right edge the input sequence is displayed.
+impl LeadrSession {
     pub fn new(config: Config, theme: Theme) -> Self {
-        ShortcutHandler {
+        LeadrSession {
             config,
             theme,
             sequence: String::new(),
         }
     }
 
-    /// Runs the input loop, capturing key events and returning when a shortcut is matched,
+    /// Runs the input loop, capturing key events and returning when a mapping is matched,
     /// cancelled, or an invalid sequence is entered.
-    pub fn run(&mut self) -> Result<ShortcutResult, LeadrError> {
+    pub fn run(&mut self) -> Result<LeadrResult, LeadrError> {
         let _guard = RawModeGuard::new()?;
         let start_time = Instant::now();
         let mut overlay: Option<Overlay> = None;
@@ -41,7 +38,7 @@ impl ShortcutHandler {
                 overlay =
                     Overlay::try_new(self.config.overlay_style.clone(), self.theme.clone()).ok();
                 if let Some(overlay) = overlay.as_mut() {
-                    let _ = overlay.draw(&self.sequence, &self.config.shortcuts);
+                    let _ = overlay.draw(&self.sequence, &self.config.mappings);
                 }
             }
 
@@ -52,31 +49,31 @@ impl ShortcutHandler {
                 {
                     if modifiers == crossterm::event::KeyModifiers::CONTROL {
                         if code == KeyCode::Char('c') {
-                            return Ok(ShortcutResult::Cancelled);
+                            return Ok(LeadrResult::Cancelled);
                         }
                         continue;
                     }
                     match code {
                         KeyCode::Char(c) => {
                             self.sequence.push(c);
-                            if let Some(shortcut) = self.match_sequence(&self.sequence) {
-                                return Ok(ShortcutResult::Shortcut(shortcut.format_command()));
+                            if let Some(mapping) = self.match_sequence(&self.sequence) {
+                                return Ok(LeadrResult::Command(mapping.format_command()));
                             }
 
                             if !self.has_partial_match(&self.sequence) {
-                                return Ok(ShortcutResult::NoMatch);
+                                return Ok(LeadrResult::NoMatch);
                             }
                         }
                         KeyCode::Backspace => {
                             self.sequence.pop();
                         }
                         KeyCode::Esc => {
-                            return Ok(ShortcutResult::Cancelled);
+                            return Ok(LeadrResult::Cancelled);
                         }
                         _ => {}
                     }
                     if let Some(overlay) = overlay.as_mut() {
-                        let _ = overlay.draw(&self.sequence, &self.config.shortcuts);
+                        let _ = overlay.draw(&self.sequence, &self.config.mappings);
                     }
                 }
             }
@@ -84,26 +81,26 @@ impl ShortcutHandler {
     }
 
     /// Returns an exact match for a given sequence, if one exists.
-    fn match_sequence(&self, seq: &str) -> Option<&Shortcut> {
-        self.config.shortcuts.get(seq)
+    fn match_sequence(&self, seq: &str) -> Option<&Mapping> {
+        self.config.mappings.get(seq)
     }
 
-    /// Returns true if any shortcut begins with the given sequence.
+    /// Returns true if any mapping begins with the given sequence.
     fn has_partial_match(&self, seq: &str) -> bool {
-        self.config.shortcuts.keys().any(|k| k.starts_with(seq))
+        self.config.mappings.keys().any(|k| k.starts_with(seq))
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::types::{InsertType, Shortcuts};
+    use crate::types::{InsertType, Mappings};
 
     fn test_config() -> Config {
-        let mut shortcuts = Shortcuts::new();
-        shortcuts.insert(
+        let mut mappings = Mappings::new();
+        mappings.insert(
             "gs".into(),
-            Shortcut {
+            Mapping {
                 command: "git status".into(),
                 description: None,
                 insert_type: InsertType::Replace,
@@ -111,9 +108,9 @@ mod tests {
                 execute: false,
             },
         );
-        shortcuts.insert(
+        mappings.insert(
             "s".into(),
-            Shortcut {
+            Mapping {
                 command: "sudo ".into(),
                 description: None,
                 insert_type: InsertType::Prepend,
@@ -123,14 +120,14 @@ mod tests {
         );
 
         Config {
-            shortcuts,
+            mappings,
             ..Default::default()
         }
     }
 
     #[test]
     fn test_exact_match() {
-        let manager = ShortcutHandler::new(test_config(), Theme::default());
+        let manager = LeadrSession::new(test_config(), Theme::default());
 
         let result = manager.match_sequence("gs");
         assert!(result.is_some());
@@ -149,7 +146,7 @@ mod tests {
 
     #[test]
     fn test_partial_match() {
-        let manager = ShortcutHandler::new(test_config(), Theme::default());
+        let manager = LeadrSession::new(test_config(), Theme::default());
 
         assert!(manager.has_partial_match("g"));
         assert!(!manager.has_partial_match("x"));

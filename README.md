@@ -1,6 +1,6 @@
 # leadr
 
-**leadr** is a customizable CLI shortcut manager inspired by the leader key concept in (Neo)Vim.
+**leadr** is a customizable CLI command manager inspired by the leader key concept in (Neo)Vim.
 Use memorable key sequences to quickly execute or insert commands in your terminal.
 
 ## 🚀 Demo
@@ -9,17 +9,17 @@ Use memorable key sequences to quickly execute or insert commands in your termin
 
 ## 💪 Features
 
-- **Customizable Shortcuts**: Define your own key sequences to set your prompt.
+- **Customizable Mappings**: Define your own key sequences to set your prompt.
 - **Insert or Execute**: Immediately execute `git status` or just insert `git commit -m ""` ready for you to fill in.
 - **Prepend/Append**: Forgot `sudo`? Just prepend it to the your prompt and keep typing.
 - **Surround**: Wrap your current command in quotes or use `$(command substitution)` in the blink of an eye.
 - **Cursor Positioning**: Automatically place your cursor at the right position after inserting or replacing commands.
 - **Evaluate pre-insert**: Need the current date in your file name? Evaluate a command, then insert it.
-- **Keybinding Overlay**: In case they slipped your mind, see available shortcuts in a fancy looking overlay.
+- **Keybinding Overlay**: In case they slipped your mind, see available mappings in a fancy looking overlay.
 
 ## 🎮 Usage
 
-After installing `leadr`, you can start using it by pressing the `leadr` keybinding followed by a shortcut.
+After installing `leadr`, you can start using it by pressing the `leadr` keybinding followed by a key sequence.
 
 With the default config, you can e.g. execute `git status` by pressing `<Ctrl-g>` followed by `gs`.
 Similarly, you can pre-populate `git commit -m ""` by pressing `<Ctrl-g>` followed by `gc`.
@@ -35,7 +35,7 @@ You can get the tl;dr of all this by running
 ```bash
 leadr --list
 ```
-which will show you a list of all available shortcuts and their descriptions.
+which will show you a list of all available mappings and their descriptions.
 
 Consult the [Configuration](#-configuration) section to learn how to make `leadr` your own.
 
@@ -98,18 +98,18 @@ source <(leadr --zsh)
 
 ### Configuration File
 
-`leadr` will automatically create a configuration file and fill it with some default shortcuts the first time you run it.
+`leadr` will automatically create a configuration file and fill it with some default mappings the first time you run it.
 See [confy's Readme](https://github.com/rust-cli/confy?tab=readme-ov-file#config-file-location) for the location of the configuration file.
 
-Modify the configuration file to add your own shortcuts or adjust the `leadr` keybinding.
+Modify the configuration file to add your own mappings or adjust the `leadr` keybinding.
 
-### Shortcuts
+### Mappings
 
-Define new shortcuts by adding a new entry to the `shortcuts` section of the configuration file.
+Define new mappings by adding a new entry to the `mappings` section of the configuration file.
 The key will be the key sequence you want to use, `command` will be the command you want to execute or insert.
 Optionally, add a `description` for the `--list` command to show.
 
-Finally, you can customize the behavior of the shortcut by specifying `insert_type`, `evaluate`, and `execute` options.
+Finally, you can customize the behavior of the mapping by specifying `insert_type`, `evaluate`, and `execute` options.
 Here's an overview of the available options:
 
 | Setting | Options | Description |

@@ -2,26 +2,26 @@ use std::collections::HashMap;
 
 #[derive(Clone, Debug, Default, PartialEq, serde::Serialize, serde::Deserialize)]
 pub enum InsertType {
-    /// A shortcut that is inserted into the command line, replacing existing text.
+    /// Replace the current prompt with the mapped command.
     #[default]
     Replace,
 
-    /// A shortcut that is inserted into the command line at the current cursor position.
+    /// Insert the mapped command at the current cursor position.
     Insert,
 
-    /// A shortcut that is prepended to the currently typed command.
+    /// Prepend the mapped command to the current prompt.
     Prepend,
 
-    /// A shortcut that is appended to the currently typed command.
+    /// Append the mapped command to the current prompt.
     Append,
 
-    /// Add a string before and after the currently typed command.
+    /// Surround your prompt with a prefix and a suffix.
     Surround,
 }
 
 /// Represents a user-defined command with additional metadata.
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
-pub struct Shortcut {
+pub struct Mapping {
     pub command: String,
 
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -41,7 +41,7 @@ pub struct Shortcut {
     pub execute: bool,
 }
 
-pub type Shortcuts = HashMap<String, Shortcut>;
+pub type Mappings = HashMap<String, Mapping>;
 
 fn is_replace(insert_type: &InsertType) -> bool {
     matches!(insert_type, InsertType::Replace)
@@ -50,7 +50,7 @@ fn is_false(b: &bool) -> bool {
     !*b
 }
 
-impl Shortcut {
+impl Mapping {
     fn flags_string(&self) -> String {
         let mut flags = vec![format!("{:?}", self.insert_type).to_uppercase()];
         if self.evaluate {
@@ -67,8 +67,8 @@ impl Shortcut {
     }
 }
 
-pub enum ShortcutResult {
-    Shortcut(String),
+pub enum LeadrResult {
+    Command(String),
     Cancelled,
     NoMatch,
 }
@@ -79,7 +79,7 @@ mod tests {
 
     #[test]
     fn test_format_replace_no_flags() {
-        let sc = Shortcut {
+        let sc = Mapping {
             command: "dummy command".into(),
             description: None,
             insert_type: InsertType::Replace,
@@ -91,7 +91,7 @@ mod tests {
 
     #[test]
     fn test_format_insert_eval_exec() {
-        let sc = Shortcut {
+        let sc = Mapping {
             command: "dummy command".into(),
             description: None,
             insert_type: InsertType::Insert,
@@ -103,7 +103,7 @@ mod tests {
 
     #[test]
     fn test_format_append_only() {
-        let sc = Shortcut {
+        let sc = Mapping {
             command: "dummy command".into(),
             description: None,
             insert_type: InsertType::Append,
@@ -115,7 +115,7 @@ mod tests {
 
     #[test]
     fn test_format_prepend_eval_only() {
-        let sc = Shortcut {
+        let sc = Mapping {
             command: "dummy command".into(),
             description: None,
             insert_type: InsertType::Prepend,
@@ -127,7 +127,7 @@ mod tests {
 
     #[test]
     fn test_format_replace_exec_only() {
-        let sc = Shortcut {
+        let sc = Mapping {
             command: "dummy command".into(),
             description: None,
             insert_type: InsertType::Replace,
@@ -139,7 +139,7 @@ mod tests {
 
     #[test]
     fn test_format_insert_only() {
-        let sc = Shortcut {
+        let sc = Mapping {
             command: "dummy command".into(),
             description: None,
             insert_type: InsertType::Insert,
@@ -151,7 +151,7 @@ mod tests {
 
     #[test]
     fn test_format_surround() {
-        let sc = Shortcut {
+        let sc = Mapping {
             command: "dummy command".into(),
             description: None,
             insert_type: InsertType::Surround,

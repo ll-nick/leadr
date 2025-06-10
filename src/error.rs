@@ -2,6 +2,12 @@ use thiserror::Error;
 
 #[derive(Debug, Error)]
 pub enum LeadrError {
+    #[error("Failed to determine config directory")]
+    ConfigDirNotFound,
+
+    #[error("Failed to parse TOML: {0}")]
+    Toml(#[from] toml::de::Error),
+
     #[error("Io error")]
     Io(#[from] std::io::Error),
 

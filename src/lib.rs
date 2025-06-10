@@ -5,17 +5,17 @@
 
 pub mod config;
 pub mod error;
-pub mod session;
 pub mod input;
 pub mod keymap;
+pub mod session;
 pub mod shell;
 pub mod types;
 pub mod ui;
 
 pub use config::Config;
 pub use error::LeadrError;
-pub use session::LeadrSession;
+pub use session::{LeadrSession, SessionResult};
 pub use shell::init_bash;
 pub use shell::init_zsh;
-pub use types::{Mapping, LeadrResult, Mappings};
+pub use types::{Mapping, Mappings};
 pub use ui::theme::Theme;

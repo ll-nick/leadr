@@ -5,9 +5,15 @@ use crossterm::event::{Event, KeyCode, KeyEvent, poll, read};
 use crate::{
     Config, LeadrError, Theme,
     input::RawModeGuard,
-    types::{Mapping, LeadrResult},
+    types::Mapping,
     ui::overlay::Overlay,
 };
+
+pub enum SessionResult {
+    Command(String),
+    Cancelled,
+    NoMatch,
+}
 
 /// Handles keyboard input and matches sequences to mapped commands.
 pub struct LeadrSession {
@@ -27,7 +33,7 @@ impl LeadrSession {
 
     /// Runs the input loop, capturing key events and returning when a mapping is matched,
     /// cancelled, or an invalid sequence is entered.
-    pub fn run(&mut self) -> Result<LeadrResult, LeadrError> {
+    pub fn run(&mut self) -> Result<SessionResult, LeadrError> {
         let _guard = RawModeGuard::new()?;
         let start_time = Instant::now();
         let mut overlay: Option<Overlay> = None;
@@ -49,7 +55,7 @@ impl LeadrSession {
                 {
                     if modifiers == crossterm::event::KeyModifiers::CONTROL {
                         if code == KeyCode::Char('c') {
-                            return Ok(LeadrResult::Cancelled);
+                            return Ok(SessionResult::Cancelled);
                         }
                         continue;
                     }
@@ -57,18 +63,18 @@ impl LeadrSession {
                         KeyCode::Char(c) => {
                             self.sequence.push(c);
                             if let Some(mapping) = self.match_sequence(&self.sequence) {
-                                return Ok(LeadrResult::Command(mapping.format_command()));
+                                return Ok(SessionResult::Command(mapping.format_command()));
                             }
 
                             if !self.has_partial_match(&self.sequence) {
-                                return Ok(LeadrResult::NoMatch);
+                                return Ok(SessionResult::NoMatch);
                             }
                         }
                         KeyCode::Backspace => {
                             self.sequence.pop();
                         }
                         KeyCode::Esc => {
-                            return Ok(LeadrResult::Cancelled);
+                            return Ok(SessionResult::Cancelled);
                         }
                         _ => {}
                     }

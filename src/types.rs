@@ -67,12 +67,6 @@ impl Mapping {
     }
 }
 
-pub enum LeadrResult {
-    Command(String),
-    Cancelled,
-    NoMatch,
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;

@@ -7,7 +7,7 @@ use std::path::PathBuf;
 use clap::Parser;
 use directories::ProjectDirs;
 
-use leadr::{Config, LeadrError, LeadrResult, LeadrSession, Theme};
+use leadr::{Config, LeadrError, SessionResult, LeadrSession, Theme};
 
 #[derive(Parser)]
 #[command(about, version)]
@@ -76,10 +76,10 @@ fn main() {
     let mut handler = LeadrSession::new(config, theme);
 
     match handler.run() {
-        Ok(LeadrResult::Command(command)) => {
+        Ok(SessionResult::Command(command)) => {
             print!("{}", command);
         }
-        Ok(LeadrResult::NoMatch | LeadrResult::Cancelled) => {}
+        Ok(SessionResult::NoMatch | SessionResult::Cancelled) => {}
         Err(e) => {
             eprintln!("Fatal error: {}", e);
             std::process::exit(1);

@@ -2,10 +2,12 @@
 //!
 //! Define key sequences that expand into commands.
 //! Inspired by the (Neo)Vim leader key.
+use std::path::PathBuf;
 
 use clap::Parser;
+use directories::ProjectDirs;
 
-use leadr::{Config, LeadrSession, LeadrResult, Theme};
+use leadr::{Config, LeadrError, LeadrResult, LeadrSession, Theme};
 
 #[derive(Parser)]
 #[command(about, version)]
@@ -21,16 +23,17 @@ struct Cli {
 fn main() {
     let cli = Cli::parse();
 
-    let config: Config = match confy::load("leadr", "config") {
+    let config_dir = match get_config_dir() {
+        Ok(dir) => dir,
+        Err(e) => {
+            eprintln!("Error determining config directory: {}", e);
+            std::process::exit(1);
+        }
+    };
+    let config = match Config::load(&config_dir) {
         Ok(cfg) => cfg,
         Err(e) => {
-            eprintln!("Error loading config");
-            match &e {
-                confy::ConfyError::BadTomlData(inner) => {
-                    eprintln!("TOML error: {}", inner);
-                }
-                _ => eprintln!("Error: {}", e),
-            }
+            eprintln!("Error loading config: {}", e);
             std::process::exit(1);
         }
     };
@@ -80,6 +83,18 @@ fn main() {
         Err(e) => {
             eprintln!("Fatal error: {}", e);
             std::process::exit(1);
+        }
+    }
+}
+
+fn get_config_dir() -> Result<PathBuf, LeadrError> {
+    if let Ok(custom_path) = std::env::var("LEADR_CONFIG_DIR") {
+        Ok(PathBuf::from(custom_path))
+    } else {
+        if let Some(path) = ProjectDirs::from("com", "leadr", "leadr") {
+            Ok(path.config_dir().to_path_buf())
+        } else {
+            Err(LeadrError::ConfigDirNotFound)
         }
     }
 }

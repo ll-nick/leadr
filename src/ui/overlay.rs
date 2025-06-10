@@ -109,7 +109,7 @@ impl Overlay {
         let border_width = 1;
         let footer_height = 2;
 
-        let next_options = group_next_options(sequence, mappings);
+        let next_options = mappings.grouped_next_options(sequence);
         let mut keys: Vec<_> = next_options.keys().collect();
         keys.sort();
         let entry_area = Area {
@@ -279,21 +279,3 @@ impl Drop for Overlay {
     }
 }
 
-pub fn group_next_options<'a>(
-    sequence: &str,
-    mappings: &'a Mappings,
-) -> HashMap<String, Vec<&'a Mapping>> {
-    let mut map: HashMap<String, Vec<&Mapping>> = HashMap::new();
-
-    for (key, mapping) in mappings.iter() {
-        if key.starts_with(&sequence) {
-            if let Some((_, char)) = key[sequence.len()..].char_indices().next() {
-                // next_key is this character (handle utf-8)
-                let next_key = char.to_string();
-                map.entry(next_key).or_default().push(mapping);
-            }
-        }
-    }
-
-    map
-}

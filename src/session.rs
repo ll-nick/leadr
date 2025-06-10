@@ -2,7 +2,7 @@ use std::time::{Duration, Instant};
 
 use crossterm::event::{poll, read, Event, KeyCode, KeyEvent};
 
-use crate::{input::RawModeGuard, Config, LeadrError, Mapping, Overlay, Theme};
+use crate::{input::RawModeGuard, Config, LeadrError, Mappings, Overlay, Theme};
 
 pub enum SessionResult {
     Command(String),
@@ -12,14 +12,16 @@ pub enum SessionResult {
 
 /// Handles keyboard input and matches sequences to mapped commands.
 pub struct LeadrSession {
+    mappings: Mappings,
     config: Config,
     theme: Theme,
     sequence: String,
 }
 
 impl LeadrSession {
-    pub fn new(config: Config, theme: Theme) -> Self {
+    pub fn new(mappings: Mappings, config: Config, theme: Theme) -> Self {
         LeadrSession {
+            mappings,
             config,
             theme,
             sequence: String::new(),
@@ -39,7 +41,7 @@ impl LeadrSession {
                 overlay =
                     Overlay::try_new(self.config.overlay_style.clone(), self.theme.clone()).ok();
                 if let Some(overlay) = overlay.as_mut() {
-                    let _ = overlay.draw(&self.sequence, &self.config.mappings);
+                    let _ = overlay.draw(&self.sequence, &self.mappings);
                 }
             }
 
@@ -57,11 +59,11 @@ impl LeadrSession {
                     match code {
                         KeyCode::Char(c) => {
                             self.sequence.push(c);
-                            if let Some(mapping) = self.match_sequence(&self.sequence) {
+                            if let Some(mapping) = self.mappings.match_sequence(&self.sequence) {
                                 return Ok(SessionResult::Command(mapping.format_command()));
                             }
 
-                            if !self.has_partial_match(&self.sequence) {
+                            if !self.mappings.has_partial_match(&self.sequence) {
                                 return Ok(SessionResult::NoMatch);
                             }
                         }
@@ -74,82 +76,10 @@ impl LeadrSession {
                         _ => {}
                     }
                     if let Some(overlay) = overlay.as_mut() {
-                        let _ = overlay.draw(&self.sequence, &self.config.mappings);
+                        let _ = overlay.draw(&self.sequence, &self.mappings);
                     }
                 }
             }
         }
-    }
-
-    /// Returns an exact match for a given sequence, if one exists.
-    fn match_sequence(&self, seq: &str) -> Option<&Mapping> {
-        self.config.mappings.get(seq)
-    }
-
-    /// Returns true if any mapping begins with the given sequence.
-    fn has_partial_match(&self, seq: &str) -> bool {
-        self.config.mappings.keys().any(|k| k.starts_with(seq))
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::{InsertType, Mappings};
-
-    fn test_config() -> Config {
-        let mut mappings = Mappings::new();
-        mappings.insert(
-            "gs".into(),
-            Mapping {
-                command: "git status".into(),
-                description: None,
-                insert_type: InsertType::Replace,
-                evaluate: false,
-                execute: false,
-            },
-        );
-        mappings.insert(
-            "s".into(),
-            Mapping {
-                command: "sudo ".into(),
-                description: None,
-                insert_type: InsertType::Prepend,
-                evaluate: false,
-                execute: false,
-            },
-        );
-
-        Config {
-            mappings,
-            ..Default::default()
-        }
-    }
-
-    #[test]
-    fn test_exact_match() {
-        let manager = LeadrSession::new(test_config(), Theme::default());
-
-        let result = manager.match_sequence("gs");
-        assert!(result.is_some());
-        assert_eq!(result.unwrap().insert_type, InsertType::Replace);
-
-        let result = manager.match_sequence("s");
-        assert!(result.is_some());
-        assert_eq!(result.unwrap().insert_type, InsertType::Prepend);
-
-        let result = manager.match_sequence("x");
-        assert!(result.is_none());
-
-        let result = manager.match_sequence("g");
-        assert!(result.is_none());
-    }
-
-    #[test]
-    fn test_partial_match() {
-        let manager = LeadrSession::new(test_config(), Theme::default());
-
-        assert!(manager.has_partial_match("g"));
-        assert!(!manager.has_partial_match("x"));
     }
 }

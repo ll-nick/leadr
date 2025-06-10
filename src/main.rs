@@ -7,7 +7,7 @@ use std::path::PathBuf;
 use clap::Parser;
 use directories::ProjectDirs;
 
-use leadr::{Config, LeadrError, SessionResult, LeadrSession, Theme};
+use leadr::{Config, LeadrError, Mappings, SessionResult, LeadrSession, Theme};
 
 #[derive(Parser)]
 #[command(about, version)]
@@ -37,10 +37,13 @@ fn main() {
             std::process::exit(1);
         }
     };
-    if let Err(e) = config.validate() {
-        eprintln!("Error validating config: {}", e);
-        std::process::exit(1);
-    }
+    let mappings = match Mappings::load(&config_dir) {
+        Ok(mappings) => mappings,
+        Err(e) => {
+            eprintln!("Error loading mappings: {}", e);
+            std::process::exit(1);
+        }
+    };
     let theme = Theme::default();
 
     if cli.bash {
@@ -69,11 +72,11 @@ fn main() {
     }
 
     if cli.list {
-        println!("{}", config.render_mapping_table());
+        println!("{}", mappings.render_table());
         return;
     }
 
-    let mut handler = LeadrSession::new(config, theme);
+    let mut handler = LeadrSession::new(mappings, config, theme);
 
     match handler.run() {
         Ok(SessionResult::Command(command)) => {

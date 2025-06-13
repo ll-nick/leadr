@@ -124,7 +124,7 @@ impl Default for Mappings {
             },
         );
         mappings.insert(
-            // Substitute Command
+            // Surround with Quotes
             "sq".into(),
             Mapping {
                 command: "\"#COMMAND\"".into(),
@@ -351,70 +351,6 @@ mod tests {
         assert!(table.contains("Description"));
     }
 
-    #[test]
-    fn test_validate_mappings() {
-        // Create a config with conflicting mappings: "g" and "gs"
-        let mut mappings = HashMap::new();
-        mappings.insert(
-            "g".into(),
-            Mapping {
-                command: "git".into(),
-                description: Some("Git command".into()),
-                insert_type: InsertType::Replace,
-                evaluate: false,
-                execute: true,
-            },
-        );
-        mappings.insert(
-            "gs".into(),
-            Mapping {
-                command: "git status".into(),
-                description: Some("Git status".into()),
-                insert_type: InsertType::Replace,
-                evaluate: false,
-                execute: true,
-            },
-        );
-
-        let mappings = Mappings { mappings };
-
-        // Validation should fail due to prefix conflict
-        let result = mappings.validate();
-        assert!(result.is_err());
-        assert!(matches!(
-            result,
-            Err(LeadrError::ConflictingSequenceError(_))
-        ));
-
-        // Now create a config with no conflicts
-        let mut mappings = HashMap::new();
-        mappings.insert(
-            "g".into(),
-            Mapping {
-                command: "git".into(),
-                description: Some("Git command".into()),
-                insert_type: InsertType::Replace,
-                evaluate: false,
-                execute: true,
-            },
-        );
-        mappings.insert(
-            "x".into(),
-            Mapping {
-                command: "exit".into(),
-                description: Some("Exit command".into()),
-                insert_type: InsertType::Replace,
-                evaluate: false,
-                execute: true,
-            },
-        );
-
-        let mappings = Mappings { mappings };
-
-        // Validation should succeed with no conflicts
-        assert!(mappings.validate().is_ok());
-    }
-
     fn test_mappings() -> Mappings {
         let mut mappings = HashMap::new();
         mappings.insert(
@@ -439,6 +375,32 @@ mod tests {
         );
 
         Mappings { mappings }
+    }
+
+
+    #[test]
+    fn test_validate_mappings() {
+        let mut mappings = test_mappings();
+        assert!(mappings.validate().is_ok());
+
+        mappings.mappings.insert(
+            "g".into(),
+            Mapping {
+                command: "git".into(),
+                description: Some("Git command".into()),
+                insert_type: InsertType::Replace,
+                evaluate: false,
+                execute: true,
+            },
+        );
+
+        // Validation should fail due to prefix conflict
+        let result = mappings.validate();
+        assert!(result.is_err());
+        assert!(matches!(
+            result,
+            Err(LeadrError::ConflictingSequenceError(_))
+        ));
     }
 
     #[test]

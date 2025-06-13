@@ -15,7 +15,7 @@ Use memorable key sequences to quickly execute or insert commands in your termin
 - **Surround**: Wrap your current command in quotes or use `$(command substitution)` in the blink of an eye.
 - **Cursor Positioning**: Automatically place your cursor at the right position after inserting or replacing commands.
 - **Evaluate pre-insert**: Need the current date in your file name? Evaluate a command, then insert it.
-- **Keybinding Overlay**: In case they slipped your mind, see available mappings in a fancy looking overlay.
+- **Command palette**: In case they slipped your mind, see available mappings in a fancy looking pop-up.
 
 ## 🎮 Usage
 

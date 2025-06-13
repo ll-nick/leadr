@@ -1,6 +1,6 @@
 use std::{path::Path};
 
-use crate::{ui::overlay::Config as OverlayConfig, LeadrError};
+use crate::{ui::panel::Config as PanelConfig, LeadrError};
 
 #[derive(serde::Serialize, serde::Deserialize)]
 #[serde(default)]
@@ -8,15 +8,15 @@ pub struct Config {
     /// The key binding to activate leadr.
     pub leadr_key: String,
 
-    /// Configuration for the overlay UI.
-    pub overlay: OverlayConfig,
+    /// Configuration for the keybinding panel.
+    pub panel: PanelConfig,
 }
 
 impl Default for Config {
     fn default() -> Self {
         Self {
             leadr_key: "<C-g>".into(),
-            overlay: OverlayConfig::default(),
+            panel: PanelConfig::default(),
         }
     }
 }

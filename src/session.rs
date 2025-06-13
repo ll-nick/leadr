@@ -2,7 +2,7 @@ use std::time::{Duration, Instant};
 
 use crossterm::event::{poll, read, Event, KeyCode, KeyEvent};
 
-use crate::{input::RawModeGuard, Config, LeadrError, Mappings, Overlay, Theme};
+use crate::{input::RawModeGuard, Config, LeadrError, Mappings, Panel, Theme};
 
 pub enum SessionResult {
     Command(String),
@@ -33,15 +33,15 @@ impl LeadrSession {
     pub fn run(&mut self) -> Result<SessionResult, LeadrError> {
         let _guard = RawModeGuard::new()?;
         let start_time = Instant::now();
-        let mut overlay: Option<Overlay> = None;
+        let mut panel: Option<Panel> = None;
 
         loop {
-            let timeout_reached = start_time.elapsed() >= self.config.overlay.timeout;
-            if self.config.overlay.enabled && overlay.is_none() && timeout_reached {
-                overlay =
-                    Overlay::try_new(self.config.overlay.clone(), self.theme.clone()).ok();
-                if let Some(overlay) = overlay.as_mut() {
-                    let _ = overlay.draw(&self.sequence, &self.mappings);
+            let timeout_reached = start_time.elapsed() >= self.config.panel.timeout;
+            if self.config.panel.enabled && panel.is_none() && timeout_reached {
+                panel =
+                    Panel::try_new(self.config.panel.clone(), self.theme.clone()).ok();
+                if let Some(panel) = panel.as_mut() {
+                    let _ = panel.draw(&self.sequence, &self.mappings);
                 }
             }
 
@@ -75,8 +75,8 @@ impl LeadrSession {
                         }
                         _ => {}
                     }
-                    if let Some(overlay) = overlay.as_mut() {
-                        let _ = overlay.draw(&self.sequence, &self.mappings);
+                    if let Some(panel) = panel.as_mut() {
+                        let _ = panel.draw(&self.sequence, &self.mappings);
                     }
                 }
             }

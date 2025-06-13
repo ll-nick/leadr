@@ -47,13 +47,13 @@ impl std::default::Default for Config {
     }
 }
 
-pub struct Overlay {
+pub struct Panel {
     pub config: Config,
     pub theme: Theme,
     scroll_up: u16,
 }
 
-impl Overlay {
+impl Panel {
     pub fn try_new(config: Config, theme: Theme) -> Result<Self, LeadrError> {
         let mut tty = std::fs::OpenOptions::new().write(true).open("/dev/tty")?;
 
@@ -277,7 +277,7 @@ impl Overlay {
     }
 }
 
-impl Drop for Overlay {
+impl Drop for Panel {
     fn drop(&mut self) {
         let _ = self.clear();
     }

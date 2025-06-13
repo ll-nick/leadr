@@ -18,4 +18,4 @@ pub use mappings::{InsertType, Mapping, Mappings};
 pub use session::{LeadrSession, SessionResult};
 pub use shell::init_bash;
 pub use shell::init_zsh;
-pub use ui::{overlay::Overlay, theme::Theme};
+pub use ui::{panel::Panel, theme::Theme};

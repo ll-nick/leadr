@@ -6,7 +6,10 @@ pub enum LeadrError {
     ConfigDirNotFound,
 
     #[error("Failed to parse TOML: {0}")]
-    Toml(#[from] toml::de::Error),
+    TomlDeserialize(#[from] toml::de::Error),
+
+    #[error("Failed to serialize TOML: {0}")]
+    TomlSerialize(#[from] toml::ser::Error),
 
     #[error("Io error")]
     Io(#[from] std::io::Error),

@@ -165,6 +165,17 @@ impl Mappings {
         }
     }
 
+    pub fn create_default(config_dir: &Path) -> Result<(), LeadrError> {
+        std::fs::create_dir_all(config_dir)?;
+        let mappings_path = config_dir.join("mappings.toml");
+        if !mappings_path.exists() {
+            let default_mappings = Mappings::default();
+            let contents = toml::to_string(&default_mappings)?;
+            std::fs::write(mappings_path, contents)?;
+        }
+        Ok(())
+    }
+
     /// Returns an exact match for a given sequence, if one exists.
     pub fn match_sequence(&self, sequence: &str) -> Option<&Mapping> {
         self.mappings.get(sequence)

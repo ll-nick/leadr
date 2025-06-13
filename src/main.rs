@@ -14,8 +14,13 @@ use leadr::{Config, LeadrError, Mappings, SessionResult, LeadrSession, Theme};
 struct Cli {
     #[arg(long)]
     bash: bool,
+
+    #[arg(long="create-default-config", help = "Create default config files")]
+    create_default_config: bool,
+
     #[arg(long, short = 'l', help = "List all mappings")]
     list: bool,
+
     #[arg(long)]
     zsh: bool,
 }
@@ -30,6 +35,20 @@ fn main() {
             std::process::exit(1);
         }
     };
+
+    if cli.create_default_config {
+        if let Err(e) = Config::create_default(&config_dir) {
+            eprintln!("Error creating default config: {}", e);
+            std::process::exit(1);
+        }
+        if let Err(e) = Mappings::create_default(&config_dir) {
+            eprintln!("Error creating default mappings: {}", e);
+            std::process::exit(1);
+        }
+        println!("Default config and mappings created in {:?}", config_dir);
+        return;
+    }
+
     let config = match Config::load(&config_dir) {
         Ok(cfg) => cfg,
         Err(e) => {

@@ -40,4 +40,15 @@ impl Config {
             Ok(Config::default())
         }
     }
+
+    pub fn create_default(config_dir: &Path) -> Result<(), LeadrError> {
+        std::fs::create_dir_all(config_dir)?;
+        let config_path = config_dir.join("config.toml");
+        if !config_path.exists() {
+            let default_config = Config::default();
+            let contents = toml::to_string(&default_config)?;
+            std::fs::write(config_path, contents)?;
+        }
+        Ok(())
+    }
 }

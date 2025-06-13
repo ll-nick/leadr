@@ -1,4 +1,4 @@
-pub mod overlay;
+pub mod panel;
 pub mod symbols;
 pub mod table;
 pub mod theme;

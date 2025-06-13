@@ -1,4 +1,4 @@
-use std::{collections::HashMap, io::Write};
+use std::{collections::HashMap, time::Duration, io::Write};
 
 use crossterm::{QueueableCommand, cursor, style::Stylize, terminal};
 use serde::{Deserialize, Serialize};
@@ -26,9 +26,11 @@ pub enum BorderType {
 pub struct Config {
     pub border_type: BorderType,
     pub column_layout: ColumnLayout,
+    pub enabled: bool,
     pub height: u16,
     pub padding: u16,
     pub symbols: Symbols,
+    pub timeout: Duration,
 }
 
 impl std::default::Default for Config {
@@ -36,20 +38,22 @@ impl std::default::Default for Config {
         Self {
             border_type: BorderType::Rounded,
             column_layout: ColumnLayout::default(),
+            enabled: true,
             height: 10,
             padding: 2,
             symbols: Symbols::default(),
+            timeout: Duration::from_millis(500),
         }
     }
 }
 
-pub struct Overlay {
+pub struct Panel {
     pub config: Config,
     pub theme: Theme,
     scroll_up: u16,
 }
 
-impl Overlay {
+impl Panel {
     pub fn try_new(config: Config, theme: Theme) -> Result<Self, LeadrError> {
         let mut tty = std::fs::OpenOptions::new().write(true).open("/dev/tty")?;
 
@@ -109,7 +113,7 @@ impl Overlay {
         let border_width = 1;
         let footer_height = 2;
 
-        let next_options = group_next_options(sequence, mappings);
+        let next_options = mappings.grouped_next_options(sequence);
         let mut keys: Vec<_> = next_options.keys().collect();
         keys.sort();
         let entry_area = Area {
@@ -273,27 +277,9 @@ impl Overlay {
     }
 }
 
-impl Drop for Overlay {
+impl Drop for Panel {
     fn drop(&mut self) {
         let _ = self.clear();
     }
 }
 
-pub fn group_next_options<'a>(
-    sequence: &str,
-    mappings: &'a Mappings,
-) -> HashMap<String, Vec<&'a Mapping>> {
-    let mut map: HashMap<String, Vec<&Mapping>> = HashMap::new();
-
-    for (key, mapping) in mappings.iter() {
-        if key.starts_with(&sequence) {
-            if let Some((_, char)) = key[sequence.len()..].char_indices().next() {
-                // next_key is this character (handle utf-8)
-                let next_key = char.to_string();
-                map.entry(next_key).or_default().push(mapping);
-            }
-        }
-    }
-
-    map
-}

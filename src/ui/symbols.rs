@@ -21,7 +21,7 @@ impl std::default::Default for Symbols {
             evaluate: "󰊕".into(),
             execute: "󰌑".into(),
             insert: "".into(),
-            prepend: "󰌥".into(),
+            prepend: "⇤".into(),
             replace: " ".into(),
             sequence_begin: "󰄾".into(),
             surround: "󰅪".into(),

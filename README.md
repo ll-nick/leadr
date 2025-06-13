@@ -15,7 +15,7 @@ Use memorable key sequences to quickly execute or insert commands in your termin
 - **Surround**: Wrap your current command in quotes or use `$(command substitution)` in the blink of an eye.
 - **Cursor Positioning**: Automatically place your cursor at the right position after inserting or replacing commands.
 - **Evaluate pre-insert**: Need the current date in your file name? Evaluate a command, then insert it.
-- **Keybinding Overlay**: In case they slipped your mind, see available mappings in a fancy looking overlay.
+- **Keybinding Panel**: In case they slipped your mind, see available mappings in a fancy looking pop-up.
 
 ## 🎮 Usage
 
@@ -96,20 +96,27 @@ source <(leadr --zsh)
 
 ## 🛠️ Configuration
 
-### Configuration File
+To get started configuring `leadr`, run `leadr --init` to create the default configuration files and start tweaking from there.
 
-`leadr` will automatically create a configuration file and fill it with some default mappings the first time you run it.
-See [confy's Readme](https://github.com/rust-cli/confy?tab=readme-ov-file#config-file-location) for the location of the configuration file.
+### config.toml
 
-Modify the configuration file to add your own mappings or adjust the `leadr` keybinding.
+The main configuration file to set your leadr keybinding, tweak the keybinding panel and other global settings.
+For a list of currently supported keybindings, see [src/keymap.rs](src/keymap.rs).
 
 ### Mappings
 
-Define new mappings by adding a new entry to the `mappings` section of the configuration file.
-The key will be the key sequence you want to use, `command` will be the command you want to execute or insert.
-Optionally, add a `description` for the `--list` command to show.
+Mappings are defined in the `mappings.toml` file and look like this
 
-Finally, you can customize the behavior of the mapping by specifying `insert_type`, `evaluate`, and `execute` options.
+```toml
+[<keybinding>]
+command = "<command>"
+description = "<an optional description>"
+insert_type = "<One of the possible insert types>" # See below for options, default: "Replace"
+evaluate = <true or false> # Default: false
+execute = <true or false> # Default: false
+```
+
+You can customize the behavior of the mapping by specifying `insert_type`, `evaluate`, and `execute` options.
 Here's an overview of the available options:
 
 | Setting | Options | Description |
@@ -129,10 +136,6 @@ This works for all insert types but will have no effect if `evaluate` or `execut
 > **Note**: `execute` works best inside a `tmux` session since it can utilize `tmux`'s `send-keys` to execute commands.
 > Outside of `tmux`, `leadr` will fallback to `eval` and manually append the command to the shell's history.
 
-
-### Leadr Keybinding
-
-For a list of currently supported keybindings, see [src/keymap.rs](src/keymap.rs).
 
 ### User Interface
 

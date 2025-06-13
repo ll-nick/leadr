@@ -16,8 +16,8 @@ struct Cli {
     #[arg(long)]
     bash: bool,
 
-    #[arg(long="create-default-config", help = "Create default config files")]
-    create_default_config: bool,
+    #[arg(long="init", help = "Create default config files")]
+    init: bool,
 
     #[arg(long, short = 'l', help = "List all mappings")]
     list: bool,
@@ -37,7 +37,7 @@ fn main() {
         }
     };
 
-    if cli.create_default_config {
+    if cli.init {
         if let Err(e) = Config::create_default(&config_dir) {
             eprintln!("Error creating default config: {}", e);
             std::process::exit(1);

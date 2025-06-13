@@ -2,15 +2,25 @@ name: Release
 on:
   push:
     tags:
-    - 'v*'
+      - v[0-9]+.[0-9]+.[0-9]+
 
 env:
   CARGO_TERM_COLOR: always
 
 jobs:
+  check-version:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install toml-cli
+        run: cargo install toml-cli
+      - name: Check version
+        run: test "v$(toml get -r Cargo.toml package.version)" = "${{ github.ref_name }}"
+
   # Cross-compiled Linux binaries using `cross`
   build-linux:
     runs-on: ubuntu-latest
+    needs: check-version
     strategy:
       matrix:
         target: [
@@ -40,6 +50,7 @@ jobs:
   # Native macOS build
   build-macos:
     runs-on: macos-latest
+    needs: check-version
     steps:
       - uses: actions/checkout@v4
 
@@ -56,8 +67,7 @@ jobs:
           name: leadr-${{ github.ref_name }}-x86_64-apple-darwin
           path: dist/leadr-${{ github.ref_name }}-x86_64-apple-darwin
 
-  # GitHub release job
-  release:
+  release-to-github:
     needs: [build-linux, build-macos]
     runs-on: ubuntu-latest
     steps:
@@ -70,3 +80,12 @@ jobs:
         with:
           artifacts: "dist/*"
 
+  publish-to-crates-io:
+    needs: [build-linux, build-macos]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Publish to crates.io
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+        run: cargo publish --no-verify

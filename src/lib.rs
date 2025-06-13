@@ -7,14 +7,14 @@ pub mod config;
 pub mod error;
 pub mod input;
 pub mod keymap;
-pub mod mapping;
+pub mod mappings;
 pub mod session;
 pub mod shell;
 pub mod ui;
 
 pub use config::Config;
 pub use error::LeadrError;
-pub use mapping::{InsertType, Mapping, Mappings};
+pub use mappings::{InsertType, Mapping, Mappings};
 pub use session::{LeadrSession, SessionResult};
 pub use shell::init_bash;
 pub use shell::init_zsh;

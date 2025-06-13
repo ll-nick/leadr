@@ -2,6 +2,7 @@
 //!
 //! Define key sequences that expand into commands.
 //! Inspired by the (Neo)Vim leader key.
+
 use std::path::PathBuf;
 
 use clap::Parser;

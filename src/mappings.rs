@@ -23,7 +23,7 @@ pub enum InsertType {
     Surround,
 }
 
-/// Represents a user-defined command with additional metadata.
+/// Represents a user-defined key sequence to command mapping with additional metadata.
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 pub struct Mapping {
     pub command: String,
@@ -150,7 +150,6 @@ impl Default for Mappings {
 }
 
 impl Mappings {
-    /// Loads mappings from a TOML file in the specified directory.
     pub fn load(config_dir: &Path) -> Result<Self, LeadrError> {
         let config_path = config_dir.join("mappings.toml");
         if config_path.exists() {
@@ -186,6 +185,7 @@ impl Mappings {
         self.mappings.keys().any(|k| k.starts_with(seq))
     }
 
+    /// Given a sequence, checks all mappings that are still possible and groups them by the next character.
     pub fn grouped_next_options(&self, sequence: &str) -> HashMap<String, Vec<&Mapping>> {
         let mut grouped_options: HashMap<String, Vec<&Mapping>> = HashMap::new();
 
@@ -202,10 +202,10 @@ impl Mappings {
         grouped_options
     }
 
-    /// Validates that no mappings overlap or are prefixes of each other.
     fn validate(&self) -> Result<(), LeadrError> {
         let keys: Vec<&String> = self.mappings.keys().collect();
 
+        // Validate that no mappings overlap or are prefixes of each other.
         for (i, key1) in keys.iter().enumerate() {
             for key2 in keys.iter().skip(i + 1) {
                 if key1.starts_with(*key2) || key2.starts_with(*key1) {
@@ -231,7 +231,6 @@ impl Mappings {
         Ok(())
     }
 
-    /// Renders the configured mappings as a formatted table.
     pub fn render_table(&self) -> String {
         let layout = table::ColumnLayout {
             sequence: 8,

@@ -29,7 +29,7 @@ impl LeadrSession {
     }
 
     /// Runs the input loop, capturing key events and returning when a mapping is matched,
-    /// cancelled, or an invalid sequence is entered.
+    /// canceled, or an invalid sequence is entered.
     pub fn run(&mut self) -> Result<SessionResult, LeadrError> {
         let _guard = RawModeGuard::new()?;
         let start_time = Instant::now();

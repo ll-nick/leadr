@@ -1,4 +1,4 @@
-use std::{path::Path, time::Duration};
+use std::{path::Path};
 
 use crate::{ui::overlay::Config as OverlayConfig, LeadrError};
 
@@ -8,23 +8,15 @@ pub struct Config {
     /// The key binding to activate leadr.
     pub leadr_key: String,
 
-    /// Whether or not to print the ui overlay.
-    pub show_overlay: bool,
-
-    /// The duration until the overlay appears.
-    pub overlay_timeout: Duration,
-
-    /// The overlay styling.
-    pub overlay_style: OverlayConfig,
+    /// Configuration for the overlay UI.
+    pub overlay: OverlayConfig,
 }
 
 impl Default for Config {
     fn default() -> Self {
         Self {
             leadr_key: "<C-g>".into(),
-            show_overlay: true,
-            overlay_timeout: Duration::from_millis(500),
-            overlay_style: OverlayConfig::default(),
+            overlay: OverlayConfig::default(),
         }
     }
 }

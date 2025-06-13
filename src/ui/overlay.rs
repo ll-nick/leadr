@@ -1,4 +1,4 @@
-use std::{collections::HashMap, io::Write};
+use std::{collections::HashMap, time::Duration, io::Write};
 
 use crossterm::{QueueableCommand, cursor, style::Stylize, terminal};
 use serde::{Deserialize, Serialize};
@@ -26,9 +26,11 @@ pub enum BorderType {
 pub struct Config {
     pub border_type: BorderType,
     pub column_layout: ColumnLayout,
+    pub enabled: bool,
     pub height: u16,
     pub padding: u16,
     pub symbols: Symbols,
+    pub timeout: Duration,
 }
 
 impl std::default::Default for Config {
@@ -36,9 +38,11 @@ impl std::default::Default for Config {
         Self {
             border_type: BorderType::Rounded,
             column_layout: ColumnLayout::default(),
+            enabled: true,
             height: 10,
             padding: 2,
             symbols: Symbols::default(),
+            timeout: Duration::from_millis(500),
         }
     }
 }

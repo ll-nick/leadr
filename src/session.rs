@@ -36,10 +36,10 @@ impl LeadrSession {
         let mut overlay: Option<Overlay> = None;
 
         loop {
-            let timeout_reached = start_time.elapsed() >= self.config.overlay_timeout;
-            if self.config.show_overlay && overlay.is_none() && timeout_reached {
+            let timeout_reached = start_time.elapsed() >= self.config.overlay.timeout;
+            if self.config.overlay.enabled && overlay.is_none() && timeout_reached {
                 overlay =
-                    Overlay::try_new(self.config.overlay_style.clone(), self.theme.clone()).ok();
+                    Overlay::try_new(self.config.overlay.clone(), self.theme.clone()).ok();
                 if let Some(overlay) = overlay.as_mut() {
                     let _ = overlay.draw(&self.sequence, &self.mappings);
                 }

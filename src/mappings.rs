@@ -48,6 +48,19 @@ pub struct Mapping {
     pub source_file: Option<std::path::PathBuf>,
 }
 
+impl Default for Mapping {
+    fn default() -> Self {
+        Mapping {
+            command: String::new(),
+            description: None,
+            insert_type: InsertType::Replace,
+            evaluate: false,
+            execute: false,
+            source_file: None,
+        }
+    }
+}
+
 impl Mapping {
     fn flags_string(&self) -> String {
         let mut flags = vec![format!("{:?}", self.insert_type).to_uppercase()];
@@ -79,9 +92,8 @@ impl Default for Mappings {
             Mapping {
                 command: "git add .".into(),
                 description: Some("Git add all".into()),
-                insert_type: InsertType::Replace,
-                evaluate: false,
                 execute: true,
+                ..Default::default()
             },
         );
         mappings.insert(
@@ -89,9 +101,7 @@ impl Default for Mappings {
             Mapping {
                 command: "git commit -m \"#CURSOR\"".into(),
                 description: Some("Start a Git commit".into()),
-                insert_type: InsertType::Replace,
-                evaluate: false,
-                execute: false,
+                ..Default::default()
             },
         );
         mappings.insert(
@@ -99,9 +109,8 @@ impl Default for Mappings {
             Mapping {
                 command: "git status".into(),
                 description: Some("Git status".into()),
-                insert_type: InsertType::Replace,
-                evaluate: false,
                 execute: true,
+                ..Default::default()
             },
         );
         mappings.insert(
@@ -112,7 +121,7 @@ impl Default for Mappings {
                 description: Some("Insert current date in YYYYMMDD format".into()),
                 insert_type: InsertType::Insert,
                 evaluate: true,
-                execute: false,
+                ..Default::default()
             },
         );
         mappings.insert(
@@ -122,8 +131,7 @@ impl Default for Mappings {
                 command: "sudo ".into(),
                 description: Some("Prepend sudo".into()),
                 insert_type: InsertType::Prepend,
-                evaluate: false,
-                execute: false,
+                ..Default::default()
             },
         );
         mappings.insert(
@@ -133,8 +141,7 @@ impl Default for Mappings {
                 command: "\"#COMMAND\"".into(),
                 description: Some("Surround with quotes".into()),
                 insert_type: InsertType::Surround,
-                evaluate: false,
-                execute: false,
+                ..Default::default()
             },
         );
         mappings.insert(
@@ -144,8 +151,7 @@ impl Default for Mappings {
                 command: " | xclip -selection clipboard".into(),
                 description: Some("Append copy to clipboard".into()),
                 insert_type: InsertType::Append,
-                evaluate: false,
-                execute: false,
+                ..Default::default()
             },
         );
         Self { mappings }
@@ -308,10 +314,7 @@ mod tests {
     fn test_format_replace_no_flags() {
         let sc = Mapping {
             command: "dummy command".into(),
-            description: None,
-            insert_type: InsertType::Replace,
-            evaluate: false,
-            execute: false,
+            ..Default::default()
         };
         assert_eq!(sc.format_command(), "REPLACE dummy command");
     }
@@ -320,10 +323,10 @@ mod tests {
     fn test_format_insert_eval_exec() {
         let sc = Mapping {
             command: "dummy command".into(),
-            description: None,
             insert_type: InsertType::Insert,
             evaluate: true,
             execute: true,
+            ..Default::default()
         };
         assert_eq!(sc.format_command(), "INSERT+EVAL+EXEC dummy command");
     }
@@ -332,10 +335,8 @@ mod tests {
     fn test_format_append_only() {
         let sc = Mapping {
             command: "dummy command".into(),
-            description: None,
             insert_type: InsertType::Append,
-            evaluate: false,
-            execute: false,
+            ..Default::default()
         };
         assert_eq!(sc.format_command(), "APPEND dummy command");
     }
@@ -344,10 +345,9 @@ mod tests {
     fn test_format_prepend_eval_only() {
         let sc = Mapping {
             command: "dummy command".into(),
-            description: None,
             insert_type: InsertType::Prepend,
             evaluate: true,
-            execute: false,
+            ..Default::default()
         };
         assert_eq!(sc.format_command(), "PREPEND+EVAL dummy command");
     }
@@ -356,10 +356,9 @@ mod tests {
     fn test_format_replace_exec_only() {
         let sc = Mapping {
             command: "dummy command".into(),
-            description: None,
             insert_type: InsertType::Replace,
-            evaluate: false,
             execute: true,
+            ..Default::default()
         };
         assert_eq!(sc.format_command(), "REPLACE+EXEC dummy command");
     }
@@ -368,10 +367,8 @@ mod tests {
     fn test_format_insert_only() {
         let sc = Mapping {
             command: "dummy command".into(),
-            description: None,
             insert_type: InsertType::Insert,
-            evaluate: false,
-            execute: false,
+            ..Default::default()
         };
         assert_eq!(sc.format_command(), "INSERT dummy command");
     }
@@ -380,10 +377,9 @@ mod tests {
     fn test_format_surround() {
         let sc = Mapping {
             command: "dummy command".into(),
-            description: None,
             insert_type: InsertType::Surround,
-            evaluate: false,
             execute: true,
+            ..Default::default()
         };
         assert_eq!(sc.format_command(), "SURROUND+EXEC dummy command");
     }
@@ -403,20 +399,15 @@ mod tests {
             "gs".into(),
             Mapping {
                 command: "git status".into(),
-                description: None,
-                insert_type: InsertType::Replace,
-                evaluate: false,
-                execute: false,
+                ..Default::default()
             },
         );
         mappings.insert(
             "s".into(),
             Mapping {
                 command: "sudo ".into(),
-                description: None,
                 insert_type: InsertType::Prepend,
-                evaluate: false,
-                execute: false,
+                ..Default::default()
             },
         );
 
@@ -433,9 +424,8 @@ mod tests {
             Mapping {
                 command: "git".into(),
                 description: Some("Git command".into()),
-                insert_type: InsertType::Replace,
-                evaluate: false,
                 execute: true,
+                ..Default::default()
             },
         );
 

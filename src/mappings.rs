@@ -1,4 +1,4 @@
-use std::{collections::HashMap, path::Path};
+use std::{collections::HashMap, fs, path::{Path, PathBuf}};
 
 use serde::{Deserialize, Serialize};
 
@@ -43,6 +43,9 @@ pub struct Mapping {
     /// Whether this command should be executed immediately after being inserted.
     #[serde(default, skip_serializing_if = "is_false")]
     pub execute: bool,
+
+    #[serde(skip)]
+    pub source_file: Option<std::path::PathBuf>,
 }
 
 impl Mapping {
@@ -151,17 +154,35 @@ impl Default for Mappings {
 
 impl Mappings {
     pub fn load(config_dir: &Path) -> Result<Self, LeadrError> {
-        let config_path = config_dir.join("mappings.toml");
-        if config_path.exists() {
-            let contents = std::fs::read_to_string(&config_path)?;
+        let mut merged = HashMap::new();
+
+        // 1. Load main mappings.toml
+        let main_file = config_dir.join("mappings.toml");
+        if main_file.exists() {
+            let contents = fs::read_to_string(&main_file)?;
             let mappings: Mappings = toml::from_str(&contents)?;
-            mappings.validate()?;
-            Ok(mappings)
-        } else {
-            let mappings = Mappings::default();
-            mappings.validate()?;
-            Ok(mappings)
+            for (key, mut mapping) in mappings.mappings {
+                mapping.source_file = Some(main_file.clone());
+                merged.insert(key, mapping);
+            }
         }
+
+        // 2. Load recursively from mappings/ directory
+        let mappings_dir = config_dir.join("mappings");
+        if mappings_dir.exists() && mappings_dir.is_dir() {
+            for path in collect_toml_files(&mappings_dir)? {
+                let contents = fs::read_to_string(&path)?;
+                let mappings: Mappings = toml::from_str(&contents)?;
+                for (key, mut mapping) in mappings.mappings {
+                    mapping.source_file = Some(path.clone());
+                    merged.insert(key, mapping);
+                }
+            }
+        }
+
+        let final_mappings = Mappings { mappings: merged };
+        final_mappings.validate()?;
+        Ok(final_mappings)
     }
 
     pub fn create_default(config_dir: &Path) -> Result<(), LeadrError> {
@@ -263,6 +284,21 @@ fn is_replace(insert_type: &InsertType) -> bool {
 fn is_false(b: &bool) -> bool {
     !*b
 }
+
+fn collect_toml_files(dir: &Path) -> Result<Vec<PathBuf>, LeadrError> {
+    let mut result = Vec::new();
+    for entry in fs::read_dir(dir)? {
+        let entry = entry?;
+        let path = entry.path();
+        if path.is_dir() {
+            result.extend(collect_toml_files(&path)?);
+        } else if path.extension().and_then(|s| s.to_str()) == Some("toml") {
+            result.push(path);
+        }
+    }
+    Ok(result)
+}
+
 
 #[cfg(test)]
 mod tests {
@@ -386,7 +422,6 @@ mod tests {
 
         Mappings { mappings }
     }
-
 
     #[test]
     fn test_validate_mappings() {

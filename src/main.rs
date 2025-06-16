@@ -64,7 +64,13 @@ fn main() {
             std::process::exit(1);
         }
     };
-    let theme = Theme::default();
+    let theme = match Theme::load(&config_dir, &config.panel.theme_name) {
+        Ok(theme) => theme,
+        Err(e) => {
+            eprintln!("Error loading theme: {}", e);
+            std::process::exit(1);
+        }
+    };
 
     if cli.bash {
         match leadr::init_bash(&config) {

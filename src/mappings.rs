@@ -1,8 +1,12 @@
-use std::{collections::HashMap, path::Path};
+use std::{
+    collections::HashMap,
+    fs,
+    path::{Path, PathBuf},
+};
 
 use serde::{Deserialize, Serialize};
 
-use crate::{ui::table, LeadrError};
+use crate::{LeadrError, ui::table};
 
 #[derive(Clone, Debug, Default, PartialEq, serde::Serialize, serde::Deserialize)]
 pub enum InsertType {
@@ -43,6 +47,22 @@ pub struct Mapping {
     /// Whether this command should be executed immediately after being inserted.
     #[serde(default, skip_serializing_if = "is_false")]
     pub execute: bool,
+
+    #[serde(skip)]
+    pub source_file: Option<std::path::PathBuf>,
+}
+
+impl Default for Mapping {
+    fn default() -> Self {
+        Mapping {
+            command: String::new(),
+            description: None,
+            insert_type: InsertType::Replace,
+            evaluate: false,
+            execute: false,
+            source_file: None,
+        }
+    }
 }
 
 impl Mapping {
@@ -76,9 +96,8 @@ impl Default for Mappings {
             Mapping {
                 command: "git add .".into(),
                 description: Some("Git add all".into()),
-                insert_type: InsertType::Replace,
-                evaluate: false,
                 execute: true,
+                ..Default::default()
             },
         );
         mappings.insert(
@@ -86,9 +105,7 @@ impl Default for Mappings {
             Mapping {
                 command: "git commit -m \"#CURSOR\"".into(),
                 description: Some("Start a Git commit".into()),
-                insert_type: InsertType::Replace,
-                evaluate: false,
-                execute: false,
+                ..Default::default()
             },
         );
         mappings.insert(
@@ -96,9 +113,8 @@ impl Default for Mappings {
             Mapping {
                 command: "git status".into(),
                 description: Some("Git status".into()),
-                insert_type: InsertType::Replace,
-                evaluate: false,
                 execute: true,
+                ..Default::default()
             },
         );
         mappings.insert(
@@ -109,7 +125,7 @@ impl Default for Mappings {
                 description: Some("Insert current date in YYYYMMDD format".into()),
                 insert_type: InsertType::Insert,
                 evaluate: true,
-                execute: false,
+                ..Default::default()
             },
         );
         mappings.insert(
@@ -119,8 +135,7 @@ impl Default for Mappings {
                 command: "sudo ".into(),
                 description: Some("Prepend sudo".into()),
                 insert_type: InsertType::Prepend,
-                evaluate: false,
-                execute: false,
+                ..Default::default()
             },
         );
         mappings.insert(
@@ -130,8 +145,7 @@ impl Default for Mappings {
                 command: "\"#COMMAND\"".into(),
                 description: Some("Surround with quotes".into()),
                 insert_type: InsertType::Surround,
-                evaluate: false,
-                execute: false,
+                ..Default::default()
             },
         );
         mappings.insert(
@@ -141,8 +155,7 @@ impl Default for Mappings {
                 command: " | xclip -selection clipboard".into(),
                 description: Some("Append copy to clipboard".into()),
                 insert_type: InsertType::Append,
-                evaluate: false,
-                execute: false,
+                ..Default::default()
             },
         );
         Self { mappings }
@@ -151,17 +164,35 @@ impl Default for Mappings {
 
 impl Mappings {
     pub fn load(config_dir: &Path) -> Result<Self, LeadrError> {
-        let config_path = config_dir.join("mappings.toml");
-        if config_path.exists() {
-            let contents = std::fs::read_to_string(&config_path)?;
+        let mut merged = HashMap::new();
+
+        // 1. Load main mappings.toml
+        let main_file = config_dir.join("mappings.toml");
+        if main_file.exists() {
+            let contents = fs::read_to_string(&main_file)?;
             let mappings: Mappings = toml::from_str(&contents)?;
-            mappings.validate()?;
-            Ok(mappings)
-        } else {
-            let mappings = Mappings::default();
-            mappings.validate()?;
-            Ok(mappings)
+            for (key, mut mapping) in mappings.mappings {
+                mapping.source_file = Some(main_file.clone());
+                merged.insert(key, mapping);
+            }
         }
+
+        // 2. Load recursively from mappings/ directory
+        let mappings_dir = config_dir.join("mappings");
+        if mappings_dir.exists() && mappings_dir.is_dir() {
+            for path in collect_toml_files(&mappings_dir)? {
+                let contents = fs::read_to_string(&path)?;
+                let mappings: Mappings = toml::from_str(&contents)?;
+                for (key, mut mapping) in mappings.mappings {
+                    mapping.source_file = Some(path.clone());
+                    merged.insert(key, mapping);
+                }
+            }
+        }
+
+        let final_mappings = Mappings { mappings: merged };
+        final_mappings.validate()?;
+        Ok(final_mappings)
     }
 
     pub fn create_default(config_dir: &Path) -> Result<(), LeadrError> {
@@ -209,9 +240,24 @@ impl Mappings {
         for (i, key1) in keys.iter().enumerate() {
             for key2 in keys.iter().skip(i + 1) {
                 if key1.starts_with(*key2) || key2.starts_with(*key1) {
+                    let mapping1 = &self.mappings[*key1];
+                    let mapping2 = &self.mappings[*key2];
+
+                    let file1 = mapping1
+                        .source_file
+                        .as_ref()
+                        .map(|p| p.display().to_string())
+                        .unwrap_or_else(|| "unknown source".to_string());
+
+                    let file2 = mapping2
+                        .source_file
+                        .as_ref()
+                        .map(|p| p.display().to_string())
+                        .unwrap_or_else(|| "unknown source".to_string());
+
                     return Err(LeadrError::ConflictingSequenceError(format!(
-                        "'{}' conflicts with '{}'",
-                        key1, key2
+                        "'{}' (from {}) conflicts with '{}' (from {})",
+                        key1, file1, key2, file2
                     )));
                 }
             }
@@ -221,9 +267,15 @@ impl Mappings {
         for mapping in self.mappings.values() {
             if mapping.insert_type == InsertType::Surround && !mapping.command.contains("#COMMAND")
             {
+                let file = mapping
+                    .source_file
+                    .as_ref()
+                    .map(|p| p.display().to_string())
+                    .unwrap_or_else(|| "unknown source".to_string());
+
                 return Err(LeadrError::InvalidSurroundCommand(format!(
-                    "Surround-type mapping '{}' must contain '#COMMAND' in its command",
-                    mapping.command
+                    "Surround-type mapping '{}' (from {}) must contain '#COMMAND' in its command",
+                    mapping.command, file
                 )));
             }
         }
@@ -239,6 +291,7 @@ impl Mappings {
             evaluate: 9,
             execute: 9,
             description: 40,
+            source: 30,
         };
 
         let mut table = String::new();
@@ -264,6 +317,20 @@ fn is_false(b: &bool) -> bool {
     !*b
 }
 
+fn collect_toml_files(dir: &Path) -> Result<Vec<PathBuf>, LeadrError> {
+    let mut result = Vec::new();
+    for entry in fs::read_dir(dir)? {
+        let entry = entry?;
+        let path = entry.path();
+        if path.is_dir() {
+            result.extend(collect_toml_files(&path)?);
+        } else if path.extension().and_then(|s| s.to_str()) == Some("toml") {
+            result.push(path);
+        }
+    }
+    Ok(result)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -272,10 +339,7 @@ mod tests {
     fn test_format_replace_no_flags() {
         let sc = Mapping {
             command: "dummy command".into(),
-            description: None,
-            insert_type: InsertType::Replace,
-            evaluate: false,
-            execute: false,
+            ..Default::default()
         };
         assert_eq!(sc.format_command(), "REPLACE dummy command");
     }
@@ -284,10 +348,10 @@ mod tests {
     fn test_format_insert_eval_exec() {
         let sc = Mapping {
             command: "dummy command".into(),
-            description: None,
             insert_type: InsertType::Insert,
             evaluate: true,
             execute: true,
+            ..Default::default()
         };
         assert_eq!(sc.format_command(), "INSERT+EVAL+EXEC dummy command");
     }
@@ -296,10 +360,8 @@ mod tests {
     fn test_format_append_only() {
         let sc = Mapping {
             command: "dummy command".into(),
-            description: None,
             insert_type: InsertType::Append,
-            evaluate: false,
-            execute: false,
+            ..Default::default()
         };
         assert_eq!(sc.format_command(), "APPEND dummy command");
     }
@@ -308,10 +370,9 @@ mod tests {
     fn test_format_prepend_eval_only() {
         let sc = Mapping {
             command: "dummy command".into(),
-            description: None,
             insert_type: InsertType::Prepend,
             evaluate: true,
-            execute: false,
+            ..Default::default()
         };
         assert_eq!(sc.format_command(), "PREPEND+EVAL dummy command");
     }
@@ -320,10 +381,9 @@ mod tests {
     fn test_format_replace_exec_only() {
         let sc = Mapping {
             command: "dummy command".into(),
-            description: None,
             insert_type: InsertType::Replace,
-            evaluate: false,
             execute: true,
+            ..Default::default()
         };
         assert_eq!(sc.format_command(), "REPLACE+EXEC dummy command");
     }
@@ -332,10 +392,8 @@ mod tests {
     fn test_format_insert_only() {
         let sc = Mapping {
             command: "dummy command".into(),
-            description: None,
             insert_type: InsertType::Insert,
-            evaluate: false,
-            execute: false,
+            ..Default::default()
         };
         assert_eq!(sc.format_command(), "INSERT dummy command");
     }
@@ -344,10 +402,9 @@ mod tests {
     fn test_format_surround() {
         let sc = Mapping {
             command: "dummy command".into(),
-            description: None,
             insert_type: InsertType::Surround,
-            evaluate: false,
             execute: true,
+            ..Default::default()
         };
         assert_eq!(sc.format_command(), "SURROUND+EXEC dummy command");
     }
@@ -367,26 +424,20 @@ mod tests {
             "gs".into(),
             Mapping {
                 command: "git status".into(),
-                description: None,
-                insert_type: InsertType::Replace,
-                evaluate: false,
-                execute: false,
+                ..Default::default()
             },
         );
         mappings.insert(
             "s".into(),
             Mapping {
                 command: "sudo ".into(),
-                description: None,
                 insert_type: InsertType::Prepend,
-                evaluate: false,
-                execute: false,
+                ..Default::default()
             },
         );
 
         Mappings { mappings }
     }
-
 
     #[test]
     fn test_validate_mappings() {
@@ -398,9 +449,8 @@ mod tests {
             Mapping {
                 command: "git".into(),
                 description: Some("Git command".into()),
-                insert_type: InsertType::Replace,
-                evaluate: false,
                 execute: true,
+                ..Default::default()
             },
         );
 

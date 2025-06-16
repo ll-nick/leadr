@@ -1,8 +1,8 @@
 use std::time::{Duration, Instant};
 
-use crossterm::event::{poll, read, Event, KeyCode, KeyEvent};
+use crossterm::event::{Event, KeyCode, KeyEvent, poll, read};
 
-use crate::{input::RawModeGuard, Config, LeadrError, Mappings, Panel, Theme};
+use crate::{Config, LeadrError, Mappings, Panel, Theme, input::RawModeGuard};
 
 pub enum SessionResult {
     Command(String),

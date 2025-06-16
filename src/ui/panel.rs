@@ -1,4 +1,4 @@
-use std::{collections::HashMap, time::Duration, io::Write};
+use std::{collections::HashMap, io::Write, time::Duration};
 
 use crossterm::{QueueableCommand, cursor, style::Stylize, terminal};
 use serde::{Deserialize, Serialize};
@@ -233,13 +233,8 @@ impl Panel {
             tty.queue(cursor::MoveTo(area.x, line))?;
 
             let mappings = &next_options_map[*key];
-            let stylized_entry = Entry::new(
-                key,
-                mappings,
-                area.width,
-                &self.config.symbols,
-                &self.theme,
-            );
+            let stylized_entry =
+                Entry::new(key, mappings, area.width, &self.config.symbols, &self.theme);
             stylized_entry.to_tty(tty)?;
 
             line += 1;
@@ -286,4 +281,3 @@ impl Drop for Panel {
         let _ = self.clear();
     }
 }
-

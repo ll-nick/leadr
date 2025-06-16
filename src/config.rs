@@ -1,6 +1,6 @@
-use std::{path::Path};
+use std::path::Path;
 
-use crate::{ui::panel::Config as PanelConfig, LeadrError};
+use crate::{LeadrError, ui::panel::Config as PanelConfig};
 
 #[derive(serde::Serialize, serde::Deserialize)]
 #[serde(default)]

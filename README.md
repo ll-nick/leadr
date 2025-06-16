@@ -98,14 +98,19 @@ source <(leadr --zsh)
 
 To get started configuring `leadr`, run `leadr --init` to create the default configuration files and start tweaking from there.
 
+To overwrite the default configuration directory (see [the directories crate](https://crates.io/crates/directories) for the default value of the `config_dir`) you can set the `LEADR_CONFIG_DIR` environment variable to your desired path.
+
 ### config.toml
 
-The main configuration file to set your leadr keybinding, tweak the keybinding panel and other global settings.
+The main configuration file to set your `leadr` keybinding, tweak the keybinding panel and other global settings.
 For a list of currently supported keybindings, see [src/keymap.rs](src/keymap.rs).
 
 ### Mappings
 
-Mappings are defined in the `mappings.toml` file and look like this
+Mappings are defined in the `mappings.toml` file located in the `leadr` config directory.
+If you prefer some more structure, you can also create a `mappings/` directory and define your mappings in separate and arbitrarily nested toml files inside that directory.
+
+A mapping looks like this:
 
 ```toml
 [abc]
@@ -142,7 +147,7 @@ This works for all insert types but will have no effect if `evaluate` or `execut
 
 ### Keybinding Panel
 
-Leadr comes with a user interface that looks suspiciously similar to [which-key](https://github.com/folke/which-key.nvim).
+`leadr` comes with a user interface that looks suspiciously similar to [which-key](https://github.com/folke/which-key.nvim).
 It is activated by default and will pop up shortly after pressing the `leadr` keybinding.
 
 You can customize the panel by modifying the `panel` section in the `config.toml` file.
@@ -154,7 +159,7 @@ You can customize the colors by modifying the `theme_name` in the panel section 
 
 All catppuccin flavors are builtin and can be activated by setting `theme_name` to `catppuccin-{flavor}`.
 
-Custom themes can be defined by adding `themes/theme-name.toml` in the leadr config directory.
+Custom themes can be defined by adding `themes/theme-name.toml` in the `leadr` config directory.
 To e.g. create a high contrast theme, add `themes/high-contrast.toml` with the following content:
 
 ```toml

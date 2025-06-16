@@ -108,13 +108,16 @@ For a list of currently supported keybindings, see [src/keymap.rs](src/keymap.rs
 Mappings are defined in the `mappings.toml` file and look like this
 
 ```toml
-[<keybinding>]
-command = "<command>"
-description = "<an optional description>"
-insert_type = "<One of the possible insert types>" # See below for options, default: "Replace"
-evaluate = <true or false> # Default: false
-execute = <true or false> # Default: false
+[abc]
+command = "my-command"
+description = "My optional command description"
+insert_type = "Append" # See below for options, default: "Replace"
+evaluate = true # Default: false
+execute = true # Default: false
 ```
+
+The only required field is `command` (and the key of course).
+All other fields will use their default values if not specified.
 
 You can customize the behavior of the mapping by specifying `insert_type`, `evaluate`, and `execute` options.
 Here's an overview of the available options:
@@ -137,7 +140,30 @@ This works for all insert types but will have no effect if `evaluate` or `execut
 > Outside of `tmux`, `leadr` will fallback to `eval` and manually append the command to the shell's history.
 
 
-### User Interface
+### Keybinding Panel
 
 Leadr comes with a user interface that looks suspiciously similar to [which-key](https://github.com/folke/which-key.nvim).
-It is activated by default an will pop up after a short delay after pressing the `leadr` keybinding.
+It is activated by default and will pop up shortly after pressing the `leadr` keybinding.
+
+You can customize the panel by modifying the `panel` section in the `config.toml` file.
+
+#### Color Theme
+
+The default color theme uses the [catppuccin mocha](https://github.com/catppuccin/catppuccin?tab=readme-ov-file#-palette) color palette.
+You can customize the colors by modifying the `theme_name` in the panel section of the `config.toml` file.
+
+All catppuccin flavors are builtin and can be activated by setting `theme_name` to `catppuccin-{flavor}`.
+
+Custom themes can be defined by adding `themes/theme-name.toml` in the leadr config directory.
+To e.g. create a high contrast theme, add `themes/high-contrast.toml` with the following content:
+
+```toml
+accent = { r = 255, g = 255, b = 0 }
+background = { r = 0, g = 0, b = 0 }
+text_highlight_primary = { r = 255, g = 0, b = 0 }
+text_highlight_secondary = { r = 255, g = 255, b = 255 }
+text_primary = { r = 255, g = 255, b = 255 }
+text_secondary = { r = 192, g = 192, b = 192 }
+```
+
+and set `theme_name = "high-contrast"` in the `config.toml` file.

@@ -27,9 +27,11 @@ pub struct Config {
     pub border_type: BorderType,
     pub column_layout: ColumnLayout,
     pub enabled: bool,
+    pub fail_silently: bool,
     pub height: u16,
     pub padding: u16,
     pub symbols: Symbols,
+    pub theme_name: String,
     pub timeout: Duration,
 }
 
@@ -39,9 +41,11 @@ impl std::default::Default for Config {
             border_type: BorderType::Rounded,
             column_layout: ColumnLayout::default(),
             enabled: true,
+            fail_silently: true,
             height: 10,
             padding: 2,
             symbols: Symbols::default(),
+            theme_name: "catppuccin-mocha".into(),
             timeout: Duration::from_millis(500),
         }
     }

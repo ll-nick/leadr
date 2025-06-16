@@ -30,6 +30,7 @@ pub struct Config {
     pub height: u16,
     pub padding: u16,
     pub symbols: Symbols,
+    pub theme_name: String,
     pub timeout: Duration,
 }
 
@@ -42,6 +43,7 @@ impl std::default::Default for Config {
             height: 10,
             padding: 2,
             symbols: Symbols::default(),
+            theme_name: "catppuccin-mocha".into(),
             timeout: Duration::from_millis(500),
         }
     }

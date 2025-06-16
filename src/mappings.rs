@@ -291,6 +291,7 @@ impl Mappings {
             evaluate: 9,
             execute: 9,
             description: 40,
+            source: 30,
         };
 
         let mut table = String::new();

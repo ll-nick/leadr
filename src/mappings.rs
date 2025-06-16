@@ -1,4 +1,8 @@
-use std::{collections::HashMap, fs, path::{Path, PathBuf}};
+use std::{
+    collections::HashMap,
+    fs,
+    path::{Path, PathBuf},
+};
 
 use serde::{Deserialize, Serialize};
 
@@ -236,9 +240,24 @@ impl Mappings {
         for (i, key1) in keys.iter().enumerate() {
             for key2 in keys.iter().skip(i + 1) {
                 if key1.starts_with(*key2) || key2.starts_with(*key1) {
+                    let mapping1 = &self.mappings[*key1];
+                    let mapping2 = &self.mappings[*key2];
+
+                    let file1 = mapping1
+                        .source_file
+                        .as_ref()
+                        .map(|p| p.display().to_string())
+                        .unwrap_or_else(|| "unknown source".to_string());
+
+                    let file2 = mapping2
+                        .source_file
+                        .as_ref()
+                        .map(|p| p.display().to_string())
+                        .unwrap_or_else(|| "unknown source".to_string());
+
                     return Err(LeadrError::ConflictingSequenceError(format!(
-                        "'{}' conflicts with '{}'",
-                        key1, key2
+                        "'{}' (from {}) conflicts with '{}' (from {})",
+                        key1, file1, key2, file2
                     )));
                 }
             }
@@ -248,9 +267,15 @@ impl Mappings {
         for mapping in self.mappings.values() {
             if mapping.insert_type == InsertType::Surround && !mapping.command.contains("#COMMAND")
             {
+                let file = mapping
+                    .source_file
+                    .as_ref()
+                    .map(|p| p.display().to_string())
+                    .unwrap_or_else(|| "unknown source".to_string());
+
                 return Err(LeadrError::InvalidSurroundCommand(format!(
-                    "Surround-type mapping '{}' must contain '#COMMAND' in its command",
-                    mapping.command
+                    "Surround-type mapping '{}' (from {}) must contain '#COMMAND' in its command",
+                    mapping.command, file
                 )));
             }
         }
@@ -304,7 +329,6 @@ fn collect_toml_files(dir: &Path) -> Result<Vec<PathBuf>, LeadrError> {
     }
     Ok(result)
 }
-
 
 #[cfg(test)]
 mod tests {

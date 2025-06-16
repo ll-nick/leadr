@@ -28,4 +28,7 @@ pub enum LeadrError {
 
     #[error("Invalid surround command: {0}")]
     InvalidSurroundCommand(String),
+
+    #[error("Theme not found: {0}")]
+    ThemeNotFound(String),
 }

@@ -67,6 +67,9 @@ impl Theme {
             "catppuccin-latte" => Self::catppuccin_latte(),
             other => {
                 let theme_path = config_dir.join("themes").join(format!("{other}.toml"));
+                if !theme_path.exists() {
+                    return Err(LeadrError::ThemeNotFound(other.to_string()));
+                }
                 let contents = fs::read_to_string(&theme_path)?;
                 toml::from_str(&contents)?
             }

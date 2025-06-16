@@ -3,8 +3,8 @@ use std::io::Write;
 use crossterm::style::Stylize;
 
 use crate::{
-    ui::{symbols::Symbols, theme::Theme},
     InsertType, Mapping,
+    ui::{symbols::Symbols, theme::Theme},
 };
 
 pub struct Entry {

@@ -50,12 +50,12 @@ impl Theme {
 
     pub fn catppuccin_mocha() -> Self {
         Self {
-            accent: rgb(137, 180, 250), // Blue
-            background: rgb(17, 17, 27), // Crust
-            text_highlight_primary: rgb(250, 179, 135), // Peach
+            accent: rgb(137, 180, 250),                   // Blue
+            background: rgb(17, 17, 27),                  // Crust
+            text_highlight_primary: rgb(250, 179, 135),   // Peach
             text_highlight_secondary: rgb(245, 224, 220), // Rosewater
-            text_primary: rgb(137, 180, 250), // Blue
-            text_secondary: rgb(108, 112, 134), // Overlay0
+            text_primary: rgb(137, 180, 250),             // Blue
+            text_secondary: rgb(108, 112, 134),           // Overlay0
         }
     }
 

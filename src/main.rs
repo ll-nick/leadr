@@ -8,7 +8,7 @@ use std::path::PathBuf;
 use clap::Parser;
 use directories::ProjectDirs;
 
-use leadr::{Config, LeadrError, Mappings, SessionResult, LeadrSession, Theme};
+use leadr::{Config, LeadrError, LeadrSession, Mappings, SessionResult, Theme};
 
 #[derive(Parser)]
 #[command(about, version)]
@@ -16,7 +16,7 @@ struct Cli {
     #[arg(long)]
     bash: bool,
 
-    #[arg(long="init", help = "Create default config files")]
+    #[arg(long = "init", help = "Create default config files")]
     init: bool,
 
     #[arg(long, short = 'l', help = "List all mappings")]

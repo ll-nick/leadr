@@ -1,12 +1,12 @@
 use std::{
-    collections::HashMap,
+    collections::{BTreeSet, HashMap},
     fs,
     path::{Path, PathBuf},
 };
 
 use serde::{Deserialize, Serialize};
 
-use crate::{LeadrError, ui::table};
+use crate::{ui::table, LeadrError};
 
 #[derive(Clone, Debug, Default, PartialEq, serde::Serialize, serde::Deserialize)]
 pub enum InsertType {
@@ -80,6 +80,12 @@ impl Mapping {
     pub fn format_command(&self) -> String {
         format!("{} {}", self.flags_string(), self.command)
     }
+}
+
+pub enum MatchType<'a> {
+    Exact(&'a Mapping),
+    Prefix(usize),
+    None,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -216,21 +222,39 @@ impl Mappings {
         self.mappings.keys().any(|k| k.starts_with(seq))
     }
 
-    /// Given a sequence, checks all mappings that are still possible and groups them by the next character.
-    pub fn grouped_next_options(&self, sequence: &str) -> HashMap<String, Vec<&Mapping>> {
-        let mut grouped_options: HashMap<String, Vec<&Mapping>> = HashMap::new();
+    /// Returns a set of next possible keys given a partial sequence.
+    pub fn next_possible_keys(&self, sequence: &str) -> BTreeSet<String> {
+        let mut next_keys = BTreeSet::new();
 
-        for (key, mapping) in self.mappings.iter() {
-            if key.starts_with(&sequence) {
-                if let Some((_, char)) = key[sequence.len()..].char_indices().next() {
-                    // next_key is this character (handle utf-8)
-                    let next_key = char.to_string();
-                    grouped_options.entry(next_key).or_default().push(mapping);
+        for (key, _) in &self.mappings {
+            if key.starts_with(sequence) {
+                if let Some((_, ch)) = key[sequence.len()..].char_indices().next() {
+                    next_keys.insert(ch.to_string());
                 }
             }
         }
 
-        grouped_options
+        next_keys
+    }
+
+    /// Resolves a sequence into either an exact match or a number of possible continuations.
+    pub fn match_partial_sequence(&self, sequence: &str) -> MatchType {
+        if let Some(mapping) = self.mappings.get(sequence) {
+            return MatchType::Exact(mapping);
+        }
+
+        let mut count = 0;
+        for key in self.mappings.keys() {
+            if key.starts_with(sequence) {
+                count += 1;
+            }
+        }
+
+        if count > 0 {
+            MatchType::Prefix(count)
+        } else {
+            MatchType::None
+        }
     }
 
     fn validate(&self) -> Result<(), LeadrError> {

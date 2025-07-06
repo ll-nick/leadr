@@ -3,8 +3,9 @@ use std::io::Write;
 use crossterm::style::Stylize;
 
 use crate::{
-    InsertType, Mapping,
+    mappings::MatchType,
     ui::{symbols::Symbols, theme::Theme},
+    InsertType, Mapping,
 };
 
 pub struct Entry {
@@ -14,28 +15,23 @@ pub struct Entry {
 impl Entry {
     pub fn new(
         key: &str,
-        mappings: &Vec<&Mapping>,
+        match_type: MatchType,
         width: u16,
         symbols: &Symbols,
         theme: &Theme,
     ) -> Self {
-        let more_options = mappings.len() != 1;
-        let mut label = if more_options {
-            format!("+{} mappings", mappings.len())
-        } else {
-            let mapping = &mappings.first().unwrap();
-            mapping
-                .description
-                .as_deref()
-                .unwrap_or(&mapping.command)
-                .to_string()
-        };
-
-        let flags = if more_options {
-            " ".repeat(5) // make sure to take up space that flags would take
-        } else {
-            let mapping = &mappings.first().unwrap();
-            format_flags(mapping, symbols)
+        let (mut label, flags, is_prefix) = match match_type {
+            MatchType::Exact(mapping) => {
+                let label = mapping
+                    .description
+                    .as_deref()
+                    .unwrap_or(&mapping.command)
+                    .to_string();
+                let flags = format_flags(mapping, symbols);
+                (label, flags, false)
+            }
+            MatchType::Prefix(count) => (format!("+{} mappings", count), " ".repeat(5), true),
+            MatchType::None => ("(invalid)".into(), "".into(), true),
         };
 
         let raw_entry = format!("{} → {} {}", key, label, flags);
@@ -53,7 +49,7 @@ impl Entry {
             let entry_underflow = width - raw_entry_width;
             spacing = " ".repeat(entry_underflow as usize);
         };
-        let styled_label = if more_options {
+        let styled_label = if is_prefix {
             label
                 .with(theme.text_primary.into())
                 .on(theme.background.into())

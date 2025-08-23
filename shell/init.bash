@@ -116,6 +116,10 @@ __leadr_invoke__() {
         local output_flags="${cmd%% *}"
         local to_insert="${cmd#* }"
 
+        if [[ -z "$cmd" ]]; then
+            return
+        fi
+
         local insert_type eval_flag exec_flag
         IFS='|' read -r insert_type eval_flag exec_flag <<< "$(leadr_parse_flags "$output_flags")"
 

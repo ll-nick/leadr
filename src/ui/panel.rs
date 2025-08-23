@@ -1,10 +1,10 @@
-use std::{collections::HashMap, io::Write, time::Duration};
+use std::{io::Write, time::Duration};
 
 use crossterm::{QueueableCommand, cursor, style::Stylize, terminal};
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    Mapping, Mappings,
+    Mappings,
     error::LeadrError,
     ui::{
         area::{Area, ColumnLayout},
@@ -117,9 +117,7 @@ impl Panel {
         let border_width = 1;
         let footer_height = 2;
 
-        let next_options = mappings.grouped_next_options(sequence);
-        let mut keys: Vec<_> = next_options.keys().collect();
-        keys.sort();
+        let next_possible_keys = mappings.next_possible_keys(sequence);
         let entry_area = Area {
             x: outer_area.x + 1,
             y: outer_area.y + 1,
@@ -129,17 +127,18 @@ impl Panel {
                 .saturating_sub(2 * border_width + footer_height),
         };
 
-        let required_num_columns = (keys.len() as f64 / entry_area.height as f64).ceil() as u16;
+        let required_num_columns =
+            (next_possible_keys.len() as f64 / entry_area.height as f64).ceil() as u16;
         let columns =
             entry_area.split_horizontally(&self.config.column_layout, &required_num_columns);
         for (i, column) in columns.iter().enumerate() {
-            let column_keys = keys
+            let column_keys = next_possible_keys
                 .iter()
                 .skip(i * column.height as usize)
                 .take(column.height as usize)
                 .cloned()
                 .collect::<Vec<_>>();
-            self.draw_entries(&mut tty, column, &next_options, &column_keys)?;
+            self.draw_entries(&mut tty, column, &mappings, &sequence, &column_keys)?;
         }
 
         let footer_area = Area {
@@ -221,8 +220,9 @@ impl Panel {
         &self,
         tty: &mut std::fs::File,
         area: &Area,
-        next_options_map: &HashMap<String, Vec<&Mapping>>,
-        keys: &Vec<&String>,
+        mappings: &Mappings,
+        sequence: &str,
+        keys: &Vec<String>,
     ) -> std::io::Result<()> {
         let mut line = area.y;
 
@@ -232,9 +232,16 @@ impl Panel {
             }
             tty.queue(cursor::MoveTo(area.x, line))?;
 
-            let mappings = &next_options_map[*key];
-            let stylized_entry =
-                Entry::new(key, mappings, area.width, &self.config.symbols, &self.theme);
+            let full_sequence = format!("{sequence}{key}");
+            let match_type = mappings.match_partial_sequence(&full_sequence);
+
+            let stylized_entry = Entry::new(
+                key,
+                match_type,
+                area.width,
+                &self.config.symbols,
+                &self.theme,
+            );
             stylized_entry.to_tty(tty)?;
 
             line += 1;

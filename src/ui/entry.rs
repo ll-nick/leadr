@@ -3,9 +3,9 @@ use std::io::Write;
 use crossterm::style::Stylize;
 
 use crate::{
+    InsertType, Mapping,
     mappings::MatchType,
     ui::{symbols::Symbols, theme::Theme},
-    InsertType, Mapping,
 };
 
 pub struct Entry {

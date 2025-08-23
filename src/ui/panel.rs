@@ -1,9 +1,10 @@
 use std::{io::Write, time::Duration};
 
-use crossterm::{cursor, style::Stylize, terminal, QueueableCommand};
+use crossterm::{QueueableCommand, cursor, style::Stylize, terminal};
 use serde::{Deserialize, Serialize};
 
 use crate::{
+    Mappings,
     error::LeadrError,
     ui::{
         area::{Area, ColumnLayout},
@@ -11,7 +12,6 @@ use crate::{
         symbols::Symbols,
         theme::Theme,
     },
-    Mappings,
 };
 
 #[derive(Clone, Debug, Serialize, Deserialize)]

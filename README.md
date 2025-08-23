@@ -46,6 +46,9 @@ Consult the [Configuration](#-configuration) section to learn how to make `leadr
 - bash or zsh
 - [crossterm](https://docs.rs/crossterm/latest/crossterm/index.html) compatible terminal (see [their Readme for a list](https://github.com/crossterm-rs/crossterm?tab=readme-ov-file#tested-terminals))
 
+> **Note**: I personally use `leadr` in `bash` on Linux. I have tested it with `zsh` on Linux but have no way to test it on macOS.
+> I'd be happy to get some feedback about how well `leadr` works in zsh, particularly on macOS.
+
 ## 📦 Installation
 
 > **Note**: This project is still in early development, expect some breaking changes every now and then.

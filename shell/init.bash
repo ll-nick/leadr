@@ -140,4 +140,4 @@ __leadr_invoke__() {
 # === Key Binding ===
 bind -m emacs -x "\"${LEADR_BIND_KEY}\":__leadr_invoke__"
 bind -m vi-insert -x "\"${LEADR_BIND_KEY}\":__leadr_invoke__"
-bind -m vi-command "\"${LEADR_BIND_KEY}\":\"i${LEADR_BIND_KEY}\""
+bind -m vi-command "\"${LEADR_BIND_KEY}\":\"i${LEADR_BIND_KEY}\e\""

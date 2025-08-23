@@ -138,4 +138,7 @@ __leadr_invoke__() {
 }
 
 # === Key Binding ===
-bind -x "\"${LEADR_BIND_KEY}\":__leadr_invoke__"
+bind -m emacs -x "\"${LEADR_BIND_KEY}\":__leadr_invoke__"
+bind -m vi-insert -x "\"${LEADR_BIND_KEY}\":__leadr_invoke__"
+# In vi-command mode, switch to insert mode, invoke leadr using the binding defined above, then return to command mode
+bind -m vi-command "\"${LEADR_BIND_KEY}\":\"i${LEADR_BIND_KEY}\e\""

@@ -17,6 +17,8 @@ Use memorable key sequences to quickly execute or insert commands in your termin
 - **Evaluate pre-insert**: Need the current date in your file name? Evaluate a command, then insert it.
 - **Keybinding Panel**: In case they slipped your mind, see available mappings in a fancy looking pop-up.
 
+![Panel](assets/panel.png)
+
 ## 🎮 Usage
 
 After installing `leadr`, you can start using it by pressing the `leadr` keybinding followed by a key sequence.

@@ -6,7 +6,8 @@ __leadr_invoke__() {
 
     leadr_cursor_line() {
         IFS='[;' read -sdR -p $'\E[6n' _ row col
-        echo "$row"
+        # row is 1-indexed, convert to 0-indexed
+        echo $((row - 1))
     }
 
     leadr_parse_flags() {

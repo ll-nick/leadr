@@ -62,9 +62,9 @@ impl Panel {
         let mut tty = std::fs::OpenOptions::new().write(true).open("/dev/tty")?;
 
         let (_cols, rows) = terminal::size()?;
-        let cursor_line = std::env::var("LEADR_CURSOR_LINE")?.parse::<u16>()?;
+        let line_below_cursor = std::env::var("LEADR_CURSOR_LINE")?.parse::<u16>()? + 1;
 
-        let lines_below = rows.saturating_sub(cursor_line);
+        let lines_below = rows.saturating_sub(line_below_cursor);
         let scroll_up = config.height.saturating_sub(lines_below);
 
         if scroll_up > 0 {

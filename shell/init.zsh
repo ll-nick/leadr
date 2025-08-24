@@ -117,6 +117,9 @@ __leadr_invoke__() {
 
     leadr_main() {
         local cmd="$(LEADR_CURSOR_LINE=$(leadr_cursor_line) leadr)"
+
+        [[ -z "$cmd" ]] && return
+
         local output_flags="${cmd%% *}"
         local to_insert="${cmd#* }"
 

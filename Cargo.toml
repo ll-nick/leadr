@@ -1,7 +1,7 @@
 [package]
 name = "leadr"
 description = "Shell aliases on steroids"
-version = "2.2.3"
+version = "2.3.0"
 edition = "2024"
 license = "MIT"
 authors = ["ll-nick"]
@@ -17,3 +17,5 @@ directories = "6.0.0"
 serde = {version = "1.0.219", features = ["derive"]}
 toml = "0.8.23"
 thiserror = "2.0.12"
+strip-ansi-escapes = "0.2.1"
+unicode-width = "0.2.1"

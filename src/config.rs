@@ -8,6 +8,10 @@ pub struct Config {
     /// The key binding to activate leadr.
     pub leadr_key: String,
 
+    /// Bash only: Whether to redraw the prompt to cosmetically fix the prompt line
+    /// disappearing while leadr is active.
+    pub redraw_prompt_line: bool,
+
     /// Configuration for the keybinding panel.
     pub panel: PanelConfig,
 }
@@ -16,6 +20,7 @@ impl Default for Config {
     fn default() -> Self {
         Self {
             leadr_key: "<C-g>".into(),
+            redraw_prompt_line: true,
             panel: PanelConfig::default(),
         }
     }

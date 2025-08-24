@@ -2,7 +2,7 @@ use std::time::{Duration, Instant};
 
 use crossterm::event::{Event, KeyCode, KeyEvent, poll, read};
 
-use crate::{Config, LeadrError, Mappings, Panel, Theme, input::RawModeGuard};
+use crate::{Config, LeadrError, Mappings, Panel, Theme, input::RawModeGuard, ui::prompt};
 
 pub enum SessionResult {
     Command(String),
@@ -31,9 +31,17 @@ impl LeadrSession {
     /// Runs the input loop, capturing key events and returning when a mapping is matched,
     /// canceled, or an invalid sequence is entered.
     pub fn run(&mut self) -> Result<SessionResult, LeadrError> {
-        let _guard = RawModeGuard::new()?;
+        let _raw_mode_guard = RawModeGuard::new()?;
         let start_time = Instant::now();
         let mut panel: Option<Panel> = None;
+
+        // Cosmetically fix the prompt line disappearing while leadr is active.
+        let mut prompt_guard = prompt::PromptGuard::try_new();
+        if let Ok(ref mut guard) = prompt_guard {
+            if self.config.redraw_prompt_line {
+                guard.redraw()?;
+            }
+        }
 
         loop {
             let timeout_reached = start_time.elapsed() >= self.config.panel.timeout;

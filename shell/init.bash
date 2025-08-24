@@ -6,7 +6,8 @@ __leadr_invoke__() {
 
     leadr_cursor_line() {
         IFS='[;' read -sdR -p $'\E[6n' _ row col
-        echo "$row"
+        # row is 1-indexed, convert to 0-indexed
+        echo $((row - 1))
     }
 
     leadr_parse_flags() {
@@ -112,9 +113,23 @@ __leadr_invoke__() {
     }
 
     leadr_main() {
-        local cmd="$(LEADR_CURSOR_LINE=$(leadr_cursor_line) leadr)"
+        local last_prompt_line=$(printf "%s" "${PS1@P}" | tail -n1)
+        local current_input="${READLINE_LINE}"
+
+        local cmd="$(
+            LEADR_CURSOR_LINE=$(leadr_cursor_line) \
+            LEADR_CURSOR_COLUMN=$READLINE_POINT \
+            LEADR_PROMPT="$last_prompt_line" \
+            LEADR_CURRENT_INPUT="$current_input" \
+                leadr
+        )"
+
         local output_flags="${cmd%% *}"
         local to_insert="${cmd#* }"
+
+        if [[ -z "$cmd" ]]; then
+            return
+        fi
 
         local insert_type eval_flag exec_flag
         IFS='|' read -r insert_type eval_flag exec_flag <<< "$(leadr_parse_flags "$output_flags")"

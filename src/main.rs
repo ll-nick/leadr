@@ -102,9 +102,9 @@ fn main() {
         return;
     }
 
-    let mut handler = LeadrSession::new(mappings, config, theme);
+    let mut session = LeadrSession::new(mappings, config, theme);
 
-    match handler.run() {
+    match session.run() {
         Ok(SessionResult::Command(command)) => {
             print!("{}", command);
         }

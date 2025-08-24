@@ -1,7 +1,7 @@
 use std::{io::Write, time::Duration};
 
 use crossterm::{QueueableCommand, cursor, style::Stylize, terminal};
-use serde::{Deserialize, Serialize};
+use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
 use crate::{
     Mappings,
@@ -13,6 +13,21 @@ use crate::{
         theme::Theme,
     },
 };
+
+fn duration_as_milliseconds<S>(dur: &Duration, s: S) -> Result<S::Ok, S::Error>
+where
+    S: Serializer,
+{
+    s.serialize_u64(dur.as_millis() as u64)
+}
+
+fn duration_from_milliseconds<'de, D>(d: D) -> Result<Duration, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    let ms = u64::deserialize(d)?;
+    Ok(Duration::from_millis(ms))
+}
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub enum BorderType {
@@ -27,12 +42,17 @@ pub struct Config {
     pub border_type: BorderType,
     pub column_layout: ColumnLayout,
     pub enabled: bool,
+    #[serde(
+        rename = "delay_ms",
+        serialize_with = "duration_as_milliseconds",
+        deserialize_with = "duration_from_milliseconds"
+    )]
+    pub delay: Duration,
     pub fail_silently: bool,
     pub height: u16,
     pub padding: u16,
     pub symbols: Symbols,
     pub theme_name: String,
-    pub timeout: Duration,
 }
 
 impl std::default::Default for Config {
@@ -41,6 +61,7 @@ impl std::default::Default for Config {
             border_type: BorderType::Rounded,
             column_layout: ColumnLayout::default(),
             enabled: true,
+            delay: Duration::from_millis(500),
             fail_silently: true,
             height: 10,
             padding: 2,

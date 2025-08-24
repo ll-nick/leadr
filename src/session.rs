@@ -44,7 +44,7 @@ impl LeadrSession {
         }
 
         loop {
-            let timeout_reached = start_time.elapsed() >= self.config.panel.timeout;
+            let timeout_reached = start_time.elapsed() >= self.config.panel.delay;
             if self.config.panel.enabled && panel.is_none() && timeout_reached {
                 let result = (|| {
                     let p = Panel::try_new(self.config.panel.clone(), self.theme.clone())?;

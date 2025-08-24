@@ -118,6 +118,7 @@ __leadr_invoke__() {
 
         local cmd="$(
             LEADR_CURSOR_LINE=$(leadr_cursor_line) \
+            LEADR_CURSOR_COLUMN=$READLINE_POINT \
             LEADR_PROMPT="$last_prompt_line" \
             LEADR_CURRENT_INPUT="$current_input" \
                 leadr

@@ -1,7 +1,7 @@
 use std::{io::Write, time::Duration};
 
 use crossterm::{QueueableCommand, cursor, style::Stylize, terminal};
-use serde::{Deserialize, Serialize};
+use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
 use crate::{
     Mappings,
@@ -14,6 +14,21 @@ use crate::{
     },
 };
 
+fn duration_as_milliseconds<S>(dur: &Duration, s: S) -> Result<S::Ok, S::Error>
+where
+    S: Serializer,
+{
+    s.serialize_u64(dur.as_millis() as u64)
+}
+
+fn duration_from_milliseconds<'de, D>(d: D) -> Result<Duration, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    let ms = u64::deserialize(d)?;
+    Ok(Duration::from_millis(ms))
+}
+
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub enum BorderType {
     Rounded,
@@ -24,29 +39,47 @@ pub enum BorderType {
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Config {
-    pub border_type: BorderType,
-    pub column_layout: ColumnLayout,
     pub enabled: bool,
+    #[serde(
+        rename = "delay_ms",
+        serialize_with = "duration_as_milliseconds",
+        deserialize_with = "duration_from_milliseconds"
+    )]
+    pub delay: Duration,
     pub fail_silently: bool,
-    pub height: u16,
-    pub padding: u16,
-    pub symbols: Symbols,
     pub theme_name: String,
-    pub timeout: Duration,
+    pub layout: LayoutConfig,
 }
 
 impl std::default::Default for Config {
     fn default() -> Self {
         Self {
-            border_type: BorderType::Rounded,
-            column_layout: ColumnLayout::default(),
             enabled: true,
+            delay: Duration::from_millis(500),
             fail_silently: true,
+            theme_name: "catppuccin-mocha".into(),
+            layout: LayoutConfig::default(),
+        }
+    }
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct LayoutConfig {
+    pub border_type: BorderType,
+    pub columns: ColumnLayout,
+    pub height: u16,
+    pub padding: u16,
+    pub symbols: Symbols,
+}
+
+impl Default for LayoutConfig {
+    fn default() -> Self {
+        Self {
+            border_type: BorderType::Rounded,
+            columns: ColumnLayout::default(),
             height: 10,
             padding: 2,
             symbols: Symbols::default(),
-            theme_name: "catppuccin-mocha".into(),
-            timeout: Duration::from_millis(500),
         }
     }
 }
@@ -65,7 +98,7 @@ impl Panel {
         let line_below_cursor = std::env::var("LEADR_CURSOR_LINE")?.parse::<u16>()? + 1;
 
         let lines_below = rows.saturating_sub(line_below_cursor);
-        let scroll_up = config.height.saturating_sub(lines_below);
+        let scroll_up = config.layout.height.saturating_sub(lines_below);
 
         if scroll_up > 0 {
             tty.queue(terminal::ScrollUp(scroll_up))?
@@ -84,7 +117,7 @@ impl Panel {
     pub fn clear(&self) -> std::io::Result<()> {
         let mut stdout = std::fs::OpenOptions::new().write(true).open("/dev/tty")?;
         let (_cols, rows) = terminal::size()?;
-        let start_y = rows.saturating_sub(self.config.height);
+        let start_y = rows.saturating_sub(self.config.layout.height);
 
         stdout
             .queue(cursor::SavePosition)?
@@ -103,13 +136,13 @@ impl Panel {
     pub fn draw(&self, sequence: &str, mappings: &Mappings) -> Result<(), LeadrError> {
         let mut tty = std::fs::OpenOptions::new().write(true).open("/dev/tty")?;
         let (cols, rows) = terminal::size()?;
-        let start_y = rows.saturating_sub(self.config.height);
+        let start_y = rows.saturating_sub(self.config.layout.height);
 
         let outer_area = Area {
-            x: self.config.padding,
+            x: self.config.layout.padding,
             y: start_y,
-            width: cols.saturating_sub(2 * self.config.padding),
-            height: self.config.height,
+            width: cols.saturating_sub(2 * self.config.layout.padding),
+            height: self.config.layout.height,
         };
 
         tty.queue(cursor::SavePosition)?;
@@ -130,7 +163,7 @@ impl Panel {
         let required_num_columns =
             (next_possible_keys.len() as f64 / entry_area.height as f64).ceil() as u16;
         let columns =
-            entry_area.split_horizontally(&self.config.column_layout, &required_num_columns);
+            entry_area.split_horizontally(&self.config.layout.columns, &required_num_columns);
         for (i, column) in columns.iter().enumerate() {
             let column_keys = next_possible_keys
                 .iter()
@@ -155,7 +188,7 @@ impl Panel {
 
     fn draw_border(&self, tty: &mut std::fs::File, area: &Area) -> std::io::Result<()> {
         let (top_left, top_right, bottom_left, bottom_right, horizontal, vertical) =
-            match self.config.border_type {
+            match self.config.layout.border_type {
                 BorderType::Rounded => ('╭', '╮', '╰', '╯', '─', '│'),
                 BorderType::Square => ('┌', '┐', '└', '┘', '─', '│'),
                 BorderType::Top => ('─', '─', ' ', ' ', '─', ' '),
@@ -168,7 +201,7 @@ impl Panel {
         tty.queue(cursor::MoveTo(area.x, area.y))?;
 
         // Top border
-        if !matches!(self.config.border_type, BorderType::None) {
+        if !matches!(self.config.layout.border_type, BorderType::None) {
             let top = format!(
                 "{tl}{line}{tr}",
                 line = horizontal_line,
@@ -181,7 +214,7 @@ impl Panel {
         }
 
         // Vertical sides
-        for i in 1..self.config.height {
+        for i in 1..self.config.layout.height {
             tty.queue(cursor::MoveTo(area.x, area.y + i))?;
             let line = format!(
                 "{vl}{space}{vr}",
@@ -196,7 +229,7 @@ impl Panel {
 
         // Bottom border
         if matches!(
-            self.config.border_type,
+            self.config.layout.border_type,
             BorderType::Rounded | BorderType::Square
         ) {
             tty.queue(cursor::MoveTo(area.x, area.y + area.height))?;
@@ -239,7 +272,7 @@ impl Panel {
                 key,
                 match_type,
                 area.width,
-                &self.config.symbols,
+                &self.config.layout.symbols,
                 &self.theme,
             );
             stylized_entry.to_tty(tty)?;
@@ -267,6 +300,7 @@ impl Panel {
         tty.queue(cursor::MoveTo(area.x, area.y))?;
         let arrow = self
             .config
+            .layout
             .symbols
             .sequence_begin
             .to_string()

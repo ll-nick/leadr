@@ -113,7 +113,16 @@ __leadr_invoke__() {
     }
 
     leadr_main() {
-        local cmd="$(LEADR_CURSOR_LINE=$(leadr_cursor_line) leadr)"
+        local last_prompt_line=$(printf "%s" "${PS1@P}" | tail -n1)
+        local current_input="${READLINE_LINE}"
+
+        local cmd="$(
+            LEADR_CURSOR_LINE=$(leadr_cursor_line) \
+            LEADR_PROMPT="$last_prompt_line" \
+            LEADR_CURRENT_INPUT="$current_input" \
+                leadr
+        )"
+
         local output_flags="${cmd%% *}"
         local to_insert="${cmd#* }"
 

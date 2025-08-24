@@ -1,8 +1,26 @@
+use std::io::Write;
 use std::time::{Duration, Instant};
 
+use crossterm::QueueableCommand;
 use crossterm::event::{Event, KeyCode, KeyEvent, poll, read};
 
 use crate::{Config, LeadrError, Mappings, Panel, Theme, input::RawModeGuard};
+
+fn redraw_line() -> Result<(), LeadrError> {
+    let mut tty = std::fs::OpenOptions::new().write(true).open("/dev/tty")?;
+    let cursor_line = std::env::var("LEADR_CURSOR_LINE")?.parse::<u16>()?;
+    let prompt = std::env::var("LEADR_PROMPT")?;
+    let input = std::env::var("LEADR_CURRENT_INPUT")?;
+
+    tty.queue(crossterm::cursor::MoveTo(0, cursor_line))?
+        .queue(crossterm::terminal::Clear(
+            crossterm::terminal::ClearType::CurrentLine,
+        ))?
+        .queue(crossterm::style::Print(format!("{}{}", prompt, input)))?
+        .flush()?;
+
+    Ok(())
+}
 
 pub enum SessionResult {
     Command(String),
@@ -34,6 +52,8 @@ impl LeadrSession {
         let _guard = RawModeGuard::new()?;
         let start_time = Instant::now();
         let mut panel: Option<Panel> = None;
+
+        let _ = redraw_line();
 
         loop {
             let timeout_reached = start_time.elapsed() >= self.config.panel.timeout;

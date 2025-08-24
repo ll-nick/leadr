@@ -31,13 +31,16 @@ impl LeadrSession {
     /// Runs the input loop, capturing key events and returning when a mapping is matched,
     /// canceled, or an invalid sequence is entered.
     pub fn run(&mut self) -> Result<SessionResult, LeadrError> {
-        let _guard = RawModeGuard::new()?;
+        let _raw_mode_guard = RawModeGuard::new()?;
         let start_time = Instant::now();
         let mut panel: Option<Panel> = None;
 
+        // Cosmetically fix the prompt line disappearing while leadr is active.
         let mut prompt_guard = prompt::PromptGuard::try_new();
         if let Ok(ref mut guard) = prompt_guard {
-            guard.redraw()?;
+            if self.config.redraw_prompt_line {
+                guard.redraw()?;
+            }
         }
 
         loop {

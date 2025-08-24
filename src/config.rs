@@ -8,6 +8,8 @@ pub struct Config {
     /// The key binding to activate leadr.
     pub leadr_key: String,
 
+    pub redraw_prompt_line: bool,
+
     /// Configuration for the keybinding panel.
     pub panel: PanelConfig,
 }
@@ -16,6 +18,7 @@ impl Default for Config {
     fn default() -> Self {
         Self {
             leadr_key: "<C-g>".into(),
+            redraw_prompt_line: true,
             panel: PanelConfig::default(),
         }
     }

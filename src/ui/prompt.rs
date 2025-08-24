@@ -90,7 +90,11 @@ impl PromptGuard {
 
 impl Drop for PromptGuard {
     fn drop(&mut self) {
-        // On exit, force cursor back to col 0 on its line
+        // On exit, prevent artifacts of the line redraw by clearing the line
+        // and moving the cursor back to the start of the input line.
         let _ = self.tty.execute(cursor::MoveTo(0, self.cursor_line));
+        let _ = self.tty.execute(crossterm::terminal::Clear(
+            crossterm::terminal::ClearType::CurrentLine,
+        ));
     }
 }

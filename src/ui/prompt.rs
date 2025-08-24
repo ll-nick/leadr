@@ -2,7 +2,7 @@
 //!
 //! ## Why do we need to redraw the line at all?
 //!
-//! When you invoke a `bind -x` command in Bash (or similar in Zsh), the shell
+//! When you invoke a `bind -x` command in Bash, the shell
 //! suspends its line editor (GNU Readline, ZLE, etc.) and executes your hook
 //! function/program. While your Rust program is running, the terminal is no
 //! longer "owned" by the shell's line editor.

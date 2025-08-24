@@ -8,6 +8,8 @@ pub struct Config {
     /// The key binding to activate leadr.
     pub leadr_key: String,
 
+    /// Bash only: Whether to redraw the prompt to cosmetically fix the prompt line
+    /// disappearing while leadr is active.
     pub redraw_prompt_line: bool,
 
     /// Configuration for the keybinding panel.

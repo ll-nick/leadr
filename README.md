@@ -107,8 +107,26 @@ To overwrite the default configuration directory (see [the directories crate](ht
 
 ### config.toml
 
-The main configuration file to set your `leadr` keybinding, tweak the keybinding panel and other global settings.
-For a list of currently supported keybindings, see [src/keymap.rs](src/keymap.rs).
+The main configuration file to set your `leadr` key, tweak the keybinding panel and other global settings.
+Most of these settings should be self-explanatory but here are some notes on a few of them:
+
+##### leadr_key
+
+The default keybinding is `<C-g>` (the `Ctrl` key and the `g` key pressed in one chord), but you can change that by modifying the `leadr_key` in the `config.toml` file.
+The syntax mimics that of Vim's keybindings, e.g. `<M-x>`, `<C-s>`, `<F5>`, etc. and supports chains like `<C-x><C-s>abc`.
+
+> **Fair warning**: Keybindings in the shell are a bit of an arcane mess.
+> I asked my good friend Chad Gibbidy to help me out with this.
+> Lots of bindings work but some don't.
+> Feel free to experiment but if you run into issues, `Ctrl` + a letter is probably your safest bet.
+
+##### redraw_prompt_line
+
+> **Note**: This setting concerns only `bash` users. It has no effect in `zsh`.
+
+Due to the way key bindings work in `bash`, the current prompt line will disappear while `leadr` is activated.
+To cover this up, `leadr` will redraw it after start-up.
+If you experience issues with this, you can disable it by setting `redraw_prompt_line = false`.
 
 ### Mappings
 

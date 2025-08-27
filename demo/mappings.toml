@@ -1,40 +1,40 @@
 [d1]
-command = "bash $LEADR_CONFIG_DIR/explain_demo.sh welcome"
+command = " bash $LEADR_CONFIG_DIR/explain_demo.sh welcome"
 description = "Demo: Welcome!"
 execute = true
 
 [d2]
-command = "bash $LEADR_CONFIG_DIR/explain_demo.sh insert"
+command = " bash $LEADR_CONFIG_DIR/explain_demo.sh insert"
 description = "Demo: Insert"
 execute = true
 
 [d3]
-command = "bash $LEADR_CONFIG_DIR/explain_demo.sh dynamic_content"
+command = " bash $LEADR_CONFIG_DIR/explain_demo.sh dynamic_content"
 description = "Demo: Dynamic Content"
 execute = true
 
 [d4]
-command = "bash $LEADR_CONFIG_DIR/explain_demo.sh advanced_example"
+command = " bash $LEADR_CONFIG_DIR/explain_demo.sh advanced_example"
 description = "Demo: Advanced Example"
 execute = true
 
 [d5]
-command = "bash $LEADR_CONFIG_DIR/explain_demo.sh append_to_command"
+command = " bash $LEADR_CONFIG_DIR/explain_demo.sh append_to_command"
 description = "Demo: Append to Command"
 execute = true
 
 [d6]
-command = "bash $LEADR_CONFIG_DIR/explain_demo.sh surround_command"
+command = " bash $LEADR_CONFIG_DIR/explain_demo.sh surround_command"
 description = "Demo: Surround Command"
 execute = true
 
 [d7]
-command = "bash $LEADR_CONFIG_DIR/explain_demo.sh panel"
+command = " bash $LEADR_CONFIG_DIR/explain_demo.sh panel"
 description = "Demo: Panel"
 execute = true
 
 [d8]
-command = "bash $LEADR_CONFIG_DIR/explain_demo.sh thanks"
+command = " bash $LEADR_CONFIG_DIR/explain_demo.sh thanks"
 description = "Demo: Thanks For Watching!"
 execute = true
 

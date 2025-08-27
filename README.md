@@ -5,7 +5,7 @@ Use memorable key sequences to quickly execute or insert commands in your termin
 
 ## 🚀 Demo
 
-![Demo](assets/demo.gif)
+https://github.com/user-attachments/assets/ace9ec1c-0976-4868-abe9-a7499101c03a
 
 ## 💪 Features
 

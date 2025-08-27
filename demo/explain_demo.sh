@@ -36,13 +36,14 @@ advanced_example() {
 
 append_to_command() {
     say "To find the commit, we append a pipe to fzf and slice a field with awk."
-    say "We can append that all at once with ${BLUE}<Ctrl-G>fl${RESET}."
+    say "We can append that all at once using ${BLUE}<Ctrl-G>fl${RESET}."
     say "The column we want is the first one, so we just need to type '1' and hit Enter."
 }
 
 surround_command() {
     say "Great, we got it! But we don't really care for the commit hash itself, we just want to check it out."
-    say "No worries, we can surround the previous command with a ${BLUE}\$()${RESET} with our cursor conveniently placed in the beginning so we just need to type 'git checkout'."
+    say "No worries, we can surround the previous command with a '\$()' with our cursor conveniently placed in the beginning."
+    say "With the cursor anywhere, type ${BLUE}<Ctrl-G>cs${RESET} and type 'git checkout'."
 }
 
 panel() {

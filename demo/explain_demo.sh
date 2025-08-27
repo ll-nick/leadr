@@ -71,6 +71,7 @@ if [[ $# -ne 1 ]]; then
 fi
 
 if [[ "$1" == "all" ]]; then
+    clear
     for step in "${ALL_STEPS[@]}"; do
         $step
         echo    # blank line between paragraphs
@@ -78,6 +79,7 @@ if [[ "$1" == "all" ]]; then
     done
 else
     if declare -F "$1" > /dev/null; then
+        clear
         $1
     else
         echo "Error: unknown step '$1'" >&2

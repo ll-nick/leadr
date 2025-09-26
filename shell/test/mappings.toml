@@ -1,0 +1,68 @@
+[r1]
+command = "This should replace the entire line"
+description = "Test Replace"
+insert_type = "Replace"
+
+[r2]
+command = "This should replace the entire line. CURSOR->#CURSOR<-HERE"
+description = "Test Replace with Cursor"
+insert_type = "Replace"
+
+[i1]
+command = "This should be inserted at the cursor position"
+description = "Test Insert"
+insert_type = "Insert"
+
+[i2]
+command = "This should be inserted at the cursor position. CURSOR->#CURSOR<-HERE"
+description = "Test Insert with Cursor"
+insert_type = "Insert"
+
+[p1]
+command = "This should be prepended to the line"
+description = "Test Prepend"
+insert_type = "Prepend"
+
+[p2]
+command = "This should be prepended to the line. CURSOR->#CURSOR<-HERE"
+description = "Test Prepend with Cursor"
+insert_type = "Prepend"
+
+[a1]
+command = "This should be appended to the line"
+description = "Test Append"
+insert_type = "Append"
+
+[a2]
+command = "This should be appended to the line. CURSOR->#CURSOR<-HERE"
+description = "Test Append with Cursor"
+insert_type = "Append"
+
+[s1]
+command = "Before [ #COMMAND ] After"
+description = "Test Surround"
+insert_type = "Surround"
+
+[s2]
+command = "Before [ #COMMAND ->#CURSOR<-] After"
+description = "Test Surround with Cursor"
+insert_type = "Surround"
+
+[e1]
+command = "echo 'Command executed'"
+description = "Test Execute"
+insert_type = "Replace"
+execute = true
+
+[e2]
+command = "date"
+description = "Test Evaluate"
+insert_type = "Insert"
+evaluate = true
+
+[e3]
+command = "which date"
+description = "Test Evaluate + Execute"
+insert_type = "Replace"
+evaluate = true
+execute = true

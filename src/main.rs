@@ -24,6 +24,10 @@ struct Cli {
 
     #[arg(long)]
     zsh: bool,
+
+    /// Generate fish shell initialization script
+    #[arg(long)]
+    fish: bool,
 }
 
 fn main() {
@@ -92,6 +96,18 @@ fn main() {
             }
             Err(e) => {
                 eprintln!("Error generating zsh script: {:?}", e);
+                std::process::exit(1);
+            }
+        };
+    }
+    if cli.fish {
+        match leadr::init_fish(&config) {
+            Ok(script) => {
+                print!("{}", script);
+                return;
+            }
+            Err(e) => {
+                eprintln!("Error generating fish script: {:?}", e);
                 std::process::exit(1);
             }
         };

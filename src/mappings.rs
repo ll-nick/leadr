@@ -238,7 +238,7 @@ impl Mappings {
     }
 
     /// Resolves a sequence into either an exact match or a number of possible continuations.
-    pub fn match_partial_sequence(&self, sequence: &str) -> MatchType {
+    pub fn match_partial_sequence(&self, sequence: &str) -> MatchType<'_> {
         if let Some(mapping) = self.mappings.get(sequence) {
             return MatchType::Exact(mapping);
         }

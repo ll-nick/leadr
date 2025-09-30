@@ -49,17 +49,18 @@ __leadr_invoke__() {
         local to_insert="$2"
         local cursor_pos="$3"
 
+        local original_cursor=$CURSOR
+
         case "$insert_type" in
             INSERT)
                 LBUFFER+="$to_insert"
                 if [[ $cursor_pos -ge 0 ]]; then
-                    CURSOR=$((CURSOR + cursor_pos))
+                    CURSOR=$((original_cursor + cursor_pos))
                 else
-                    CURSOR=$((CURSOR + ${#to_insert}))
+                    CURSOR=$((original_cursor + ${#to_insert}))
                 fi
                 ;;
             PREPEND)
-                local original_cursor=$CURSOR
                 BUFFER="${to_insert}${BUFFER}"
                 if [[ $cursor_pos -ge 0 ]]; then
                     CURSOR=$cursor_pos

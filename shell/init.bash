@@ -85,7 +85,7 @@ __leadr_invoke__() {
                         READLINE_POINT=$((cursor_pos - ${#LEADR_COMMAND_POSITION_ENCODING} + ${#original_line}))
                     fi
                 else
-                    READLINE_POINT=${#READLINE_LINE}
+                    READLINE_POINT=$((${#before_command} + original_point))
                 fi
                 ;;
             *)

@@ -89,7 +89,7 @@ __leadr_invoke__() {
                         CURSOR=$(($cursor_pos - ${#LEADR_COMMAND_POSITION_ENCODING} + ${#original_buffer}))
                     fi
                 else
-                    CURSOR=${#BUFFER}
+                    CURSOR=$((${#before} + original_cursor))
                 fi
                 ;;
             *)

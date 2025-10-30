@@ -1,5 +1,16 @@
 def __leadr_invoke__ [] {
-    print "Leadr invoked!"
+    def leadr_main [] {
+        let cmd = (leadr)
+        let parts = ($cmd | split row " ")
+        let output_flags = $parts.0
+        let to_insert = $parts | reject 0 | str join " "
+
+        if ($cmd | str trim | str length) == 0 {
+            return
+        }
+
+    }
+    leadr_main
 }
 
 $env.config.keybindings ++= [{

@@ -1,14 +1,34 @@
 def __leadr_invoke__ [] {
+    def leadr_parse_flags [flags: list<string>] {
+        mut result = {
+            insert_type: ""
+            eval: false
+            exec: false
+        }
+        for flag in $flags {
+            if $flag == "REPLACE" or $flag == "INSERT" or $flag == "PREPEND" or $flag == "APPEND" or $flag == "SURROUND" {
+                $result.insert_type = $flag
+            } else if $flag == "EVAL" {
+                $result.eval = true
+            } else if $flag == "EXEC" {
+                $result.exec = true
+            }
+        }
+
+        $result
+    }
+
     def leadr_main [] {
         let cmd = (leadr)
         let parts = ($cmd | split row " ")
-        let output_flags = $parts.0
+        let flags = $parts.0 | split row "+"
         let to_insert = $parts | reject 0 | str join " "
 
         if ($cmd | str trim | str length) == 0 {
             return
         }
 
+        let parsed_flags = (leadr_parse_flags $flags)
     }
     leadr_main
 }

@@ -1,4 +1,8 @@
 def __leadr_invoke__ [] {
+    def leadr_cursor_line [] {
+        term query (ansi cursor_position) --prefix (ansi csi) --terminator 'R' | decode utf8 | parse "{row};{col}" | get row.0
+    }
+
     def leadr_parse_flags [flags: list<string>] {
         mut result = {
             insert_type: ""
@@ -121,7 +125,9 @@ def __leadr_invoke__ [] {
     }
 
     def leadr_main [] {
-        let cmd = (leadr)
+        let cursor_line = leadr_cursor_line
+        let cmd = (LEADR_CURSOR_LINE=$cursor_line leadr)
+
         let parts = ($cmd | split row " ")
         let flags = $parts.0 | split row "+"
         let to_insert = $parts | reject 0 | str join " "

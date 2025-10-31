@@ -118,8 +118,15 @@ def __leadr_invoke__ [] {
 
         let parsed_flags = (leadr_parse_flags $flags)
 
-        let cursor_pos = leadr_extract_cursor_pos $to_insert
-        let to_insert  = ($to_insert | str replace "#CURSOR" "")
+        mut cursor_pos = leadr_extract_cursor_pos $to_insert
+        mut to_insert  = ($to_insert | str replace "#CURSOR" "")
+
+        if $parsed_flags.eval {
+            # There is no such thing as eval in nushell, but capturing the output of a subshell should do in most cases
+            # For reference, see https://www.nushell.sh/book/thinking_in_nu.html#think-of-nushell-as-a-compiled-language
+            $to_insert = (nu -c $"($to_insert)")
+            $cursor_pos = -1
+        }
 
         leadr_insert_command $to_insert $parsed_flags.insert_type $cursor_pos
 

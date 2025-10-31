@@ -1,5 +1,3 @@
-LEADR_BIND_KEY='{{bind_key}}'
-
 __leadr_invoke__() {
     LEADR_COMMAND_POSITION_ENCODING="#COMMAND"
     LEADR_CURSOR_POSITION_ENCODING="#CURSOR"
@@ -146,8 +144,3 @@ __leadr_invoke__() {
 
     leadr_main
 }
-
-# === Key Binding ===
-zle -N __leadr_invoke__
-bindkey "$LEADR_BIND_KEY" __leadr_invoke__
-

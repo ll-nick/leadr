@@ -2,6 +2,12 @@ use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 
 use crate::error::LeadrError;
 
+/// All currently supported shells
+pub enum Shell {
+    Bash,
+    Zsh,
+}
+
 /// Parses a single Vim-style key like `<C-x>`, `<M-Enter>`, `<F5>`.
 fn parse_vim_key(key: &str) -> Result<KeyEvent, LeadrError> {
     let key = key.trim_matches(|c| c == '<' || c == '>');
@@ -126,31 +132,83 @@ fn keyevent_to_shell_seq(event: KeyEvent) -> String {
     s
 }
 
-/// Parses a full Vim-style sequence like `<C-x><M-Enter>` into a shell string
-pub fn parse_keybinding(seq: &str) -> Result<String, LeadrError> {
-    let mut result = String::new();
-    let mut temp = String::new();
+/// Parses a full Vim-style sequence like `<C-x><M-Enter>` into a vector of KeyEvents
+pub fn parse_keysequence(seq: &str) -> Result<Vec<KeyEvent>, LeadrError> {
+    let mut result = Vec::new();
+    let mut current_combo = String::new();
     let mut in_angle = false;
 
-    for c in seq.chars() {
-        if c == '<' {
+    for char in seq.chars() {
+        if char == '<' {
             in_angle = true;
-            temp.push(c);
-        } else if c == '>' && in_angle {
-            temp.push(c);
+            current_combo.push(char);
+        } else if char == '>' && in_angle {
+            current_combo.push(char);
             in_angle = false;
-            let key_event = parse_vim_key(&temp)?;
-            result.push_str(&keyevent_to_shell_seq(key_event));
-            temp.clear();
+            let key_event = parse_vim_key(&current_combo)?;
+            result.push(key_event);
+            current_combo.clear();
         } else if in_angle {
-            temp.push(c);
+            current_combo.push(char);
         } else {
             // plain character
-            result.push(c);
+            result.push(KeyEvent {
+                code: KeyCode::Char(char),
+                modifiers: KeyModifiers::empty(),
+                kind: crossterm::event::KeyEventKind::Press,
+                state: crossterm::event::KeyEventState::NONE,
+            });
         }
     }
 
     Ok(result)
+}
+
+/// Generate shell code to bind a sequence of KeyEvents to a shell function
+pub fn keyevents_to_shell_binding(
+    events: &[KeyEvent],
+    function_name: &str,
+    shell: Shell,
+) -> Result<String, LeadrError> {
+    if events.is_empty() {
+        return Err(LeadrError::InvalidKeymapError(
+            "No key events provided".into(),
+        ));
+    }
+
+    match shell {
+        Shell::Bash => {
+            let key_code_string = events
+                .iter()
+                .map(|ev| keyevent_to_shell_seq(*ev))
+                .collect::<String>();
+
+            return Ok(format!(
+                "\nbind -m emacs -x '\"{}\":{}'\n\
+                 bind -m vi-insert -x '\"{}\":{}'\n\
+                 # In vi-command mode, switch to insert mode, invoke leadr using the binding defined above, then return to command mode\n\
+                 bind -m vi-command '\"{}\":i{}\\e'\n",
+                key_code_string,
+                function_name,
+                key_code_string,
+                function_name,
+                key_code_string,
+                function_name,
+            ));
+        }
+        Shell::Zsh => {
+            let key_code_string = events
+                .iter()
+                .map(|ev| keyevent_to_shell_seq(*ev))
+                .collect::<String>();
+
+            return Ok(format!(
+                "zle -N {}\n\
+                bindkey '{}' {}",
+                function_name, key_code_string, function_name
+            ));
+        }
+    }
 }
 
 #[cfg(test)]
@@ -213,12 +271,6 @@ mod tests {
     }
 
     #[test]
-    fn test_parse_sequence_mixed() {
-        let seq = parse_keybinding("<C-x><M-Enter>abc").unwrap();
-        assert_eq!(seq, "\x18\x1B\rabc");
-    }
-
-    #[test]
     fn test_invalid_modifier() {
         let err = parse_vim_key("<Q-x>").unwrap_err();
         match err {
@@ -238,5 +290,38 @@ mod tests {
             }
             _ => panic!("Unexpected error type"),
         }
+    }
+
+    #[test]
+    fn test_parse_keysequence_simple() {
+        let events = crate::keymap::parse_keysequence("abc").unwrap();
+        assert_eq!(events.len(), 3);
+        assert_eq!(events[0].code, KeyCode::Char('a'));
+        assert_eq!(events[1].code, KeyCode::Char('b'));
+        assert_eq!(events[2].code, KeyCode::Char('c'));
+    }
+
+    #[test]
+    fn test_parse_keysequence_vim_style() {
+        let events = crate::keymap::parse_keysequence("<C-x><M-Enter>").unwrap();
+        assert_eq!(events.len(), 2);
+        assert_eq!(events[0].code, KeyCode::Char('x'));
+        assert!(events[0].modifiers.contains(KeyModifiers::CONTROL));
+        assert_eq!(events[1].code, KeyCode::Enter);
+        assert!(events[1].modifiers.contains(KeyModifiers::ALT));
+    }
+
+    #[test]
+    fn test_keysequence_to_shell_seq_basic() {
+        let events = crate::keymap::parse_keysequence("<C-g>").unwrap();
+        let seq = crate::keymap::keyevent_to_shell_seq(*events.first().unwrap());
+        assert_eq!(seq, "\x07"); // Ctrl-G
+    }
+
+    #[test]
+    fn test_keysequence_to_shell_seq_alt() {
+        let events = crate::keymap::parse_keysequence("<M-x>").unwrap();
+        let seq = crate::keymap::keyevent_to_shell_seq(*events.first().unwrap());
+        assert_eq!(seq, "\x1Bx"); // ESC + 'x'
     }
 }

@@ -127,14 +127,14 @@ def __leadr_invoke__ [] {
     def leadr_main [] {
         let cursor_line = leadr_cursor_line
         let cmd = (LEADR_CURSOR_LINE=$cursor_line leadr)
-
-        let parts = ($cmd | split row " ")
-        let flags = $parts.0 | split row "+"
-        let to_insert = $parts | reject 0 | str join " "
-
         if ($cmd | str trim | str length) == 0 {
             return
         }
+
+        let parsed = ($cmd | parse "{flags} {to_insert}")
+
+        let flags = $parsed.flags.0 | split row "+"
+        let to_insert = $parsed.to_insert.0
 
         let parsed_flags = (leadr_parse_flags $flags)
 

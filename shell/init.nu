@@ -27,13 +27,22 @@ def __leadr_invoke__ [] {
         }
     }
 
-    def leadr_insert_command [to_insert:string insert_type:string exec:bool] {
+    def leadr_insert_command [to_insert:string insert_type:string exec:bool cursor_pos:int] {
+        let original_cursor = (commandline get-cursor)
+
         match $insert_type {
             "INSERT" => {
                 if $exec {
                     commandline edit --insert --accept $to_insert
                 } else {
                     commandline edit --insert $to_insert
+                    if $cursor_pos >= 0 {
+                        let new_cursor = $original_cursor + $cursor_pos
+                        commandline set-cursor $new_cursor
+                    } else {
+                        let new_cursor = $original_cursor + ($to_insert | str length)
+                        commandline set-cursor $new_cursor
+                    }
                 }
             }
             "PREPEND" => {
@@ -42,6 +51,14 @@ def __leadr_invoke__ [] {
                     commandline edit --replace --accept $buffer
                 } else {
                     commandline edit --replace $buffer
+
+                    if $cursor_pos >= 0 {
+                        let new_cursor = $cursor_pos
+                        commandline set-cursor $new_cursor
+                    } else {
+                        let new_cursor = $original_cursor + ($to_insert | str length)
+                        commandline set-cursor $new_cursor
+                    }
                 }
             }
 
@@ -50,17 +67,38 @@ def __leadr_invoke__ [] {
                     commandline edit --append --accept $to_insert
                 } else {
                     commandline edit --append $to_insert
+                    if $cursor_pos >= 0 {
+                        let new_cursor = (commandline | str length) - ($to_insert | str length) + $cursor_pos
+                        commandline set-cursor $new_cursor
+                    } else {
+                        commandline set-cursor --end
+                    }
                 }
             }
 
             "SURROUND" => {
-                let parts = ($to_insert | split row "#COMMAND")
-                let buffer = $"($parts.0)(commandline)($parts.1)"
+                let parts = ($to_insert | parse "{before}#COMMAND{after}")
+                let before = $parts.before.0
+                let after = $parts.after.0
+                let original_buffer = (commandline)
+                let buffer = $"($before)($original_buffer)($after)"
 
                 if $exec {
                     commandline edit --replace --accept $buffer
                 } else {
                     commandline edit --replace $buffer
+
+                    if $cursor_pos >= 0 {
+                        if $cursor_pos <= ($before | str length) {
+                            commandline set-cursor $cursor_pos
+                        } else {
+                            let new_cursor = $cursor_pos - ("#COMMAND" | str length) + ($original_buffer | str length)
+                            commandline set-cursor $new_cursor
+                        }
+                    } else {
+                        let new_cursor = ($before | str length) + $original_cursor
+                        commandline set-cursor $new_cursor
+                    }
                 }
             }
 
@@ -70,6 +108,13 @@ def __leadr_invoke__ [] {
                     commandline edit --replace --accept $to_insert
                 } else {
                     commandline edit --replace $to_insert
+
+                    if $cursor_pos >= 0 {
+                        commandline set-cursor $cursor_pos
+                    } else {
+                        let new_cursor = ($to_insert | str length)
+                        commandline set-cursor $new_cursor
+                    }
                 }
             }
         }
@@ -90,7 +135,7 @@ def __leadr_invoke__ [] {
         let cursor_pos = leadr_extract_cursor_pos $to_insert
         let to_insert  = ($to_insert | str replace "#CURSOR" "")
 
-        leadr_insert_command $to_insert $parsed_flags.insert_type $parsed_flags.exec
+        leadr_insert_command $to_insert $parsed_flags.insert_type $parsed_flags.exec $cursor_pos
     }
     leadr_main
 }

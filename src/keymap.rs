@@ -408,4 +408,28 @@ mod tests {
         let seq = crate::keymap::keyevent_to_shell_seq(*events.first().unwrap());
         assert_eq!(seq, "\x1Bx"); // ESC + 'x'
     }
+
+    #[test]
+    fn test_nushell_fields_simple() {
+        let ev = parse_vim_key("<C-g>").unwrap();
+        let fields = nushell_keyevent_to_fields(ev).unwrap();
+        assert_eq!(fields.modifier, "Control");
+        assert_eq!(fields.keycode, "Char_g");
+    }
+
+    #[test]
+    fn test_nushell_fields_combo() {
+        let ev = parse_vim_key("<C-M-S-x>").unwrap();
+        let fields = nushell_keyevent_to_fields(ev).unwrap();
+        assert_eq!(fields.modifier, "Control_Alt_Shift");
+        assert_eq!(fields.keycode, "Char_x");
+    }
+
+    #[test]
+    fn test_nushell_fields_non_char() {
+        let ev = parse_vim_key("<F5>").unwrap();
+        let fields = nushell_keyevent_to_fields(ev).unwrap();
+        assert_eq!(fields.keycode, "F5");
+        assert_eq!(fields.modifier, "None");
+    }
 }

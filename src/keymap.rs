@@ -279,14 +279,14 @@ pub fn keyevents_to_shell_binding(
             let fields = nushell_keyevent_to_fields(event)?;
 
             Ok(format!(
-                "$env.config.keybindings ++= [{{\n\
-                     name: leadr\n\
-                     modifier: {}\n\
-                     keycode: {}\n\
-                     mode: [emacs vi_insert vi_normal]\n\
-                     event: {{\n\
-                         send: executehostcommand\n\
-                         cmd: \"{}\"\n\
+                "\n$env.config.keybindings ++= [{{\n    \
+                     name: leadr\n    \
+                     modifier: {}\n    \
+                     keycode: {}\n    \
+                     mode: [emacs vi_insert vi_normal]\n    \
+                     event: {{\n        \
+                         send: executehostcommand\n        \
+                         cmd: \"{}\"\n    \
                      }}\n\
                  }}]",
                 fields.modifier, fields.keycode, function_name

@@ -2,7 +2,7 @@ use std::path::Path;
 
 use crossterm::event::KeyEvent;
 
-use crate::{LeadrError, keymap::parse_keysequence, ui::panel::Config as PanelConfig};
+use crate::{LeadrError, keybinding::parse_keysequence, ui::panel::Config as PanelConfig};
 
 #[derive(serde::Serialize, serde::Deserialize)]
 #[serde(default)]

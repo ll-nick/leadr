@@ -6,7 +6,7 @@
 pub mod config;
 pub mod error;
 pub mod input;
-pub mod keymap;
+pub mod keybinding;
 pub mod mappings;
 pub mod session;
 pub mod shell;

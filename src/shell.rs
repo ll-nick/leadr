@@ -1,6 +1,6 @@
 use crate::{
     Config, LeadrError,
-    keymap::{Shell, keyevents_to_shell_binding},
+    keybinding::{Shell, keyevents_to_shell_binding},
 };
 
 const BASH_INIT_TEMPLATE: &str = include_str!("../shell/init.bash");

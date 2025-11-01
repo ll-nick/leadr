@@ -28,8 +28,9 @@ fn parse_vim_key(key: &str) -> Result<KeyEvent, LeadrError> {
                 "S" => shift = true,
                 other => {
                     return Err(LeadrError::InvalidKeymapError(format!(
-                        "Unknown modifier '{}'",
-                        other
+                        "Invalid leadr keymap: <{}>. \
+                        '{}' is not a recognized modifier (valid modifiers are C, M, S)",
+                        key, other
                     )));
                 }
             }
@@ -53,14 +54,17 @@ fn parse_vim_key(key: &str) -> Result<KeyEvent, LeadrError> {
             "RIGHT" => KeyCode::Right,
             k if k.starts_with('F') => {
                 let n = k[1..].parse::<u8>().map_err(|_| {
-                    LeadrError::InvalidKeymapError(format!("Invalid function key: {}", key))
+                    LeadrError::InvalidKeymapError(format!(
+                        "Invalid leadr keymap: <{}>. '{}' is not a valid function key",
+                        key, k
+                    ))
                 })?;
                 KeyCode::F(n)
             }
             _ => {
                 return Err(LeadrError::InvalidKeymapError(format!(
-                    "Unknown key: {}",
-                    key
+                    "Invalid leadr keymap: <{}>. '{}' is not a recognized keycode",
+                    key, k
                 )));
             }
         },
@@ -271,7 +275,10 @@ pub fn keyevents_to_shell_binding(
         Shell::Nushell => {
             if events.len() != 1 {
                 return Err(LeadrError::InvalidKeymapError(
-                    "Nushell only supports single-chord keybindings".into(),
+                    "Nushell only supports single-chord keybindings (e.g. `<C-g>` or <S-M-a>). \
+                     Multi-chord sequences like `<C-x><C-f>` are not supported. \
+                     Please adjust the leadr keymap in your configuration accordingly."
+                        .into(),
                 ));
             }
 

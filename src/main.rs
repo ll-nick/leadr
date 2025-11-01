@@ -23,6 +23,9 @@ struct Cli {
     list: bool,
 
     #[arg(long)]
+    nu: bool,
+
+    #[arg(long)]
     zsh: bool,
 }
 
@@ -80,6 +83,18 @@ fn main() {
             }
             Err(e) => {
                 eprintln!("Error generating bash script: {:?}", e);
+                std::process::exit(1);
+            }
+        };
+    }
+    if cli.nu {
+        match leadr::init_nushell(&config) {
+            Ok(script) => {
+                print!("{}", script);
+                return;
+            }
+            Err(e) => {
+                eprintln!("Error generating nu script: {:?}", e);
                 std::process::exit(1);
             }
         };

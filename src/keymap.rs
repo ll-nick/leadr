@@ -5,6 +5,7 @@ use crate::error::LeadrError;
 /// All currently supported shells
 pub enum Shell {
     Bash,
+    Nushell,
     Zsh,
 }
 
@@ -132,6 +133,65 @@ fn keyevent_to_shell_seq(event: KeyEvent) -> String {
     s
 }
 
+/// Represents a single Nushell keybinding entry
+pub struct NushellKeyFields {
+    pub modifier: String,
+    pub keycode: String,
+}
+
+fn nushell_keyevent_to_fields(ev: KeyEvent) -> Result<NushellKeyFields, LeadrError> {
+    use KeyCode::*;
+    use KeyModifiers as KM;
+
+    // --- Determine modifier string ---
+    let ctrl = ev.modifiers.contains(KM::CONTROL);
+    let alt = ev.modifiers.contains(KM::ALT);
+    let shift = ev.modifiers.contains(KM::SHIFT);
+
+    let modifier = match (ctrl, alt, shift) {
+        (false, false, false) => "None",
+        (true, false, false) => "Control",
+        (false, true, false) => "Alt",
+        (false, false, true) => "Shift",
+        (true, true, false) => "Control_Alt",
+        (true, false, true) => "Control_Shift",
+        (false, true, true) => "Alt_Shift",
+        (true, true, true) => "Control_Alt_Shift",
+    }
+    .to_string();
+
+    // --- Determine keycode string ---
+    let keycode = match ev.code {
+        Backspace => "Backspace".into(),
+        Enter => "Enter".into(),
+        Esc => "Esc".into(),
+        Tab => "Tab".into(),
+        Char(' ') => "Space".into(),
+        Char(c) => format!("Char_{}", c),
+        Delete => "Delete".into(),
+        Insert => "Insert".into(),
+        Home => "Home".into(),
+        End => "End".into(),
+        PageUp => "PageUp".into(),
+        PageDown => "PageDown".into(),
+        Up => "Up".into(),
+        Down => "Down".into(),
+        Left => "Left".into(),
+        Right => "Right".into(),
+        F(n) => format!("F{}", n),
+        Null => "Null".into(),
+        BackTab => "BackTab".into(),
+        _ => {
+            return Err(LeadrError::InvalidKeymapError(format!(
+                "Unsupported keycode for Nushell: {:?}",
+                ev.code
+            )));
+        }
+    };
+
+    Ok(NushellKeyFields { modifier, keycode })
+}
+
 /// Parses a full Vim-style sequence like `<C-x><M-Enter>` into a vector of KeyEvents
 pub fn parse_keysequence(seq: &str) -> Result<Vec<KeyEvent>, LeadrError> {
     let mut result = Vec::new();
@@ -207,6 +267,30 @@ pub fn keyevents_to_shell_binding(
                 bindkey '{}' {}",
                 function_name, key_code_string, function_name
             ));
+        }
+        Shell::Nushell => {
+            if events.len() != 1 {
+                return Err(LeadrError::InvalidKeymapError(
+                    "Nushell only supports single-chord keybindings".into(),
+                ));
+            }
+
+            let event = events[0];
+            let fields = nushell_keyevent_to_fields(event)?;
+
+            Ok(format!(
+                "$env.config.keybindings ++= [{{\n\
+                     name: leadr\n\
+                     modifier: {}\n\
+                     keycode: {}\n\
+                     mode: [emacs vi_insert vi_normal]\n\
+                     event: {{\n\
+                         send: executehostcommand\n\
+                         cmd: \"{}\"\n\
+                     }}\n\
+                 }}]",
+                fields.modifier, fields.keycode, function_name
+            ))
         }
     }
 }

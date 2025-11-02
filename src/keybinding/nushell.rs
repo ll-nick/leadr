@@ -1,6 +1,6 @@
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 
-use crate::error::LeadrError;
+use crate::LeadrError;
 
 /// Represents a single Nushell keybinding entry
 pub struct NushellKeyFields {
@@ -90,4 +90,3 @@ mod tests {
         assert_eq!(fields.modifier, "None");
     }
 }
-

@@ -4,13 +4,10 @@ use crossterm::{QueueableCommand, cursor, style::Stylize, terminal};
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
 use crate::{
-    Mappings,
-    error::LeadrError,
+    LeadrError, Mappings, Symbols, Theme,
     ui::{
         area::{Area, ColumnLayout},
         entry::Entry,
-        symbols::Symbols,
-        theme::Theme,
     },
 };
 

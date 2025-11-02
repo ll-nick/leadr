@@ -1,7 +1,7 @@
 use crossterm::event::KeyEvent;
 
 use crate::{
-    error::LeadrError,
+    LeadrError,
     keybinding::{bash_zsh::keyevent_to_shell_seq, nushell::nushell_keyevent_to_fields},
 };
 

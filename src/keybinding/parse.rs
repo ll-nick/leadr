@@ -1,6 +1,6 @@
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 
-use crate::error::LeadrError;
+use crate::LeadrError;
 
 /// Parses a full Vim-style sequence like `<C-x><M-Enter>` into a vector of KeyEvents
 pub fn parse_keysequence(seq: &str) -> Result<Vec<KeyEvent>, LeadrError> {

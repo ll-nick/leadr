@@ -2,11 +2,7 @@ use std::io::Write;
 
 use crossterm::style::Stylize;
 
-use crate::{
-    InsertType, Mapping,
-    mappings::MatchType,
-    ui::{symbols::Symbols, theme::Theme},
-};
+use crate::{InsertType, Mapping, Symbols, Theme, mappings::MatchType};
 
 pub struct Entry {
     pub styled_parts: Vec<crossterm::style::StyledContent<String>>,

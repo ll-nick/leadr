@@ -1,6 +1,38 @@
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 
-use crate::error::LeadrError;
+use crate::LeadrError;
+
+/// Parses a full Vim-style sequence like `<C-x><M-Enter>` into a vector of KeyEvents
+pub fn parse_keysequence(seq: &str) -> Result<Vec<KeyEvent>, LeadrError> {
+    let mut result = Vec::new();
+    let mut current_combo = String::new();
+    let mut in_angle = false;
+
+    for char in seq.chars() {
+        if char == '<' {
+            in_angle = true;
+            current_combo.push(char);
+        } else if char == '>' && in_angle {
+            current_combo.push(char);
+            in_angle = false;
+            let key_event = parse_vim_key(&current_combo)?;
+            result.push(key_event);
+            current_combo.clear();
+        } else if in_angle {
+            current_combo.push(char);
+        } else {
+            // plain character
+            result.push(KeyEvent {
+                code: KeyCode::Char(char),
+                modifiers: KeyModifiers::empty(),
+                kind: crossterm::event::KeyEventKind::Press,
+                state: crossterm::event::KeyEventState::NONE,
+            });
+        }
+    }
+
+    Ok(result)
+}
 
 /// Parses a single Vim-style key like `<C-x>`, `<M-Enter>`, `<F5>`.
 fn parse_vim_key(key: &str) -> Result<KeyEvent, LeadrError> {
@@ -21,8 +53,9 @@ fn parse_vim_key(key: &str) -> Result<KeyEvent, LeadrError> {
                 "S" => shift = true,
                 other => {
                     return Err(LeadrError::InvalidKeymapError(format!(
-                        "Unknown modifier '{}'",
-                        other
+                        "Invalid leadr keymap: <{}>. \
+                        '{}' is not a recognized modifier (valid modifiers are C, M, S)",
+                        key, other
                     )));
                 }
             }
@@ -46,14 +79,17 @@ fn parse_vim_key(key: &str) -> Result<KeyEvent, LeadrError> {
             "RIGHT" => KeyCode::Right,
             k if k.starts_with('F') => {
                 let n = k[1..].parse::<u8>().map_err(|_| {
-                    LeadrError::InvalidKeymapError(format!("Invalid function key: {}", key))
+                    LeadrError::InvalidKeymapError(format!(
+                        "Invalid leadr keymap: <{}>. '{}' is not a valid function key",
+                        key, k
+                    ))
                 })?;
                 KeyCode::F(n)
             }
             _ => {
                 return Err(LeadrError::InvalidKeymapError(format!(
-                    "Unknown key: {}",
-                    key
+                    "Invalid leadr keymap: <{}>. '{}' is not a recognized keycode",
+                    key, k
                 )));
             }
         },
@@ -76,81 +112,6 @@ fn parse_vim_key(key: &str) -> Result<KeyEvent, LeadrError> {
         kind: crossterm::event::KeyEventKind::Press,
         state: crossterm::event::KeyEventState::NONE,
     })
-}
-
-/// Converts a KeyEvent to a Bash/Zsh-compatible sequence
-fn keyevent_to_shell_seq(event: KeyEvent) -> String {
-    use KeyCode::*;
-    let mut s = String::new();
-
-    if event.modifiers.contains(KeyModifiers::ALT) {
-        s.push('\x1B'); // ESC prefix for Alt
-    }
-
-    match event.code {
-        Char(c) => {
-            let c = if event.modifiers.contains(KeyModifiers::CONTROL) {
-                (c as u8 & 0x1F) as char
-            } else if event.modifiers.contains(KeyModifiers::SHIFT) {
-                c.to_ascii_uppercase()
-            } else {
-                c
-            };
-            s.push(c);
-        }
-        Enter => s.push('\x0D'),
-        Tab => s.push('\x09'),
-        Esc => s.push('\x1B'),
-        Up => s.push_str("\x1B[A"),
-        Down => s.push_str("\x1B[B"),
-        Left => s.push_str("\x1B[D"),
-        Right => s.push_str("\x1B[C"),
-        F(n) => s.push_str(match n {
-            1 => "\x1BOP",
-            2 => "\x1BOQ",
-            3 => "\x1BOR",
-            4 => "\x1BOS",
-            5 => "\x1B[15~",
-            6 => "\x1B[17~",
-            7 => "\x1B[18~",
-            8 => "\x1B[19~",
-            9 => "\x1B[20~",
-            10 => "\x1B[21~",
-            11 => "\x1B[23~",
-            12 => "\x1B[24~",
-            _ => "",
-        }),
-        _ => {}
-    }
-
-    s
-}
-
-/// Parses a full Vim-style sequence like `<C-x><M-Enter>` into a shell string
-pub fn parse_keybinding(seq: &str) -> Result<String, LeadrError> {
-    let mut result = String::new();
-    let mut temp = String::new();
-    let mut in_angle = false;
-
-    for c in seq.chars() {
-        if c == '<' {
-            in_angle = true;
-            temp.push(c);
-        } else if c == '>' && in_angle {
-            temp.push(c);
-            in_angle = false;
-            let key_event = parse_vim_key(&temp)?;
-            result.push_str(&keyevent_to_shell_seq(key_event));
-            temp.clear();
-        } else if in_angle {
-            temp.push(c);
-        } else {
-            // plain character
-            result.push(c);
-        }
-    }
-
-    Ok(result)
 }
 
 #[cfg(test)]
@@ -199,31 +160,11 @@ mod tests {
     }
 
     #[test]
-    fn test_keyevent_to_shell_seq_ctrl() {
-        let ev = parse_vim_key("<C-g>").unwrap();
-        let seq = keyevent_to_shell_seq(ev);
-        assert_eq!(seq, "\x07"); // Ctrl-G
-    }
-
-    #[test]
-    fn test_keyevent_to_shell_seq_alt() {
-        let ev = parse_vim_key("<M-x>").unwrap();
-        let seq = keyevent_to_shell_seq(ev);
-        assert_eq!(seq, "\x1Bx"); // ESC + 'x'
-    }
-
-    #[test]
-    fn test_parse_sequence_mixed() {
-        let seq = parse_keybinding("<C-x><M-Enter>abc").unwrap();
-        assert_eq!(seq, "\x18\x1B\rabc");
-    }
-
-    #[test]
     fn test_invalid_modifier() {
         let err = parse_vim_key("<Q-x>").unwrap_err();
         match err {
             LeadrError::InvalidKeymapError(s) => {
-                assert!(s.contains("Unknown modifier"));
+                assert!(s.contains("not a recognized modifier"));
             }
             _ => panic!("Unexpected error type"),
         }
@@ -234,9 +175,28 @@ mod tests {
         let err = parse_vim_key("<C-NotAKey>").unwrap_err();
         match err {
             LeadrError::InvalidKeymapError(s) => {
-                assert!(s.contains("Unknown key"));
+                assert!(s.contains("not a recognized keycode"));
             }
             _ => panic!("Unexpected error type"),
         }
+    }
+
+    #[test]
+    fn test_parse_keysequence_simple() {
+        let events = parse_keysequence("abc").unwrap();
+        assert_eq!(events.len(), 3);
+        assert_eq!(events[0].code, KeyCode::Char('a'));
+        assert_eq!(events[1].code, KeyCode::Char('b'));
+        assert_eq!(events[2].code, KeyCode::Char('c'));
+    }
+
+    #[test]
+    fn test_parse_keysequence_vim_style() {
+        let events = parse_keysequence("<C-x><M-Enter>").unwrap();
+        assert_eq!(events.len(), 2);
+        assert_eq!(events[0].code, KeyCode::Char('x'));
+        assert!(events[0].modifiers.contains(KeyModifiers::CONTROL));
+        assert_eq!(events[1].code, KeyCode::Enter);
+        assert!(events[1].modifiers.contains(KeyModifiers::ALT));
     }
 }

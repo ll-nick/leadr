@@ -1,6 +1,8 @@
 use std::path::Path;
 
-use crate::{LeadrError, ui::panel::Config as PanelConfig};
+use crossterm::event::KeyEvent;
+
+use crate::{LeadrError, keybinding::parse_keysequence, ui::panel::Config as PanelConfig};
 
 #[derive(serde::Serialize, serde::Deserialize)]
 #[serde(default)]
@@ -47,5 +49,10 @@ impl Config {
             std::fs::write(config_path, contents)?;
         }
         Ok(())
+    }
+
+    /// Returns the leadr key as a vector of KeyEvents
+    pub fn leadr_key_events(&self) -> Result<Vec<KeyEvent>, LeadrError> {
+        parse_keysequence(&self.leadr_key)
     }
 }

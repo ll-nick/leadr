@@ -43,10 +43,10 @@ Consult the [Configuration](#-configuration) section to learn how to make `leadr
 
 ## ⚡️ Requirements
 
-- bash or zsh
+- A supported shell: bash, nushell or zsh
 - [crossterm](https://docs.rs/crossterm/latest/crossterm/index.html) compatible terminal (see [their Readme for a list](https://github.com/crossterm-rs/crossterm?tab=readme-ov-file#tested-terminals))
 
-> **Note**: I personally use `leadr` in `bash` on Linux. I have tested it with `zsh` on Linux but have no way to test it on macOS.
+> **Note**: I personally use `leadr` in `bash` and `nushell` on Linux. I have tested it with `zsh` on Linux but have no way to test it on macOS.
 > I'd be happy to get some feedback about how well `leadr` works in zsh, particularly on macOS.
 
 ## 📦 Installation
@@ -58,6 +58,10 @@ Consult the [Configuration](#-configuration) section to learn how to make `leadr
 
 You can download pre-built binaries from the [releases page](https://github.com/ll-nick/leadr/releases/latest).
 Just copy the binary to a directory in your `PATH` and make it executable.
+
+I highly recommend the amazing [mise-en-place](https://mise.jdx.dev/) to do this for you while also managing updates.
+With mise installed, run:
+`mise use --global ubi:ll-nick/leadr`
 
 </details>
 
@@ -87,15 +91,21 @@ cargo install --path .
 
 ## 🐚 Shell Integration
 
-To use `leadr`, simply add the following line to your shell configuration file (e.g. `~/.bashrc` or `~/.zshrc`):
+To use `leadr`, simply add the following to your shell configuration file:
 
 ```bash
-# For bash
+# ~/.bashrc
 source <(leadr --bash)
 ```
 
+```nushell
+# nushell/config.nu
+mkdir ($nu.data-dir | path join "vendor/autoload")
+leadr --nu | save -f ($nu.data-dir | path join "vendor/autoload/leadr.nu")
+```
+
 ```zsh
-# For zsh
+# ~/.zshrc
 source <(leadr --zsh)
 ```
 
@@ -113,7 +123,7 @@ Most of these settings should be self-explanatory but here are some notes on a f
 ##### leadr_key
 
 The default keybinding is `<C-g>` (the `Ctrl` key and the `g` key pressed in one chord), but you can change that by modifying the `leadr_key` in the `config.toml` file.
-The syntax mimics that of Vim's keybindings, e.g. `<M-x>`, `<C-s>`, `<F5>`, etc. and supports chains like `<C-x><C-s>abc`.
+The syntax mimics that of Vim's keybindings, e.g. `<M-x>`, `<C-s>`, `<F5>`, etc. and supports (with the exception of nushell) chains like `<C-x><C-s>abc`.
 
 > **Fair warning**: Keybindings in the shell are a bit of an arcane mess.
 > I asked my good friend Chad Gibbidy to help me out with this.
@@ -122,7 +132,7 @@ The syntax mimics that of Vim's keybindings, e.g. `<M-x>`, `<C-s>`, `<F5>`, etc.
 
 ##### redraw_prompt_line
 
-> **Note**: This setting concerns only `bash` users. It has no effect in `zsh`.
+> **Note**: This setting concerns only `bash` users. It has no effect in other shells.
 
 Due to the way key bindings work in `bash`, the current prompt line will disappear while `leadr` is activated.
 To cover this up, `leadr` will redraw it after start-up.
@@ -164,7 +174,7 @@ The cursor position after inserting or replacing commands can be customized by a
 For the `git commit -m ""` example, define the command as `git commit -m "#CURSOR"` to place the cursor between the double quotes after inserting the command.
 This works for all insert types but will have no effect if `evaluate` or `execute` is set to `true`.
 
-> **Note**: `execute` works best inside a `tmux` session since it can utilize `tmux`'s `send-keys` to execute commands.
+> **Note**: For `bash` and `zsh`, `execute` works best inside a `tmux` session since it can utilize `tmux`'s `send-keys` to execute commands.
 > Outside of `tmux`, `leadr` will fallback to `eval` and manually append the command to the shell's history.
 
 

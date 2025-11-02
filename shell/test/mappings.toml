@@ -55,13 +55,13 @@ insert_type = "Replace"
 execute = true
 
 [e2]
-command = "date"
+command = "echo 'There is no echo to the left of me'"
 description = "Test Evaluate"
 insert_type = "Insert"
 evaluate = true
 
 [e3]
-command = "which date"
+command = "echo ls"
 description = "Test Evaluate + Execute"
 insert_type = "Replace"
 evaluate = true

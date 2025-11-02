@@ -2,7 +2,7 @@ use std::time::{Duration, Instant};
 
 use crossterm::event::{Event, KeyCode, KeyEvent, poll, read};
 
-use crate::{Config, LeadrError, Mappings, Panel, Theme, input::RawModeGuard, ui::prompt};
+use crate::{Config, LeadrError, Mappings, Panel, RawModeGuard, Theme, ui::prompt};
 
 pub enum SessionResult {
     Command(String),

@@ -19,6 +19,15 @@ pub fn init_bash(config: &Config) -> Result<String, LeadrError> {
     Ok(script + bind_command.as_str())
 }
 
+/// Generates a fish script that handles the resulting command and binds it to the leadr key.
+pub fn init_fish(config: &Config) -> Result<String, LeadrError> {
+    let bind_command =
+        keyevents_to_shell_binding(&config.leadr_key_events()?, INIT_FUNCTION_NAME, Shell::Fish)?;
+
+    let script = FISH_INIT_TEMPLATE.to_owned();
+    Ok(script + bind_command.as_str())
+}
+
 /// Generates a nushell script that handles the resulting command and binds it to the leadr key.
 pub fn init_nushell(config: &Config) -> Result<String, LeadrError> {
     let bind_command = keyevents_to_shell_binding(
@@ -38,13 +47,6 @@ pub fn init_zsh(config: &Config) -> Result<String, LeadrError> {
 
     let script = ZSH_INIT_TEMPLATE.to_owned();
     Ok(script + bind_command.as_str())
-}
-
-/// Generates a fish script that handles the resulting command and binds it to the leadr key.
-pub fn init_fish(config: &Config) -> Result<String, LeadrError> {
-    let leader_key = parse_keybinding(&config.leadr_key)?;
-
-    Ok(FISH_INIT_TEMPLATE.replace("{{bind_key}}", &leader_key))
 }
 
 #[cfg(test)]

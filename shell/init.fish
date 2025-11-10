@@ -103,6 +103,3 @@ function __leadr_invoke__
 
     leadr_main
 end
-
-# === Key Binding ===
-bind {{bind_key}} __leadr_invoke__

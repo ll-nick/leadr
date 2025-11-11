@@ -38,26 +38,53 @@ function __leadr_invoke__
         set -l to_insert $argv[2]
         set -l cursor_pos $argv[3]
 
+        set -l original_cursor (commandline -C)
+
         switch $insert_type
             case "INSERT"
                 commandline -i $to_insert
+                if test $cursor_pos -ge 0
+                    commandline -C (math $original_cursor + $cursor_pos)
+                else
+                    commandline -C (math $original_cursor + (string length $to_insert))
+                end
             case "PREPEND"
                 set -l current (commandline)
                 commandline -r "$to_insert$current"
+                if test $cursor_pos -ge 0
+                    commandline -C $cursor_pos
+                else
+                    commandline -C (math $original_cursor + (string length $to_insert))
+                end
             case "APPEND"
                 commandline -a $to_insert
+                if test $cursor_pos -ge 0
+                    commandline -C (math (string length (commandline)) - (string length $to_insert) + $cursor_pos)
+                else
+                    commandline -C (string length (commandline))
+                end
             case "SURROUND"
                 set -l before (string split $LEADR_COMMAND_POSITION_ENCODING $to_insert)[1]
                 set -l after (string split $LEADR_COMMAND_POSITION_ENCODING $to_insert)[2]
                 set -l current (commandline)
                 commandline -r "$before$current$after"
+
+                if test $cursor_pos -ge 0
+                    if test $cursor_pos -le (string length $before)
+                        commandline -C $cursor_pos
+                    else 
+                        commandline -C (math $cursor_pos - (string length $LEADR_COMMAND_POSITION_ENCODING) + (string length $current))
+                    end
+                else
+                    commandline -C (math (string length $before) + $original_cursor)
+                end
             case "*"
                 commandline -r $to_insert
-        end
-
-        # Set cursor position if specified
-        if test $cursor_pos -ge 0
-            commandline -C $cursor_pos
+                if test $cursor_pos -ge 0
+                    commandline -C $cursor_pos
+                else
+                    commandline -C (string length (commandline))
+                end
         end
     end
 

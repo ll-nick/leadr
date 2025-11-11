@@ -43,15 +43,13 @@ Consult the [Configuration](#-configuration) section to learn how to make `leadr
 
 ## ⚡️ Requirements
 
-- A supported shell: bash, nushell or zsh
+- A supported shell: bash, fish, nushell or zsh
 - [crossterm](https://docs.rs/crossterm/latest/crossterm/index.html) compatible terminal (see [their Readme for a list](https://github.com/crossterm-rs/crossterm?tab=readme-ov-file#tested-terminals))
 
-> **Note**: I personally use `leadr` in `bash` and `nushell` on Linux. I have tested it with `zsh` on Linux but have no way to test it on macOS.
-> I'd be happy to get some feedback about how well `leadr` works in zsh, particularly on macOS.
+> **Note**: I personally use and test `leadr` on Linux.
+> I'd be happy to get some feedback about how well it works on macOS.
 
 ## 📦 Installation
-
-> **Note**: This project is still in early development, expect some breaking changes every now and then.
 
 <details>
 <summary>From pre-built binaries</summary>
@@ -96,6 +94,11 @@ To use `leadr`, simply add the following to your shell configuration file:
 ```bash
 # ~/.bashrc
 source <(leadr --bash)
+```
+
+```fish
+# ~/.config/fish/config.fish
+leadr --fish | source
 ```
 
 ```nushell
@@ -205,3 +208,7 @@ text_secondary = { r = 192, g = 192, b = 192 }
 ```
 
 and set `theme_name = "high-contrast"` in the `config.toml` file.
+
+## ❤️ Contributions
+
+Thanks @Banh-Canh for contributing the fish integration!

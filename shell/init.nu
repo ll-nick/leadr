@@ -1,4 +1,7 @@
 def __leadr_invoke__ [] {
+    let LEADR_COMMAND_POSITION_ENCODING = "#COMMAND"
+    let LEADR_CURSOR_POSITION_ENCODING = "#CURSOR"
+
     def leadr_parse_flags [flags: list<string>] {
         mut result = {
             insert_type: ""
@@ -19,8 +22,8 @@ def __leadr_invoke__ [] {
     }
 
     def leadr_extract_cursor_pos [input] {
-        if ($input | str contains "#CURSOR") {
-            let before = ($input | split row "#CURSOR" | first)
+        if ($input | str contains $LEADR_CURSOR_POSITION_ENCODING) {
+            let before = ($input | split row $LEADR_CURSOR_POSITION_ENCODING | first)
             ($before | str length)
         } else {
             -1
@@ -65,7 +68,7 @@ def __leadr_invoke__ [] {
             }
 
             "SURROUND" => {
-                let parts = ($to_insert | parse "{before}#COMMAND{after}")
+                let parts = ($to_insert | parse $"{before}($LEADR_COMMAND_POSITION_ENCODING){after}")
                 let before = $parts.before.0
                 let after = $parts.after.0
                 let original_buffer = (commandline)
@@ -77,7 +80,7 @@ def __leadr_invoke__ [] {
                     if $cursor_pos <= ($before | str length) {
                         commandline set-cursor $cursor_pos
                     } else {
-                        let new_cursor = $cursor_pos - ("#COMMAND" | str length) + ($original_buffer | str length)
+                        let new_cursor = $cursor_pos - ($LEADR_COMMAND_POSITION_ENCODING | str length) + ($original_buffer | str length)
                         commandline set-cursor $new_cursor
                     }
                 } else {

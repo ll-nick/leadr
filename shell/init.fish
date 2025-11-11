@@ -2,10 +2,6 @@ function __leadr_invoke__
     set -g LEADR_COMMAND_POSITION_ENCODING "#COMMAND"
     set -g LEADR_CURSOR_POSITION_ENCODING "#CURSOR"
 
-    function leadr_cursor_line
-        echo 1
-    end
-
     function leadr_parse_flags
         set -l flag_str $argv[1]
         set -l insert ""
@@ -70,7 +66,7 @@ function __leadr_invoke__
     end
 
     function leadr_main
-        set -l cmd (env LEADR_CURSOR_LINE=(leadr_cursor_line) leadr)
+        set -l cmd (leadr)
 
         test -z "$cmd"; and return
 

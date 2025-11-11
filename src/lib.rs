@@ -4,6 +4,7 @@
 //! Inspired by the (Neo)Vim leader key.
 
 pub mod config;
+mod cursor;
 pub mod error;
 pub mod input;
 pub mod keybinding;

@@ -2,15 +2,6 @@ __leadr_invoke__() {
     LEADR_COMMAND_POSITION_ENCODING="#COMMAND"
     LEADR_CURSOR_POSITION_ENCODING="#CURSOR"
 
-    # Reference: https://stackoverflow.com/a/43911767
-    leadr_cursor_line() {
-      echo -ne "\033[6n" > /dev/tty
-      read -t 1 -s -d 'R' line < /dev/tty
-      line="${line##*\[}"
-      line="${line%;*}"
-      echo $((line - 1))
-    }
-
     leadr_parse_flags() {
         local flag_str="$1"
 
@@ -115,7 +106,7 @@ __leadr_invoke__() {
     }
 
     leadr_main() {
-        local cmd="$(LEADR_CURSOR_LINE=$(leadr_cursor_line) leadr)"
+        local cmd="$(leadr)"
 
         [[ -z "$cmd" ]] && return
 

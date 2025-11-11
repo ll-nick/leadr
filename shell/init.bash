@@ -2,12 +2,6 @@ __leadr_invoke__() {
     LEADR_COMMAND_POSITION_ENCODING="#COMMAND"
     LEADR_CURSOR_POSITION_ENCODING="#CURSOR"
 
-    leadr_cursor_line() {
-        IFS='[;' read -sdR -p $'\E[6n' _ row col
-        # row is 1-indexed, convert to 0-indexed
-        echo $((row - 1))
-    }
-
     leadr_parse_flags() {
         local flag_str="$1"
         local insert=""
@@ -115,10 +109,8 @@ __leadr_invoke__() {
         local current_input="${READLINE_LINE}"
 
         local cmd="$(
-            LEADR_CURSOR_LINE=$(leadr_cursor_line) \
-            LEADR_CURSOR_COLUMN=$READLINE_POINT \
             LEADR_PROMPT="$last_prompt_line" \
-            LEADR_CURRENT_INPUT="$current_input" \
+                LEADR_CURRENT_INPUT="$current_input" \
                 leadr
         )"
 

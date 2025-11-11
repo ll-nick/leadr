@@ -1,8 +1,4 @@
 def __leadr_invoke__ [] {
-    def leadr_cursor_line [] {
-        term query (ansi cursor_position) --prefix (ansi csi) --terminator 'R' | decode utf8 | parse "{row};{col}" | get row.0
-    }
-
     def leadr_parse_flags [flags: list<string>] {
         mut result = {
             insert_type: ""
@@ -105,8 +101,7 @@ def __leadr_invoke__ [] {
     }
 
     def leadr_main [] {
-        let cursor_line = leadr_cursor_line
-        let cmd = (LEADR_CURSOR_LINE=$cursor_line leadr)
+        let cmd = (leadr)
         if ($cmd | str trim | str length) == 0 {
             return
         }

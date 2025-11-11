@@ -5,6 +5,7 @@ use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
 use crate::{
     LeadrError, Mappings, Symbols, Theme,
+    cursor::query_cursor_position,
     ui::{
         area::{Area, ColumnLayout},
         entry::Entry,
@@ -92,7 +93,8 @@ impl Panel {
         let mut tty = std::fs::OpenOptions::new().write(true).open("/dev/tty")?;
 
         let (_cols, rows) = terminal::size()?;
-        let line_below_cursor = std::env::var("LEADR_CURSOR_LINE")?.parse::<u16>()? + 1;
+        let (_cursor_x, cursor_y) = query_cursor_position(100)?;
+        let line_below_cursor = cursor_y.saturating_add(1);
 
         let lines_below = rows.saturating_sub(line_below_cursor);
         let scroll_up = config.layout.height.saturating_sub(lines_below);

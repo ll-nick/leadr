@@ -22,7 +22,7 @@ use std::io::Write;
 use crossterm::{ExecutableCommand, QueueableCommand, cursor};
 use unicode_width::UnicodeWidthStr;
 
-use crate::LeadrError;
+use crate::{LeadrError, cursor::query_cursor_position};
 
 /// Compute the visible width of a string by stripping ANSI escape sequences
 /// and measuring Unicode display width.
@@ -51,10 +51,10 @@ impl PromptGuard {
     /// Create a new redraw guard.
     pub fn try_new() -> Result<Self, LeadrError> {
         let tty = OpenOptions::new().write(true).open("/dev/tty")?;
-        let cursor_line = env::var("LEADR_CURSOR_LINE")?.parse::<u16>()?;
-        let cursor_column = env::var("LEADR_CURSOR_COLUMN")?.parse::<u16>()?;
         let prompt = env::var("LEADR_PROMPT")?;
         let input = env::var("LEADR_CURRENT_INPUT")?;
+
+        let (cursor_column, cursor_line) = query_cursor_position(100)?;
 
         Ok(Self {
             tty,

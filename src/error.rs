@@ -31,4 +31,7 @@ pub enum LeadrError {
 
     #[error("Theme not found: {0}")]
     ThemeNotFound(String),
+
+    #[error("Terminal query error: {0}")]
+    TerminalQueryError(String),
 }

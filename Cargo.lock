@@ -259,6 +259,7 @@ dependencies = [
  "clap",
  "crossterm",
  "directories",
+ "mio",
  "serde",
  "strip-ansi-escapes",
  "thiserror",

@@ -6,6 +6,7 @@ use crate::{
 const BASH_INIT_TEMPLATE: &str = include_str!("../shell/init.bash");
 const NUSHELL_INIT_TEMPLATE: &str = include_str!("../shell/init.nu");
 const ZSH_INIT_TEMPLATE: &str = include_str!("../shell/init.zsh");
+const FISH_INIT_TEMPLATE: &str = include_str!("../shell/init.fish");
 
 const INIT_FUNCTION_NAME: &str = "__leadr_invoke__";
 
@@ -15,6 +16,15 @@ pub fn init_bash(config: &Config) -> Result<String, LeadrError> {
         keyevents_to_shell_binding(&config.leadr_key_events()?, INIT_FUNCTION_NAME, Shell::Bash)?;
 
     let script = BASH_INIT_TEMPLATE.to_owned();
+    Ok(script + bind_command.as_str())
+}
+
+/// Generates a fish script that handles the resulting command and binds it to the leadr key.
+pub fn init_fish(config: &Config) -> Result<String, LeadrError> {
+    let bind_command =
+        keyevents_to_shell_binding(&config.leadr_key_events()?, INIT_FUNCTION_NAME, Shell::Fish)?;
+
+    let script = FISH_INIT_TEMPLATE.to_owned();
     Ok(script + bind_command.as_str())
 }
 

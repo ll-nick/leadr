@@ -8,6 +8,7 @@ use crate::{
 /// All currently supported shells
 pub enum Shell {
     Bash,
+    Fish,
     Nushell,
     Zsh,
 }
@@ -44,17 +45,13 @@ pub fn keyevents_to_shell_binding(
                 function_name,
             ));
         }
-        Shell::Zsh => {
+        Shell::Fish => {
             let key_code_string = events
                 .iter()
                 .map(|ev| keyevent_to_shell_seq(*ev))
                 .collect::<String>();
 
-            return Ok(format!(
-                "zle -N {}\n\
-                bindkey '{}' {}",
-                function_name, key_code_string, function_name
-            ));
+            return Ok(format!("\nbind '{}' {}\n", key_code_string, function_name));
         }
         Shell::Nushell => {
             if events.len() != 1 {
@@ -82,6 +79,18 @@ pub fn keyevents_to_shell_binding(
                  }}]",
                 fields.modifier, fields.keycode, function_name
             ))
+        }
+        Shell::Zsh => {
+            let key_code_string = events
+                .iter()
+                .map(|ev| keyevent_to_shell_seq(*ev))
+                .collect::<String>();
+
+            return Ok(format!(
+                "zle -N {}\n\
+                bindkey '{}' {}",
+                function_name, key_code_string, function_name
+            ));
         }
     }
 }

@@ -18,5 +18,5 @@ pub use error::LeadrError;
 pub use input::RawModeGuard;
 pub use mappings::{InsertType, Mapping, Mappings};
 pub use session::{LeadrSession, SessionResult};
-pub use shell::{init_bash, init_nushell, init_zsh};
+pub use shell::{init_bash, init_fish, init_nushell, init_zsh};
 pub use ui::{panel::Panel, symbols::Symbols, theme::Theme};

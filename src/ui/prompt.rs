@@ -54,7 +54,7 @@ impl PromptGuard {
         let prompt = env::var("LEADR_PROMPT")?;
         let input = env::var("LEADR_CURRENT_INPUT")?;
 
-        let (cursor_column, cursor_line) = query_cursor_position(100)?;
+        let (cursor_column, cursor_line) = query_cursor_position()?;
 
         Ok(Self {
             tty,

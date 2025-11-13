@@ -254,12 +254,11 @@ checksum = "a6cb138bb79a146c1bd460005623e142ef0181e3d0219cb493e02f7d08a35695"
 
 [[package]]
 name = "leadr"
-version = "2.8.0"
+version = "2.8.1"
 dependencies = [
  "clap",
  "crossterm",
  "directories",
- "mio",
  "serde",
  "strip-ansi-escapes",
  "thiserror",

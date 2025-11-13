@@ -93,7 +93,7 @@ impl Panel {
         let mut tty = std::fs::OpenOptions::new().write(true).open("/dev/tty")?;
 
         let (_cols, rows) = terminal::size()?;
-        let (_cursor_x, cursor_y) = query_cursor_position(100)?;
+        let (_cursor_x, cursor_y) = query_cursor_position()?;
         let line_below_cursor = cursor_y.saturating_add(1);
 
         let lines_below = rows.saturating_sub(line_below_cursor);

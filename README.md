@@ -46,9 +46,6 @@ Consult the [Configuration](#-configuration) section to learn how to make `leadr
 - A supported shell: bash, fish, nushell or zsh
 - [crossterm](https://docs.rs/crossterm/latest/crossterm/index.html) compatible terminal (see [their Readme for a list](https://github.com/crossterm-rs/crossterm?tab=readme-ov-file#tested-terminals))
 
-> **Note**: I personally use and test `leadr` on Linux.
-> I'd be happy to get some feedback about how well it works on macOS.
-
 ## 📦 Installation
 
 <details>
@@ -211,4 +208,5 @@ and set `theme_name = "high-contrast"` in the `config.toml` file.
 
 ## ❤️ Contributions
 
-Thanks @Banh-Canh for contributing the fish integration!
+Thanks @Banh-Canh for contributing the fish integration!  
+Thanks @johnallen3d for testing `leadr` on macOS!

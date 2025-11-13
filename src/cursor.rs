@@ -1,19 +1,15 @@
 use std::fs::OpenOptions;
 use std::io::{Read, Write};
-use std::os::fd::AsRawFd;
-use std::time::Duration;
-
-use mio::{Events, Interest, Poll, Token, unix::SourceFd};
 
 use crate::LeadrError;
 
 /// Query the terminal for the current cursor position (col, row)
 ///
 /// Returns `(col, row)` as 0-based coordinates on success.
-/// This cannot be done via crossterm because the shell integration pipes stdin/stdout,
+/// This cannot be done via crossterm because the shell integration redirects stdin/stdout,
 /// so we have to open `/dev/tty` directly which is not currently supported by crossterm.
 /// See https://github.com/crossterm-rs/crossterm/issues/919
-pub fn query_cursor_position(timeout_ms: u64) -> Result<(u16, u16), LeadrError> {
+pub fn query_cursor_position() -> Result<(u16, u16), LeadrError> {
     // Open the controlling terminal directly
     let mut tty = OpenOptions::new().read(true).write(true).open("/dev/tty")?;
 
@@ -21,27 +17,12 @@ pub fn query_cursor_position(timeout_ms: u64) -> Result<(u16, u16), LeadrError> 
     tty.write_all(b"\x1b[6n")?;
     tty.flush()?;
 
-    // Prepare Mio polling
-    let fd = tty.as_raw_fd();
-    let mut poll = Poll::new()?;
-    poll.registry()
-        .register(&mut SourceFd(&fd), Token(0), Interest::READABLE)?;
-
-    let mut events = Events::with_capacity(4);
-
-    // Wait for up to `timeout_ms` for the terminal to respond
-    poll.poll(&mut events, Some(Duration::from_millis(timeout_ms)))?;
-
-    if events.is_empty() {
-        return Err(LeadrError::TerminalQueryError(
-            "Timed out waiting for cursor position response".into(),
-        ));
-    }
-
     // Read the response
     let mut response_buffer = [0u8; 64];
     let bytes_read = tty.read(&mut response_buffer)?;
-    let response_string = String::from_utf8_lossy(&response_buffer[..bytes_read]);
+    let response_string = std::str::from_utf8(&response_buffer[..bytes_read]).map_err(|e| {
+        LeadrError::TerminalQueryError(format!("Invalid UTF-8 in cursor position response: {}", e))
+    })?;
 
     parse_cursor_response(&response_string)
 }

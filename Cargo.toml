@@ -16,6 +16,5 @@ crossterm = "0.29.0"
 directories = "6.0.0"
 serde = {version = "1.0.219", features = ["derive"]}
 toml = "0.8.23"
-thiserror = "2.0.12"
 strip-ansi-escapes = "0.2.1"
 unicode-width = "0.2.1"

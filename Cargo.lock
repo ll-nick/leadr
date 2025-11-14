@@ -261,7 +261,6 @@ dependencies = [
  "directories",
  "serde",
  "strip-ansi-escapes",
- "thiserror",
  "toml",
  "unicode-width",
 ]

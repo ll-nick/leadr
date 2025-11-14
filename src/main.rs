@@ -6,6 +6,7 @@
 use std::path::PathBuf;
 
 use clap::Parser;
+use color_eyre::eyre::{Result, WrapErr, eyre};
 use directories::ProjectDirs;
 
 use leadr::{Config, LeadrError, LeadrSession, Mappings, SessionResult, Theme};
@@ -33,7 +34,9 @@ struct Cli {
     fish: bool,
 }
 
-fn main() {
+fn main() -> Result<()> {
+    color_eyre::install()?;
+
     let cli = Cli::parse();
 
     let config_dir = match get_config_dir() {
@@ -130,7 +133,7 @@ fn main() {
 
     if cli.list {
         println!("{}", mappings.render_table());
-        return;
+        return Ok(());
     }
 
     let mut session = LeadrSession::new(mappings, config, theme);
@@ -145,6 +148,8 @@ fn main() {
             std::process::exit(1);
         }
     }
+
+    Ok(())
 }
 
 fn get_config_dir() -> Result<PathBuf, LeadrError> {

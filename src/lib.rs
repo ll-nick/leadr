@@ -5,8 +5,8 @@
 
 pub mod config;
 mod cursor;
-pub mod input;
-pub mod keybinding;
+mod input;
+mod keybinding;
 pub mod mappings;
 pub mod session;
 pub mod shell;

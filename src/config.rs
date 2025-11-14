@@ -1,8 +1,9 @@
 use std::path::Path;
 
+use color_eyre::eyre::Result;
 use crossterm::event::KeyEvent;
 
-use crate::{LeadrError, keybinding::parse_keysequence, ui::panel::Config as PanelConfig};
+use crate::{keybinding::parse_keysequence, ui::panel::Config as PanelConfig};
 
 #[derive(serde::Serialize, serde::Deserialize)]
 #[serde(default)]
@@ -29,7 +30,7 @@ impl Default for Config {
 }
 
 impl Config {
-    pub fn load(config_dir: &Path) -> Result<Self, LeadrError> {
+    pub fn load(config_dir: &Path) -> Result<Self> {
         let config_path = config_dir.join("config.toml");
         if config_path.exists() {
             let contents = std::fs::read_to_string(&config_path)?;
@@ -40,7 +41,7 @@ impl Config {
         }
     }
 
-    pub fn create_default(config_dir: &Path) -> Result<(), LeadrError> {
+    pub fn create_default(config_dir: &Path) -> Result<()> {
         std::fs::create_dir_all(config_dir)?;
         let config_path = config_dir.join("config.toml");
         if !config_path.exists() {
@@ -52,7 +53,7 @@ impl Config {
     }
 
     /// Returns the leadr key as a vector of KeyEvents
-    pub fn leadr_key_events(&self) -> Result<Vec<KeyEvent>, LeadrError> {
+    pub fn leadr_key_events(&self) -> Result<Vec<KeyEvent>> {
         parse_keysequence(&self.leadr_key)
     }
 }

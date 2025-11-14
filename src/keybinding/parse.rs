@@ -1,9 +1,8 @@
+use color_eyre::eyre::{Result, eyre};
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 
-use crate::LeadrError;
-
 /// Parses a full Vim-style sequence like `<C-x><M-Enter>` into a vector of KeyEvents
-pub fn parse_keysequence(seq: &str) -> Result<Vec<KeyEvent>, LeadrError> {
+pub fn parse_keysequence(seq: &str) -> Result<Vec<KeyEvent>> {
     let mut result = Vec::new();
     let mut current_combo = String::new();
     let mut in_angle = false;
@@ -35,7 +34,7 @@ pub fn parse_keysequence(seq: &str) -> Result<Vec<KeyEvent>, LeadrError> {
 }
 
 /// Parses a single Vim-style key like `<C-x>`, `<M-Enter>`, `<F5>`.
-fn parse_vim_key(key: &str) -> Result<KeyEvent, LeadrError> {
+fn parse_vim_key(key: &str) -> Result<KeyEvent> {
     let key = key.trim_matches(|c| c == '<' || c == '>');
     let parts: Vec<&str> = key.split('-').collect();
 
@@ -52,7 +51,7 @@ fn parse_vim_key(key: &str) -> Result<KeyEvent, LeadrError> {
                 "M" => alt = true,
                 "S" => shift = true,
                 other => {
-                    return Err(LeadrError::InvalidKeymapError(format!(
+                    return Err(eyre!(format!(
                         "Invalid leadr keymap: <{}>. \
                         '{}' is not a recognized modifier (valid modifiers are C, M, S)",
                         key, other
@@ -79,7 +78,7 @@ fn parse_vim_key(key: &str) -> Result<KeyEvent, LeadrError> {
             "RIGHT" => KeyCode::Right,
             k if k.starts_with('F') => {
                 let n = k[1..].parse::<u8>().map_err(|_| {
-                    LeadrError::InvalidKeymapError(format!(
+                    eyre!(format!(
                         "Invalid leadr keymap: <{}>. '{}' is not a valid function key",
                         key, k
                     ))
@@ -87,7 +86,7 @@ fn parse_vim_key(key: &str) -> Result<KeyEvent, LeadrError> {
                 KeyCode::F(n)
             }
             _ => {
-                return Err(LeadrError::InvalidKeymapError(format!(
+                return Err(eyre!(format!(
                     "Invalid leadr keymap: <{}>. '{}' is not a recognized keycode",
                     key, k
                 )));
@@ -162,23 +161,23 @@ mod tests {
     #[test]
     fn test_invalid_modifier() {
         let err = parse_vim_key("<Q-x>").unwrap_err();
-        match err {
-            LeadrError::InvalidKeymapError(s) => {
-                assert!(s.contains("not a recognized modifier"));
-            }
-            _ => panic!("Unexpected error type"),
-        }
+        let msg = format!("{}", err); // get the error message
+        assert!(
+            msg.contains("not a recognized modifier"),
+            "Error message: {}",
+            msg
+        );
     }
 
     #[test]
     fn test_invalid_key() {
         let err = parse_vim_key("<C-NotAKey>").unwrap_err();
-        match err {
-            LeadrError::InvalidKeymapError(s) => {
-                assert!(s.contains("not a recognized keycode"));
-            }
-            _ => panic!("Unexpected error type"),
-        }
+        let msg = format!("{}", err); // get the error message
+        assert!(
+            msg.contains("not a recognized keycode"),
+            "Error message: {}",
+            msg
+        );
     }
 
     #[test]

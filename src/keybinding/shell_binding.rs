@@ -1,9 +1,7 @@
+use color_eyre::eyre::{Result, ensure};
 use crossterm::event::KeyEvent;
 
-use crate::{
-    LeadrError,
-    keybinding::{bash_zsh::keyevent_to_shell_seq, nushell::nushell_keyevent_to_fields},
-};
+use crate::keybinding::{bash_zsh::keyevent_to_shell_seq, nushell::nushell_keyevent_to_fields};
 
 /// All currently supported shells
 pub enum Shell {
@@ -18,12 +16,11 @@ pub fn keyevents_to_shell_binding(
     events: &[KeyEvent],
     function_name: &str,
     shell: Shell,
-) -> Result<String, LeadrError> {
-    if events.is_empty() {
-        return Err(LeadrError::InvalidKeymapError(
-            "No key events provided".into(),
-        ));
-    }
+) -> Result<String> {
+    ensure!(
+        !events.is_empty(),
+        "Invalid leadr keymap: No key events provided"
+    );
 
     match shell {
         Shell::Bash => {
@@ -54,14 +51,12 @@ pub fn keyevents_to_shell_binding(
             return Ok(format!("\nbind '{}' {}\n", key_code_string, function_name));
         }
         Shell::Nushell => {
-            if events.len() != 1 {
-                return Err(LeadrError::InvalidKeymapError(
-                    "Nushell only supports single-chord keybindings (e.g. `<C-g>` or <S-M-a>). \
-                     Multi-chord sequences like `<C-x><C-f>` are not supported. \
+            ensure!(
+                events.len() == 1,
+                "Invalid keymap: Nushell only supports single-chord keybindings (e.g. `<C-g>` or <S-M-a>).\n  \
+                     Multi-chord sequences like `<C-x><C-f>` are not supported.\n  \
                      Please adjust the leadr keymap in your configuration accordingly."
-                        .into(),
-                ));
-            }
+            );
 
             let event = events[0];
             let fields = nushell_keyevent_to_fields(event)?;

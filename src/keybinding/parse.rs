@@ -1,4 +1,4 @@
-use color_eyre::eyre::{Result, eyre};
+use color_eyre::eyre::{Result, WrapErr, eyre};
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 
 /// Parses a full Vim-style sequence like `<C-x><M-Enter>` into a vector of KeyEvents
@@ -51,11 +51,10 @@ fn parse_vim_key(key: &str) -> Result<KeyEvent> {
                 "M" => alt = true,
                 "S" => shift = true,
                 other => {
-                    return Err(eyre!(format!(
-                        "Invalid leadr keymap: <{}>. \
-                        '{}' is not a recognized modifier (valid modifiers are C, M, S)",
-                        key, other
-                    )));
+                    return Err(eyre!(
+                        "Invalid leadr keymap: <{key}>.\n  \
+                        '{other}' is not a recognized modifier (valid modifiers are C, M, S)."
+                    ));
                 }
             }
         }
@@ -77,19 +76,15 @@ fn parse_vim_key(key: &str) -> Result<KeyEvent> {
             "LEFT" => KeyCode::Left,
             "RIGHT" => KeyCode::Right,
             k if k.starts_with('F') => {
-                let n = k[1..].parse::<u8>().map_err(|_| {
-                    eyre!(format!(
-                        "Invalid leadr keymap: <{}>. '{}' is not a valid function key",
-                        key, k
-                    ))
+                let n = k[1..].parse::<u8>().wrap_err_with(|| {
+                    format!("Invalid leadr keymap: <{key}>. '{k}' is not a valid function key.")
                 })?;
                 KeyCode::F(n)
             }
             _ => {
-                return Err(eyre!(format!(
-                    "Invalid leadr keymap: <{}>. '{}' is not a recognized keycode",
-                    key, k
-                )));
+                return Err(eyre!(
+                    "Invalid leadr keymap: <{key}>. '{k}' is not a recognized keycode."
+                ));
             }
         },
     };

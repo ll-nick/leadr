@@ -19,7 +19,7 @@ pub fn keyevents_to_shell_binding(
 ) -> Result<String> {
     ensure!(
         !events.is_empty(),
-        "Invalid leadr keymap: No key events provided"
+        "Invalid leadr keymap: No key events provided."
     );
 
     match shell {

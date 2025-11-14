@@ -1,7 +1,7 @@
 use std::fs::OpenOptions;
 use std::io::{Read, Write};
 
-use color_eyre::eyre::{Result, eyre};
+use color_eyre::eyre::{OptionExt, Result, eyre};
 
 /// Query the terminal for the current cursor position (col, row)
 ///
@@ -36,15 +36,8 @@ fn parse_cursor_response(s: &str) -> Result<(u16, u16)> {
 
     let mut parts = coords.split(';');
 
-    let row: u16 = parts
-        .next()
-        .ok_or_else(|| eyre!("Missing row value"))?
-        .parse()?;
-
-    let col: u16 = parts
-        .next()
-        .ok_or_else(|| eyre!("Missing column value"))?
-        .parse()?;
+    let row: u16 = parts.next().ok_or_eyre("Missing row value.")?.parse()?;
+    let col: u16 = parts.next().ok_or_eyre("Missing column value.")?.parse()?;
 
     Ok((col - 1, row - 1)) // convert to 0-based
 }

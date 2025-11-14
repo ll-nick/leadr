@@ -50,10 +50,7 @@ pub fn nushell_keyevent_to_fields(ev: KeyEvent) -> Result<NushellKeyFields> {
         Null => "Null".into(),
         BackTab => "BackTab".into(),
         _ => {
-            return Err(eyre!(format!(
-                "Unsupported keycode for Nushell: {:?}",
-                ev.code
-            )));
+            return Err(eyre!("Unsupported keycode for Nushell: {:?}", ev.code));
         }
     };
 

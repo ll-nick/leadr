@@ -281,11 +281,7 @@ impl Mappings {
                         .unwrap_or_else(|| "unknown source".to_string());
 
                     return Err(eyre!(
-                        "Conflicting key sequence: '{}' (from {}) conflicts with '{}' (from {})",
-                        key1,
-                        file1,
-                        key2,
-                        file2
+                        "Conflicting key sequence: '{key1}' (from {file1}) conflicts with '{key2}' (from {file2})"
                     ));
                 }
             }
@@ -301,10 +297,9 @@ impl Mappings {
                     .map(|p| p.display().to_string())
                     .unwrap_or_else(|| "unknown source".to_string());
 
+                let command = &mapping.command;
                 return Err(eyre!(
-                    "Surround-type mapping '{}' (from {}) must contain '#COMMAND' in its command",
-                    mapping.command,
-                    file
+                    "Surround-type mapping '{command}' (from {file}) must contain '#COMMAND' in its command"
                 ));
             }
         }

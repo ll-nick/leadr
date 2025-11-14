@@ -14,8 +14,11 @@ use leadr::{Config, LeadrSession, Mappings, SessionResult, Theme};
 #[derive(Parser)]
 #[command(about, version)]
 struct Cli {
-    #[arg(long)]
+    #[arg(long, help = "Generate initialization script for Bash")]
     bash: bool,
+
+    #[arg(long, help = "Generate initialization script for Fish")]
+    fish: bool,
 
     #[arg(long = "init", help = "Create default config files")]
     init: bool,
@@ -23,15 +26,11 @@ struct Cli {
     #[arg(long, short = 'l', help = "List all mappings")]
     list: bool,
 
-    #[arg(long)]
+    #[arg(long, help = "Generate initialization script for NuShell")]
     nu: bool,
 
-    #[arg(long)]
+    #[arg(long, help = "Generate initialization script for Zsh")]
     zsh: bool,
-
-    /// Generate fish shell initialization script
-    #[arg(long)]
-    fish: bool,
 }
 
 fn main() -> Result<()> {

@@ -1,8 +1,9 @@
 use std::time::{Duration, Instant};
 
+use color_eyre::eyre::Result;
 use crossterm::event::{Event, KeyCode, KeyEvent, poll, read};
 
-use crate::{Config, LeadrError, Mappings, Panel, RawModeGuard, Theme, ui::prompt};
+use crate::{Config, Mappings, Panel, RawModeGuard, Theme, ui::prompt};
 
 pub enum SessionResult {
     Command(String),
@@ -30,7 +31,7 @@ impl LeadrSession {
 
     /// Runs the input loop, capturing key events and returning when a mapping is matched,
     /// canceled, or an invalid sequence is entered.
-    pub fn run(&mut self) -> Result<SessionResult, LeadrError> {
+    pub fn run(&mut self) -> Result<SessionResult> {
         let _raw_mode_guard = RawModeGuard::new()?;
         let start_time = Instant::now();
         let mut panel: Option<Panel> = None;

@@ -4,9 +4,10 @@ use std::{
     path::{Path, PathBuf},
 };
 
+use color_eyre::eyre::{Result, eyre};
 use serde::{Deserialize, Serialize};
 
-use crate::{LeadrError, ui::table};
+use crate::ui::table;
 
 #[derive(Clone, Debug, Default, PartialEq, serde::Serialize, serde::Deserialize)]
 pub enum InsertType {
@@ -169,7 +170,7 @@ impl Default for Mappings {
 }
 
 impl Mappings {
-    pub fn load(config_dir: &Path) -> Result<Self, LeadrError> {
+    pub fn load(config_dir: &Path) -> Result<Self> {
         let mut merged = HashMap::new();
 
         // 1. Load main mappings.toml
@@ -201,7 +202,7 @@ impl Mappings {
         Ok(final_mappings)
     }
 
-    pub fn create_default(config_dir: &Path) -> Result<(), LeadrError> {
+    pub fn create_default(config_dir: &Path) -> Result<()> {
         std::fs::create_dir_all(config_dir)?;
         let mappings_path = config_dir.join("mappings.toml");
         if !mappings_path.exists() {
@@ -257,7 +258,7 @@ impl Mappings {
         }
     }
 
-    fn validate(&self) -> Result<(), LeadrError> {
+    fn validate(&self) -> Result<()> {
         let keys: Vec<&String> = self.mappings.keys().collect();
 
         // Validate that no mappings overlap or are prefixes of each other.
@@ -279,10 +280,9 @@ impl Mappings {
                         .map(|p| p.display().to_string())
                         .unwrap_or_else(|| "unknown source".to_string());
 
-                    return Err(LeadrError::ConflictingSequenceError(format!(
-                        "'{}' (from {}) conflicts with '{}' (from {})",
-                        key1, file1, key2, file2
-                    )));
+                    return Err(eyre!(
+                        "Conflicting key sequence: '{key1}' (from {file1}) conflicts with '{key2}' (from {file2})"
+                    ));
                 }
             }
         }
@@ -297,10 +297,10 @@ impl Mappings {
                     .map(|p| p.display().to_string())
                     .unwrap_or_else(|| "unknown source".to_string());
 
-                return Err(LeadrError::InvalidSurroundCommand(format!(
-                    "Surround-type mapping '{}' (from {}) must contain '#COMMAND' in its command",
-                    mapping.command, file
-                )));
+                let command = &mapping.command;
+                return Err(eyre!(
+                    "Surround-type mapping '{command}' (from {file}) must contain '#COMMAND' in its command"
+                ));
             }
         }
 
@@ -341,7 +341,7 @@ fn is_false(b: &bool) -> bool {
     !*b
 }
 
-fn collect_toml_files(dir: &Path) -> Result<Vec<PathBuf>, LeadrError> {
+fn collect_toml_files(dir: &Path) -> Result<Vec<PathBuf>> {
     let mut result = Vec::new();
     for entry in fs::read_dir(dir)? {
         let entry = entry?;
@@ -483,7 +483,7 @@ mod tests {
         assert!(result.is_err());
         assert!(matches!(
             result,
-            Err(LeadrError::ConflictingSequenceError(_))
+            Err(e) if e.to_string().contains("Conflicting key sequence")
         ));
     }
 

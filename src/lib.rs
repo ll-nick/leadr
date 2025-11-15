@@ -5,16 +5,14 @@
 
 pub mod config;
 mod cursor;
-pub mod error;
-pub mod input;
-pub mod keybinding;
+mod input;
+mod keybinding;
 pub mod mappings;
 pub mod session;
 pub mod shell;
 pub mod ui;
 
 pub use config::Config;
-pub use error::LeadrError;
 pub use input::RawModeGuard;
 pub use mappings::{InsertType, Mapping, Mappings};
 pub use session::{LeadrSession, SessionResult};

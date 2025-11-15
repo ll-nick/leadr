@@ -1,8 +1,7 @@
 use std::{fs, path::Path};
 
+use color_eyre::eyre::{Result, ensure};
 use serde::{Deserialize, Serialize};
-
-use crate::LeadrError;
 
 #[derive(Clone, Serialize, Deserialize)]
 pub struct Theme {
@@ -59,7 +58,7 @@ impl Theme {
         }
     }
 
-    pub fn load(config_dir: &Path, theme_name: &str) -> Result<Self, LeadrError> {
+    pub fn load(config_dir: &Path, theme_name: &str) -> Result<Self> {
         let theme = match theme_name {
             "catppuccin-mocha" => Self::catppuccin_mocha(),
             "catppuccin-macchiato" => Self::catppuccin_macchiato(),
@@ -67,9 +66,11 @@ impl Theme {
             "catppuccin-latte" => Self::catppuccin_latte(),
             other => {
                 let theme_path = config_dir.join("themes").join(format!("{other}.toml"));
-                if !theme_path.exists() {
-                    return Err(LeadrError::ThemeNotFound(other.to_string()));
-                }
+                ensure!(
+                    theme_path.exists(),
+                    "Theme '{other}' not found at {:?}",
+                    theme_path
+                );
                 let contents = fs::read_to_string(&theme_path)?;
                 toml::from_str(&contents)?
             }

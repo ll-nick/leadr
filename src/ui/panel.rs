@@ -1,10 +1,11 @@
 use std::{io::Write, time::Duration};
 
+use color_eyre::eyre::Result;
 use crossterm::{QueueableCommand, cursor, style::Stylize, terminal};
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
 use crate::{
-    LeadrError, Mappings, Symbols, Theme,
+    Mappings, Symbols, Theme,
     cursor::query_cursor_position,
     ui::{
         area::{Area, ColumnLayout},
@@ -89,7 +90,7 @@ pub struct Panel {
 }
 
 impl Panel {
-    pub fn try_new(config: Config, theme: Theme) -> Result<Self, LeadrError> {
+    pub fn try_new(config: Config, theme: Theme) -> Result<Self> {
         let mut tty = std::fs::OpenOptions::new().write(true).open("/dev/tty")?;
 
         let (_cols, rows) = terminal::size()?;
@@ -132,7 +133,7 @@ impl Panel {
         stdout.flush()
     }
 
-    pub fn draw(&self, sequence: &str, mappings: &Mappings) -> Result<(), LeadrError> {
+    pub fn draw(&self, sequence: &str, mappings: &Mappings) -> Result<()> {
         let mut tty = std::fs::OpenOptions::new().write(true).open("/dev/tty")?;
         let (cols, rows) = terminal::size()?;
         let start_y = rows.saturating_sub(self.config.layout.height);

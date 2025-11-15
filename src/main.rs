@@ -6,15 +6,19 @@
 use std::path::PathBuf;
 
 use clap::Parser;
+use color_eyre::eyre::{Result, WrapErr, eyre};
 use directories::ProjectDirs;
 
-use leadr::{Config, LeadrError, LeadrSession, Mappings, SessionResult, Theme};
+use leadr::{Config, LeadrSession, Mappings, SessionResult, Theme};
 
 #[derive(Parser)]
 #[command(about, version)]
 struct Cli {
-    #[arg(long)]
+    #[arg(long, help = "Generate initialization script for Bash")]
     bash: bool,
+
+    #[arg(long, help = "Generate initialization script for Fish")]
+    fish: bool,
 
     #[arg(long = "init", help = "Create default config files")]
     init: bool,
@@ -22,139 +26,84 @@ struct Cli {
     #[arg(long, short = 'l', help = "List all mappings")]
     list: bool,
 
-    #[arg(long)]
+    #[arg(long, help = "Generate initialization script for NuShell")]
     nu: bool,
 
-    #[arg(long)]
+    #[arg(long, help = "Generate initialization script for Zsh")]
     zsh: bool,
-
-    /// Generate fish shell initialization script
-    #[arg(long)]
-    fish: bool,
 }
 
-fn main() {
+fn main() -> Result<()> {
+    color_eyre::install()?;
+
     let cli = Cli::parse();
 
-    let config_dir = match get_config_dir() {
-        Ok(dir) => dir,
-        Err(e) => {
-            eprintln!("Error determining config directory: {}", e);
-            std::process::exit(1);
-        }
-    };
+    let config_dir =
+        get_config_dir().wrap_err("Failed to determine the configuration directory.")?;
 
     if cli.init {
-        if let Err(e) = Config::create_default(&config_dir) {
-            eprintln!("Error creating default config: {}", e);
-            std::process::exit(1);
-        }
-        if let Err(e) = Mappings::create_default(&config_dir) {
-            eprintln!("Error creating default mappings: {}", e);
-            std::process::exit(1);
-        }
+        Config::create_default(&config_dir)?;
+        Mappings::create_default(&config_dir)?;
+
         println!("Default config and mappings created in {:?}", config_dir);
-        return;
+        return Ok(());
     }
 
-    let config = match Config::load(&config_dir) {
-        Ok(cfg) => cfg,
-        Err(e) => {
-            eprintln!("Error loading config: {}", e);
-            std::process::exit(1);
-        }
-    };
-    let mappings = match Mappings::load(&config_dir) {
-        Ok(mappings) => mappings,
-        Err(e) => {
-            eprintln!("Error loading mappings: {}", e);
-            std::process::exit(1);
-        }
-    };
-    let theme = match Theme::load(&config_dir, &config.panel.theme_name) {
-        Ok(theme) => theme,
-        Err(e) => {
-            eprintln!("Error loading theme: {}", e);
-            std::process::exit(1);
-        }
-    };
+    let config = Config::load(&config_dir).wrap_err("Failed to load config.")?;
+    let mappings = Mappings::load(&config_dir).wrap_err("Failed to load mappings.")?;
+    let theme =
+        Theme::load(&config_dir, &config.panel.theme_name).wrap_err("Failed to load theme.")?;
 
     if cli.bash {
-        match leadr::init_bash(&config) {
-            Ok(script) => {
-                print!("{}", script);
-                return;
-            }
-            Err(e) => {
-                eprintln!("Error generating bash script: {:?}", e);
-                std::process::exit(1);
-            }
-        };
-    }
-    if cli.nu {
-        match leadr::init_nushell(&config) {
-            Ok(script) => {
-                print!("{}", script);
-                return;
-            }
-            Err(e) => {
-                eprintln!("Error generating nu script: {:?}", e);
-                std::process::exit(1);
-            }
-        };
-    }
-    if cli.zsh {
-        match leadr::init_zsh(&config) {
-            Ok(script) => {
-                print!("{}", script);
-                return;
-            }
-            Err(e) => {
-                eprintln!("Error generating zsh script: {:?}", e);
-                std::process::exit(1);
-            }
-        };
+        let script =
+            leadr::init_bash(&config).wrap_err("Failed to generate Bash initialization script.")?;
+        print!("{}", script);
+        return Ok(());
     }
     if cli.fish {
-        match leadr::init_fish(&config) {
-            Ok(script) => {
-                print!("{}", script);
-                return;
-            }
-            Err(e) => {
-                eprintln!("Error generating fish script: {:?}", e);
-                std::process::exit(1);
-            }
-        };
+        let script =
+            leadr::init_fish(&config).wrap_err("Failed to generate Fish initialization script.")?;
+        print!("{}", script);
+        return Ok(());
+    }
+    if cli.nu {
+        let script = leadr::init_nushell(&config)
+            .wrap_err("Failed to generate NuShell initialization script.")?;
+        print!("{}", script);
+        return Ok(());
+    }
+    if cli.zsh {
+        let script =
+            leadr::init_zsh(&config).wrap_err("Failed to generate Zsh initialization script.")?;
+        print!("{}", script);
+        return Ok(());
     }
 
     if cli.list {
         println!("{}", mappings.render_table());
-        return;
+        return Ok(());
     }
 
     let mut session = LeadrSession::new(mappings, config, theme);
 
-    match session.run() {
-        Ok(SessionResult::Command(command)) => {
+    match session.run().wrap_err("Failed to execute leadr session.")? {
+        SessionResult::Command(command) => {
             print!("{}", command);
         }
-        Ok(SessionResult::NoMatch | SessionResult::Cancelled) => {}
-        Err(e) => {
-            eprintln!("Fatal error: {}", e);
-            std::process::exit(1);
-        }
+        SessionResult::NoMatch | SessionResult::Cancelled => {}
     }
+
+    Ok(())
 }
 
-fn get_config_dir() -> Result<PathBuf, LeadrError> {
+fn get_config_dir() -> Result<PathBuf> {
     if let Ok(custom_path) = std::env::var("LEADR_CONFIG_DIR") {
         Ok(PathBuf::from(custom_path))
     } else {
         if let Some(path) = ProjectDirs::from("com", "leadr", "leadr") {
             Ok(path.config_dir().to_path_buf())
         } else {
-            Err(LeadrError::ConfigDirNotFound)
+            Err(eyre!("Could not determine configuration directory."))
         }
     }
 }

@@ -1,5 +1,7 @@
+use color_eyre::eyre::Result;
+
 use crate::{
-    Config, LeadrError,
+    Config,
     keybinding::{Shell, keyevents_to_shell_binding},
 };
 
@@ -11,7 +13,7 @@ const FISH_INIT_TEMPLATE: &str = include_str!("../shell/init.fish");
 const INIT_FUNCTION_NAME: &str = "__leadr_invoke__";
 
 /// Generates a bash script that handles the resulting command and binds it to the leadr key.
-pub fn init_bash(config: &Config) -> Result<String, LeadrError> {
+pub fn init_bash(config: &Config) -> Result<String> {
     let bind_command =
         keyevents_to_shell_binding(&config.leadr_key_events()?, INIT_FUNCTION_NAME, Shell::Bash)?;
 
@@ -20,7 +22,7 @@ pub fn init_bash(config: &Config) -> Result<String, LeadrError> {
 }
 
 /// Generates a fish script that handles the resulting command and binds it to the leadr key.
-pub fn init_fish(config: &Config) -> Result<String, LeadrError> {
+pub fn init_fish(config: &Config) -> Result<String> {
     let bind_command =
         keyevents_to_shell_binding(&config.leadr_key_events()?, INIT_FUNCTION_NAME, Shell::Fish)?;
 
@@ -29,7 +31,7 @@ pub fn init_fish(config: &Config) -> Result<String, LeadrError> {
 }
 
 /// Generates a nushell script that handles the resulting command and binds it to the leadr key.
-pub fn init_nushell(config: &Config) -> Result<String, LeadrError> {
+pub fn init_nushell(config: &Config) -> Result<String> {
     let bind_command = keyevents_to_shell_binding(
         &config.leadr_key_events()?,
         INIT_FUNCTION_NAME,
@@ -41,7 +43,7 @@ pub fn init_nushell(config: &Config) -> Result<String, LeadrError> {
 }
 
 /// Generates a zsh script that handles the resulting command and binds it to the leadr key.
-pub fn init_zsh(config: &Config) -> Result<String, LeadrError> {
+pub fn init_zsh(config: &Config) -> Result<String> {
     let bind_command =
         keyevents_to_shell_binding(&config.leadr_key_events()?, INIT_FUNCTION_NAME, Shell::Zsh)?;
 

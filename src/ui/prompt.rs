@@ -19,10 +19,11 @@ use std::env;
 use std::fs::OpenOptions;
 use std::io::Write;
 
+use color_eyre::eyre::Result;
 use crossterm::{ExecutableCommand, QueueableCommand, cursor};
 use unicode_width::UnicodeWidthStr;
 
-use crate::{LeadrError, cursor::query_cursor_position};
+use crate::cursor::query_cursor_position;
 
 /// Compute the visible width of a string by stripping ANSI escape sequences
 /// and measuring Unicode display width.
@@ -49,7 +50,7 @@ pub struct PromptGuard {
 
 impl PromptGuard {
     /// Create a new redraw guard.
-    pub fn try_new() -> Result<Self, LeadrError> {
+    pub fn try_new() -> Result<Self> {
         let tty = OpenOptions::new().write(true).open("/dev/tty")?;
         let prompt = env::var("LEADR_PROMPT")?;
         let input = env::var("LEADR_CURRENT_INPUT")?;
@@ -66,7 +67,7 @@ impl PromptGuard {
     }
 
     /// Redraw the current prompt + input line, restoring cursor position.
-    pub fn redraw(&mut self) -> Result<(), LeadrError> {
+    pub fn redraw(&mut self) -> Result<()> {
         let prompt_width = visible_width(&self.prompt) as u16;
 
         self.tty

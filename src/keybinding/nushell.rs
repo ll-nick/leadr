@@ -1,6 +1,5 @@
+use color_eyre::eyre::{Result, eyre};
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
-
-use crate::LeadrError;
 
 /// Represents a single Nushell keybinding entry
 pub struct NushellKeyFields {
@@ -8,7 +7,7 @@ pub struct NushellKeyFields {
     pub keycode: String,
 }
 
-pub fn nushell_keyevent_to_fields(ev: KeyEvent) -> Result<NushellKeyFields, LeadrError> {
+pub fn nushell_keyevent_to_fields(ev: KeyEvent) -> Result<NushellKeyFields> {
     use KeyCode::*;
     use KeyModifiers as KM;
 
@@ -51,10 +50,7 @@ pub fn nushell_keyevent_to_fields(ev: KeyEvent) -> Result<NushellKeyFields, Lead
         Null => "Null".into(),
         BackTab => "BackTab".into(),
         _ => {
-            return Err(LeadrError::InvalidKeymapError(format!(
-                "Unsupported keycode for Nushell: {:?}",
-                ev.code
-            )));
+            return Err(eyre!("Unsupported keycode for Nushell: {:?}", ev.code));
         }
     };
 

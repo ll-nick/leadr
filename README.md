@@ -209,4 +209,4 @@ and set `theme_name = "high-contrast"` in the `config.toml` file.
 ## ❤️ Contributions
 
 Thanks @Banh-Canh for contributing the fish integration!  
-Thanks @johnallen3d for testing `leadr` on macOS!
+Thanks @johnallen3d and @bjohnso5 for testing `leadr` on macOS!

@@ -72,6 +72,19 @@ This will install the latest version of `leadr` from [crates.io](https://crates.
 </details>
 
 <details>
+<summary>From Homebrew 🍺 (community tap)</summary>
+On macOS or Linux with [Homebrew](https://brew.sh/) installed, you can use a community-maintained tap:
+
+```bash
+brew tap ltaupiac/leadr
+brew install leadr
+```
+
+- This tap builds `leadr` from the official GitHub release tarball using the Rust toolchain.
+
+</details>
+
+<details>
 <summary>From source</summary>
 
 You can build `leadr` from source using cargo:

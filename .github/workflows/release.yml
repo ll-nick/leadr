@@ -99,6 +99,7 @@ jobs:
 
   update-homebrew-tap:
     runs-on: ubuntu-latest
+    needs: release-to-github
     steps:
       - name: Update homebrew tap
         run: gh workflow run update-formula.yml -f version=${{ github.ref_name }} -R ll-nick/homebrew-leadr

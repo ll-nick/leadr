@@ -96,3 +96,11 @@ jobs:
         env:
           CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
         run: cargo publish --no-verify
+
+  update-homebrew-tap:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Update homebrew tap
+        run: gh workflow run update-formula.yml -f version=${{ github.ref_name }} -R ll-nick/homebrew-leadr
+        env:
+          GITHUB_TOKEN: ${{ secrets.HOMEBREW_LEADR_GH_TOKEN }}

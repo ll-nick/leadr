@@ -49,7 +49,7 @@ Consult the [Configuration](#-configuration) section to learn how to make `leadr
 ## 📦 Installation
 
 <details>
-<summary>From pre-built binaries</summary>
+<summary>📦 Using pre-built binaries</summary>
 
 You can download pre-built binaries from the [releases page](https://github.com/ll-nick/leadr/releases/latest).
 Just copy the binary to a directory in your `PATH` and make it executable.
@@ -61,7 +61,7 @@ With mise installed, run:
 </details>
 
 <details>
-<summary>From crates.io</summary>
+<summary>🦀 Via crates.io</summary>
 
 You can install `leadr` using cargo:
 ```bash
@@ -72,20 +72,19 @@ This will install the latest version of `leadr` from [crates.io](https://crates.
 </details>
 
 <details>
-<summary>From Homebrew 🍺 (community tap)</summary>
-On macOS or Linux with [Homebrew](https://brew.sh/) installed, you can use a community-maintained tap:
+<summary>🍺 Via Homebrew</summary>
+
+On macOS or Linux with [Homebrew](https://brew.sh/) installed, you can use:
 
 ```bash
-brew tap ltaupiac/leadr
+brew tap ll-nick/leadr
 brew install leadr
 ```
-
-- This tap builds `leadr` from the official GitHub release tarball using the Rust toolchain.
 
 </details>
 
 <details>
-<summary>From source</summary>
+<summary>💻 From source</summary>
 
 You can build `leadr` from source using cargo:
 
@@ -222,4 +221,5 @@ and set `theme_name = "high-contrast"` in the `config.toml` file.
 ## ❤️ Contributions
 
 Thanks @Banh-Canh for contributing the fish integration!  
-Thanks @johnallen3d and @bjohnso5 for testing `leadr` on macOS!
+Thanks @johnallen3d and @bjohnso5 for testing `leadr` on macOS!  
+Thanks @ltaupiac for setting up the Homebrew tap!  

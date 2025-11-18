@@ -51,21 +51,28 @@ jobs:
   build-macos:
     runs-on: macos-latest
     needs: check-version
+    strategy:
+      matrix:
+        target: [x86_64-apple-darwin, aarch64-apple-darwin]
     steps:
       - uses: actions/checkout@v4
 
+      - name: Install Rust target
+        run: rustup target add ${{ matrix.target }}
+
       - name: Build (macOS)
-        run: cargo build --release
+        run: cargo build --release --target ${{ matrix.target }}
 
       - name: Rename binary
         run: |
           mkdir -p dist
-          cp target/release/leadr dist/leadr-${{ github.ref_name }}-x86_64-apple-darwin
+          cp target/${{ matrix.target }}/release/leadr dist/leadr-${{ github.ref_name }}-${{ matrix.target }}
 
       - uses: actions/upload-artifact@v4
         with:
-          name: leadr-${{ github.ref_name }}-x86_64-apple-darwin
-          path: dist/leadr-${{ github.ref_name }}-x86_64-apple-darwin
+          name: leadr-${{ github.ref_name }}-${{ matrix.target }}
+          path: dist/leadr-${{ github.ref_name }}-${{ matrix.target }}
+
 
   release-to-github:
     needs: [build-linux, build-macos]

@@ -16,6 +16,8 @@ jobs:
         run: cargo install toml-cli
       - name: Check version
         run: test "v$(toml get -r Cargo.toml package.version)" = "${{ github.ref_name }}"
+      - name: Verify Cargo.lock matches Cargo.toml
+        run: cargo metadata --locked --format-version=1 > /dev/null
 
   # Cross-compiled Linux binaries using `cross`
   build-linux:
@@ -35,7 +37,7 @@ jobs:
         run: cargo install cross
 
       - name: Build with cross
-        run: cross build --release --target ${{ matrix.target }}
+        run: cross build --locked --release --target ${{ matrix.target }}
 
       - name: Rename binary
         run: |
@@ -61,7 +63,7 @@ jobs:
         run: rustup target add ${{ matrix.target }}
 
       - name: Build (macOS)
-        run: cargo build --release --target ${{ matrix.target }}
+        run: cargo build --locked --release --target ${{ matrix.target }}
 
       - name: Rename binary
         run: |
@@ -83,9 +85,35 @@ jobs:
           merge-multiple: true
           path: dist
 
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+
+      - name: Generate release notes
+        id: release_notes
+        run: |
+          set -e
+
+          echo -e "This release contains the following changes:\n\n---\n" > release_notes.md
+
+          PREV_TAG=$(git describe --tags --abbrev=0 "${GITHUB_REF_NAME}^" 2>/dev/null || echo "")
+
+          if [ -z "$PREV_TAG" ]; then
+            echo "No previous tag found, including all merge commits."
+            git log --merges --pretty=format:'### %s%n%n%b%n%n---' >> release_notes.md
+          else
+            echo "Previous tag: $PREV_TAG"
+            git log "$PREV_TAG"..HEAD --merges --pretty=format:'### %s%n%n%b%n%n---' >> release_notes.md
+          fi
+
+          echo "Generated release notes:"
+          cat release_notes.md
+
       - uses: ncipollo/release-action@v1
         with:
           artifacts: "dist/*"
+          bodyFile: release_notes.md
 
   publish-to-crates-io:
     needs: [build-linux, build-macos]
@@ -95,7 +123,7 @@ jobs:
       - name: Publish to crates.io
         env:
           CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
-        run: cargo publish --no-verify
+        run: cargo publish --locked --no-verify
 
   update-homebrew-tap:
     runs-on: ubuntu-latest

@@ -16,6 +16,8 @@ jobs:
         run: cargo install toml-cli
       - name: Check version
         run: test "v$(toml get -r Cargo.toml package.version)" = "${{ github.ref_name }}"
+      - name: Verify Cargo.lock matches Cargo.toml
+        run: cargo metadata --locked --format-version=1 > /dev/null
 
   # Cross-compiled Linux binaries using `cross`
   build-linux:

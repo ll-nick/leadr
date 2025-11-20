@@ -1,7 +1,10 @@
 use color_eyre::eyre::{Result, ensure};
 use crossterm::event::KeyEvent;
 
-use crate::keybinding::{bash_zsh::keyevent_to_shell_seq, nushell::nushell_keyevent_to_fields};
+use crate::keybinding::{
+    bash_zsh::keyevent_to_shell_seq, fish::fish_keyevent_to_shell_seq,
+    nushell::nushell_keyevent_to_fields,
+};
 
 /// All currently supported shells
 pub enum Shell {
@@ -45,10 +48,12 @@ pub fn keyevents_to_shell_binding(
         Shell::Fish => {
             let key_code_string = events
                 .iter()
-                .map(|ev| keyevent_to_shell_seq(*ev))
+                .map(|ev| fish_keyevent_to_shell_seq(*ev) + ",")
                 .collect::<String>();
 
-            return Ok(format!("\nbind '{}' {}\n", key_code_string, function_name));
+            let key_code_string = key_code_string.trim_end_matches(",");
+
+            return Ok(format!("\nbind {} {}\n", key_code_string, function_name));
         }
         Shell::Nushell => {
             ensure!(

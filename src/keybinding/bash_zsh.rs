@@ -56,13 +56,13 @@ mod tests {
 
     #[test]
     fn test_keyevent_to_shell_seq_ctrl() {
-        let seq = keyevent_to_shell_seq(parse_keysequence("<C-g>").unwrap()[0].clone());
+        let seq = keyevent_to_shell_seq(parse_keysequence("<C-g>").unwrap()[0]);
         assert_eq!(seq, "\x07"); // Ctrl-G
     }
 
     #[test]
     fn test_keyevent_to_shell_seq_alt() {
-        let seq = keyevent_to_shell_seq(parse_keysequence("<M-x>").unwrap()[0].clone());
+        let seq = keyevent_to_shell_seq(parse_keysequence("<M-x>").unwrap()[0]);
         assert_eq!(seq, "\x1Bx"); // ESC + 'x'
     }
 }

@@ -1,4 +1,5 @@
 mod bash_zsh;
+mod fish;
 mod nushell;
 mod parse;
 mod shell_binding;

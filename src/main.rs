@@ -99,11 +99,9 @@ fn main() -> Result<()> {
 fn get_config_dir() -> Result<PathBuf> {
     if let Ok(custom_path) = std::env::var("LEADR_CONFIG_DIR") {
         Ok(PathBuf::from(custom_path))
+    } else if let Some(path) = ProjectDirs::from("com", "leadr", "leadr") {
+        Ok(path.config_dir().to_path_buf())
     } else {
-        if let Some(path) = ProjectDirs::from("com", "leadr", "leadr") {
-            Ok(path.config_dir().to_path_buf())
-        } else {
-            Err(eyre!("Could not determine configuration directory."))
-        }
+        Err(eyre!("Could not determine configuration directory."))
     }
 }

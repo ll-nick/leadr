@@ -38,10 +38,10 @@ impl LeadrSession {
 
         // Cosmetically fix the prompt line disappearing while leadr is active.
         let mut prompt_guard = prompt::PromptGuard::try_new();
-        if let Ok(ref mut guard) = prompt_guard {
-            if self.config.redraw_prompt_line {
-                guard.redraw()?;
-            }
+        if let Ok(ref mut guard) = prompt_guard
+            && self.config.redraw_prompt_line
+        {
+            guard.redraw()?;
         }
 
         loop {
@@ -60,41 +60,40 @@ impl LeadrSession {
                 }
             }
 
-            if poll(Duration::from_millis(50))? {
-                if let Event::Key(KeyEvent {
+            if poll(Duration::from_millis(50))?
+                && let Event::Key(KeyEvent {
                     code, modifiers, ..
                 }) = read()?
-                {
-                    if modifiers == crossterm::event::KeyModifiers::CONTROL {
-                        if code == KeyCode::Char('c') {
-                            return Ok(SessionResult::Cancelled);
-                        }
-                        continue;
+            {
+                if modifiers == crossterm::event::KeyModifiers::CONTROL {
+                    if code == KeyCode::Char('c') {
+                        return Ok(SessionResult::Cancelled);
                     }
-                    match code {
-                        KeyCode::Char(c) => {
-                            self.sequence.push(c);
-                            if let Some(mapping) = self.mappings.match_sequence(&self.sequence) {
-                                return Ok(SessionResult::Command(mapping.format_command()));
-                            }
+                    continue;
+                }
+                match code {
+                    KeyCode::Char(c) => {
+                        self.sequence.push(c);
+                        if let Some(mapping) = self.mappings.match_sequence(&self.sequence) {
+                            return Ok(SessionResult::Command(mapping.format_command()));
+                        }
 
-                            if !self.mappings.has_partial_match(&self.sequence) {
-                                return Ok(SessionResult::NoMatch);
-                            }
+                        if !self.mappings.has_partial_match(&self.sequence) {
+                            return Ok(SessionResult::NoMatch);
                         }
-                        KeyCode::Backspace => {
-                            self.sequence.pop();
-                        }
-                        KeyCode::Esc => {
-                            return Ok(SessionResult::Cancelled);
-                        }
-                        _ => {}
                     }
-                    if let Some(panel) = panel.as_mut() {
-                        if let Err(e) = panel.draw(&self.sequence, &self.mappings) {
-                            if !self.config.panel.fail_silently {
-                                return Err(e);
-                            }
+                    KeyCode::Backspace => {
+                        self.sequence.pop();
+                    }
+                    KeyCode::Esc => {
+                        return Ok(SessionResult::Cancelled);
+                    }
+                    _ => {}
+                }
+                if let Some(panel) = panel.as_mut() {
+                    if let Err(e) = panel.draw(&self.sequence, &self.mappings) {
+                        if !self.config.panel.fail_silently {
+                            return Err(e);
                         }
                     }
                 }

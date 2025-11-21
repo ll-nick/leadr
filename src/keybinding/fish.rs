@@ -46,7 +46,7 @@ pub fn fish_keyevent_to_shell_seq(ev: KeyEvent) -> String {
         _ => "".into(),
     };
 
-    return format!("{}{}", modifier, keycode);
+    format!("{}{}", modifier, keycode)
 }
 
 #[cfg(test)]

@@ -47,17 +47,7 @@ impl LeadrSession {
         loop {
             let timeout_reached = start_time.elapsed() >= self.config.panel.delay;
             if self.config.panel.enabled && panel.is_none() && timeout_reached {
-                let result = (|| {
-                    let p = Panel::try_new(self.config.panel.clone(), self.theme.clone())?;
-                    p.draw(&self.sequence, &self.mappings)?;
-                    Ok(p)
-                })();
-
-                match result {
-                    Ok(p) => panel = Some(p),
-                    Err(_e) if self.config.panel.fail_silently => {}
-                    Err(e) => return Err(e),
-                }
+                panel = self.try_new_panel()?;
             }
 
             if poll(Duration::from_millis(50))?
@@ -90,14 +80,33 @@ impl LeadrSession {
                     }
                     _ => {}
                 }
-                if let Some(panel) = panel.as_mut() {
-                    if let Err(e) = panel.draw(&self.sequence, &self.mappings) {
-                        if !self.config.panel.fail_silently {
-                            return Err(e);
-                        }
-                    }
+
+                if let Some(ref mut p) = panel {
+                    self.try_draw_panel(p)?;
                 }
             }
+        }
+    }
+
+    /// Try creating a new panel and draw upon success.
+    /// Will return Ok(None) if panel creation fails but fail_silently is set.
+    fn try_new_panel(&self) -> Result<Option<Panel>> {
+        match Panel::try_new(self.config.panel.clone(), self.theme.clone()) {
+            Ok(mut p) => {
+                self.try_draw_panel(&mut p)?;
+                Ok(Some(p))
+            }
+            Err(_) if self.config.panel.fail_silently => Ok(None),
+            Err(e) => Err(e),
+        }
+    }
+
+    /// Try drawing the panel, respecting the fail_silently setting.
+    fn try_draw_panel(&self, panel: &mut Panel) -> Result<()> {
+        match panel.draw(&self.sequence, &self.mappings) {
+            Ok(()) => Ok(()),
+            Err(_) if self.config.panel.fail_silently => Ok(()),
+            Err(e) => Err(e),
         }
     }
 }

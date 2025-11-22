@@ -80,15 +80,15 @@ jobs:
     needs: [build-linux, build-macos]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/download-artifact@v4
-        with:
-          merge-multiple: true
-          path: dist
-
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
           fetch-tags: true
+
+      - uses: actions/download-artifact@v4
+        with:
+          merge-multiple: true
+          path: dist
 
       - name: Generate release notes
         id: release_notes

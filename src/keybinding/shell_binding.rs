@@ -48,10 +48,9 @@ pub fn keyevents_to_shell_binding(
         Shell::Fish => {
             let key_code_string = events
                 .iter()
-                .map(|ev| fish_keyevent_to_shell_seq(*ev) + ",")
-                .collect::<String>();
-
-            let key_code_string = key_code_string.trim_end_matches(",");
+                .map(|ev| fish_keyevent_to_shell_seq(*ev))
+                .collect::<Vec<_>>()
+                .join(",");
 
             Ok(format!("\nbind {} {}\n", key_code_string, function_name))
         }

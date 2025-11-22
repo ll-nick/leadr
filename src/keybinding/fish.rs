@@ -46,7 +46,7 @@ pub fn fish_keyevent_to_shell_seq(ev: KeyEvent) -> String {
         _ => "".into(),
     };
 
-    return format!("{}{}", modifier, keycode);
+    format!("{}{}", modifier, keycode)
 }
 
 #[cfg(test)]
@@ -56,21 +56,19 @@ mod tests {
 
     #[test]
     fn test_fish_fields_simple() {
-        let seq = fish_keyevent_to_shell_seq(parse_keysequence("<C-g>").unwrap()[0].clone());
+        let seq = fish_keyevent_to_shell_seq(parse_keysequence("<C-g>").unwrap()[0]);
         assert_eq!(seq, "ctrl-g");
     }
 
     #[test]
     fn test_fish_fields_combo() {
-        let seq = fish_keyevent_to_shell_seq(parse_keysequence("<C-M-S-x>").unwrap()[0].clone());
+        let seq = fish_keyevent_to_shell_seq(parse_keysequence("<C-M-S-x>").unwrap()[0]);
         assert_eq!(seq, "ctrl-alt-shift-x");
     }
 
     #[test]
     fn test_fish_fields_non_char() {
-        let seq = fish_keyevent_to_shell_seq(parse_keysequence("<F5>").unwrap()[0].clone());
+        let seq = fish_keyevent_to_shell_seq(parse_keysequence("<F5>").unwrap()[0]);
         assert_eq!(seq, "f5");
     }
-
-
 }

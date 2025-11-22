@@ -65,7 +65,7 @@ mod tests {
     #[test]
     fn test_nushell_fields_simple() {
         let ev = parse_keysequence("<C-g>").unwrap();
-        let fields = nushell_keyevent_to_fields(ev.first().unwrap().clone()).unwrap();
+        let fields = nushell_keyevent_to_fields(*ev.first().unwrap()).unwrap();
         assert_eq!(fields.modifier, "Control");
         assert_eq!(fields.keycode, "Char_g");
     }
@@ -73,7 +73,7 @@ mod tests {
     #[test]
     fn test_nushell_fields_combo() {
         let ev = parse_keysequence("<C-M-S-x>").unwrap();
-        let fields = nushell_keyevent_to_fields(ev.first().unwrap().clone()).unwrap();
+        let fields = nushell_keyevent_to_fields(*ev.first().unwrap()).unwrap();
         assert_eq!(fields.modifier, "Control_Alt_Shift");
         assert_eq!(fields.keycode, "Char_x");
     }
@@ -81,7 +81,7 @@ mod tests {
     #[test]
     fn test_nushell_fields_non_char() {
         let ev = parse_keysequence("<F5>").unwrap();
-        let fields = nushell_keyevent_to_fields(ev.first().unwrap().clone()).unwrap();
+        let fields = nushell_keyevent_to_fields(*ev.first().unwrap()).unwrap();
         assert_eq!(fields.keycode, "F5");
         assert_eq!(fields.modifier, "None");
     }

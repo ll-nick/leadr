@@ -171,7 +171,7 @@ impl Panel {
                 .take(column.height as usize)
                 .cloned()
                 .collect::<Vec<_>>();
-            self.draw_entries(&mut tty, column, &mappings, &sequence, &column_keys)?;
+            self.draw_entries(&mut tty, column, mappings, sequence, &column_keys)?;
         }
 
         let footer_area = Area {

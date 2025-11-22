@@ -1,0 +1,22 @@
+name: Run checks
+on:
+  push:
+env:
+  CARGO_TERM_COLOR: always
+jobs:
+  run_checks:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Check formatting
+      run: cargo fmt --all -- --check
+
+    - name: Check linting
+      run: cargo clippy --all-targets --all-features -- -D warnings
+
+    - name: Build
+      run: cargo build --locked --verbose
+
+    - name: Run tests
+      run: cargo test --locked --verbose

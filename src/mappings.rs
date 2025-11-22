@@ -227,11 +227,12 @@ impl Mappings {
     pub fn next_possible_keys(&self, sequence: &str) -> BTreeSet<String> {
         let mut next_keys = BTreeSet::new();
 
-        for (key, _) in &self.mappings {
-            if key.starts_with(sequence) {
-                if let Some((_, ch)) = key[sequence.len()..].char_indices().next() {
-                    next_keys.insert(ch.to_string());
-                }
+        for key in self.mappings.keys() {
+            if let Some(next_char) = key
+                .strip_prefix(sequence)
+                .and_then(|rest| rest.chars().next())
+            {
+                next_keys.insert(next_char.to_string());
             }
         }
 

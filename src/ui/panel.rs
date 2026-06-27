@@ -202,11 +202,9 @@ impl Panel {
 
         // Top border
         if !matches!(self.config.layout.border_type, BorderType::None) {
-            let top = format!(
-                "{top_left}{horizontal_line}{top_right}",
-            )
-            .with(self.theme.accent.into())
-            .on(self.theme.background.into());
+            let top = format!("{top_left}{horizontal_line}{top_right}",)
+                .with(self.theme.accent.into())
+                .on(self.theme.background.into());
             write!(tty, "{top}")?;
         }
 
@@ -230,11 +228,9 @@ impl Panel {
             BorderType::Rounded | BorderType::Square
         ) {
             tty.queue(cursor::MoveTo(area.x, area.y + area.height))?;
-            let bottom = format!(
-                "{bottom_left}{horizontal_line}{bottom_right}"
-            )
-            .with(self.theme.accent.into())
-            .on(self.theme.background.into());
+            let bottom = format!("{bottom_left}{horizontal_line}{bottom_right}")
+                .with(self.theme.accent.into())
+                .on(self.theme.background.into());
             write!(tty, "{bottom}")?;
         }
 

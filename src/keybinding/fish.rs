@@ -42,11 +42,11 @@ pub fn fish_keyevent_to_shell_seq(ev: KeyEvent) -> String {
         Down => "down".into(),
         Left => "left".into(),
         Right => "right".into(),
-        F(n) => format!("f{}", n),
+        F(n) => format!("f{n}"),
         _ => "".into(),
     };
 
-    format!("{}{}", modifier, keycode)
+    format!("{modifier}{keycode}")
 }
 
 #[cfg(test)]

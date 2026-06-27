@@ -156,22 +156,20 @@ mod tests {
     #[test]
     fn test_invalid_modifier() {
         let err = parse_vim_key("<Q-x>").unwrap_err();
-        let msg = format!("{}", err); // get the error message
+        let msg = format!("{err}"); // get the error message
         assert!(
             msg.contains("not a recognized modifier"),
-            "Error message: {}",
-            msg
+            "Error message: {msg}"
         );
     }
 
     #[test]
     fn test_invalid_key() {
         let err = parse_vim_key("<C-NotAKey>").unwrap_err();
-        let msg = format!("{}", err); // get the error message
+        let msg = format!("{err}"); // get the error message
         assert!(
             msg.contains("not a recognized keycode"),
-            "Error message: {}",
-            msg
+            "Error message: {msg}"
         );
     }
 

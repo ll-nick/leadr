@@ -1,7 +1,7 @@
 [package]
 name = "leadr"
 description = "Shell aliases on steroids"
-version = "2.8.5"
+version = "2.8.6"
 edition = "2024"
 license = "MIT"
 authors = ["ll-nick"]
@@ -15,7 +15,7 @@ clap = {version = "4.5.37", features = ["derive"] }
 crossterm = {version = "0.29.0", features = ["use-dev-tty"] }
 directories = "6.0.0"
 serde = {version = "1.0.219", features = ["derive"]}
-toml = "0.8.23"
+toml = "1"
 strip-ansi-escapes = "0.2.1"
 unicode-width = "0.2.1"
 color-eyre = "0.6.5"

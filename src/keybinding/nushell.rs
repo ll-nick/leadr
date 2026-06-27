@@ -35,7 +35,7 @@ pub fn nushell_keyevent_to_fields(ev: KeyEvent) -> Result<NushellKeyFields> {
         Esc => "Esc".into(),
         Tab => "Tab".into(),
         Char(' ') => "Space".into(),
-        Char(c) => format!("Char_{}", c),
+        Char(c) => format!("Char_{c}"),
         Delete => "Delete".into(),
         Insert => "Insert".into(),
         Home => "Home".into(),
@@ -46,7 +46,7 @@ pub fn nushell_keyevent_to_fields(ev: KeyEvent) -> Result<NushellKeyFields> {
         Down => "Down".into(),
         Left => "Left".into(),
         Right => "Right".into(),
-        F(n) => format!("F{}", n),
+        F(n) => format!("F{n}"),
         Null => "Null".into(),
         BackTab => "BackTab".into(),
         _ => {

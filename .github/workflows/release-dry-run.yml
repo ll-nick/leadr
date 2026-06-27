@@ -1,28 +1,21 @@
-name: Release
+name: Release dry-run
+
+# Validates the release pipeline (artifact upload/download + release-action) against the
+# pinned action versions WITHOUT publishing: creates a draft GitHub release and skips
+# crates.io and Homebrew.
+# Trigger by pushing a tag like `test-v2.8.6`
+
 on:
   push:
     tags:
-      - v[0-9]+.[0-9]+.[0-9]+
+      - test-v*
 
 env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  check-version:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v7
-      - name: Install toml-cli
-        run: cargo install toml-cli
-      - name: Check version
-        run: test "v$(toml get -r Cargo.toml package.version)" = "${{ github.ref_name }}"
-      - name: Verify Cargo.lock matches Cargo.toml
-        run: cargo metadata --locked --format-version=1 > /dev/null
-
-  # Cross-compiled Linux binaries using `cross`
   build-linux:
     runs-on: ubuntu-latest
-    needs: check-version
     strategy:
       matrix:
         target: [
@@ -49,10 +42,8 @@ jobs:
           name: leadr-${{ github.ref_name }}-${{ matrix.target }}
           path: dist/leadr-${{ github.ref_name }}-${{ matrix.target }}
 
-  # Native macOS build
   build-macos:
     runs-on: macos-latest
-    needs: check-version
     strategy:
       matrix:
         target: [x86_64-apple-darwin, aarch64-apple-darwin]
@@ -75,8 +66,7 @@ jobs:
           name: leadr-${{ github.ref_name }}-${{ matrix.target }}
           path: dist/leadr-${{ github.ref_name }}-${{ matrix.target }}
 
-
-  release-to-github:
+  draft-release:
     needs: [build-linux, build-macos]
     runs-on: ubuntu-latest
     steps:
@@ -90,12 +80,17 @@ jobs:
           merge-multiple: true
           path: dist
 
+      - name: Inspect downloaded assets
+        run: |
+          ls -lR dist
+          file dist/* || true
+
       - name: Generate release notes
         id: release_notes
         run: |
           set -e
 
-          echo -e "This release contains the following changes:\n\n---\n" > release_notes.md
+          echo -e "TEST RELEASE | DELETE LATER\nThis release contains the following changes:\n\n---\n" > release_notes.md
 
           PREV_TAG=$(git describe --tags --abbrev=0 "${GITHUB_REF_NAME}^" 2>/dev/null || echo "")
 
@@ -114,22 +109,6 @@ jobs:
         with:
           artifacts: "dist/*"
           bodyFile: release_notes.md
-
-  publish-to-crates-io:
-    needs: [build-linux, build-macos]
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v7
-      - name: Publish to crates.io
-        env:
-          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
-        run: cargo publish --locked --no-verify
-
-  update-homebrew-tap:
-    runs-on: ubuntu-latest
-    needs: release-to-github
-    steps:
-      - name: Update homebrew tap
-        run: gh workflow run update-formula.yml -f version=${{ github.ref_name }} -R ll-nick/homebrew-leadr
-        env:
-          GITHUB_TOKEN: ${{ secrets.HOMEBREW_LEADR_GH_TOKEN }}
+          draft: true
+          prerelease: true
+          name: "DRY RUN ${{ github.ref_name }}"

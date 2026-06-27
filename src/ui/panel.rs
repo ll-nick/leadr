@@ -247,9 +247,7 @@ impl Panel {
         sequence: &str,
         keys: &Vec<String>,
     ) -> std::io::Result<()> {
-        let mut line = area.y;
-
-        for key in keys {
+        for (line, key) in (area.y..).zip(keys) {
             if line >= area.y + area.height {
                 break; // stop if no more vertical space
             }
@@ -266,8 +264,6 @@ impl Panel {
                 &self.theme,
             );
             stylized_entry.to_tty(tty)?;
-
-            line += 1;
         }
 
         Ok(())

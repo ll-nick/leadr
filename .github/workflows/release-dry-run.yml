@@ -1,0 +1,114 @@
+name: Release dry-run
+
+# Validates the release pipeline (artifact upload/download + release-action) against the
+# pinned action versions WITHOUT publishing: creates a draft GitHub release and skips
+# crates.io and Homebrew.
+# Trigger by pushing a tag like `test-v2.8.6`
+
+on:
+  push:
+    tags:
+      - test-v*
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build-linux:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        target: [
+          x86_64-unknown-linux-musl,
+          aarch64-unknown-linux-musl,
+          armv7-unknown-linux-musleabihf
+        ]
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Install cross
+        run: cargo install cross
+
+      - name: Build with cross
+        run: cross build --locked --release --target ${{ matrix.target }}
+
+      - name: Rename binary
+        run: |
+          mkdir -p dist
+          cp target/${{ matrix.target }}/release/leadr dist/leadr-${{ github.ref_name }}-${{ matrix.target }}
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: leadr-${{ github.ref_name }}-${{ matrix.target }}
+          path: dist/leadr-${{ github.ref_name }}-${{ matrix.target }}
+
+  build-macos:
+    runs-on: macos-latest
+    strategy:
+      matrix:
+        target: [x86_64-apple-darwin, aarch64-apple-darwin]
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Install Rust target
+        run: rustup target add ${{ matrix.target }}
+
+      - name: Build (macOS)
+        run: cargo build --locked --release --target ${{ matrix.target }}
+
+      - name: Rename binary
+        run: |
+          mkdir -p dist
+          cp target/${{ matrix.target }}/release/leadr dist/leadr-${{ github.ref_name }}-${{ matrix.target }}
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: leadr-${{ github.ref_name }}-${{ matrix.target }}
+          path: dist/leadr-${{ github.ref_name }}-${{ matrix.target }}
+
+  draft-release:
+    needs: [build-linux, build-macos]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+
+      - uses: actions/download-artifact@v8
+        with:
+          merge-multiple: true
+          path: dist
+
+      - name: Inspect downloaded assets
+        run: |
+          ls -lR dist
+          file dist/* || true
+
+      - name: Generate release notes
+        id: release_notes
+        run: |
+          set -e
+
+          echo -e "TEST RELEASE | DELETE LATER\nThis release contains the following changes:\n\n---\n" > release_notes.md
+
+          PREV_TAG=$(git describe --tags --abbrev=0 "${GITHUB_REF_NAME}^" 2>/dev/null || echo "")
+
+          if [ -z "$PREV_TAG" ]; then
+            echo "No previous tag found, including all merge commits."
+            git log --merges --pretty=format:'### %s%n%n%b%n%n---' >> release_notes.md
+          else
+            echo "Previous tag: $PREV_TAG"
+            git log "$PREV_TAG"..HEAD --merges --pretty=format:'### %s%n%n%b%n%n---' >> release_notes.md
+          fi
+
+          echo "Generated release notes:"
+          cat release_notes.md
+
+      - uses: ncipollo/release-action@v1
+        with:
+          artifacts: "dist/*"
+          bodyFile: release_notes.md
+          draft: true
+          prerelease: true
+          name: "DRY RUN ${{ github.ref_name }}"

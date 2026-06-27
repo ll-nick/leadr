@@ -45,7 +45,7 @@ fn main() -> Result<()> {
         Config::create_default(&config_dir)?;
         Mappings::create_default(&config_dir)?;
 
-        println!("Default config and mappings created in {:?}", config_dir);
+        println!("Default config and mappings created in {config_dir:?}");
         return Ok(());
     }
 
@@ -57,25 +57,25 @@ fn main() -> Result<()> {
     if cli.bash {
         let script =
             leadr::init_bash(&config).wrap_err("Failed to generate Bash initialization script.")?;
-        print!("{}", script);
+        print!("{script}");
         return Ok(());
     }
     if cli.fish {
         let script =
             leadr::init_fish(&config).wrap_err("Failed to generate Fish initialization script.")?;
-        print!("{}", script);
+        print!("{script}");
         return Ok(());
     }
     if cli.nu {
         let script = leadr::init_nushell(&config)
             .wrap_err("Failed to generate NuShell initialization script.")?;
-        print!("{}", script);
+        print!("{script}");
         return Ok(());
     }
     if cli.zsh {
         let script =
             leadr::init_zsh(&config).wrap_err("Failed to generate Zsh initialization script.")?;
-        print!("{}", script);
+        print!("{script}");
         return Ok(());
     }
 
@@ -88,7 +88,7 @@ fn main() -> Result<()> {
 
     match session.run().wrap_err("Failed to execute leadr session.")? {
         SessionResult::Command(command) => {
-            print!("{}", command);
+            print!("{command}");
         }
         SessionResult::NoMatch | SessionResult::Cancelled => {}
     }

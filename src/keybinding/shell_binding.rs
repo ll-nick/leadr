@@ -33,16 +33,10 @@ pub fn keyevents_to_shell_binding(
                 .collect::<String>();
 
             Ok(format!(
-                "\nbind -m emacs -x '\"{}\":{}'\n\
-                 bind -m vi-insert -x '\"{}\":{}'\n\
+                "\nbind -m emacs -x '\"{key_code_string}\":{function_name}'\n\
+                 bind -m vi-insert -x '\"{key_code_string}\":{function_name}'\n\
                  # In vi-command mode, switch to insert mode, invoke leadr using the binding defined above, then return to command mode\n\
-                 bind -m vi-command '\"{}\":i{}\\e'\n",
-                key_code_string,
-                function_name,
-                key_code_string,
-                function_name,
-                key_code_string,
-                function_name,
+                 bind -m vi-command '\"{key_code_string}\":i{function_name}\\e'\n",
             ))
         }
         Shell::Fish => {
@@ -52,7 +46,7 @@ pub fn keyevents_to_shell_binding(
                 .collect::<Vec<_>>()
                 .join(",");
 
-            Ok(format!("\nbind {} {}\n", key_code_string, function_name))
+            Ok(format!("\nbind {key_code_string} {function_name}\n"))
         }
         Shell::Nushell => {
             ensure!(
@@ -86,9 +80,8 @@ pub fn keyevents_to_shell_binding(
                 .collect::<String>();
 
             Ok(format!(
-                "zle -N {}\n\
-                bindkey '{}' {}",
-                function_name, key_code_string, function_name
+                "zle -N {function_name}\n\
+                bindkey '{key_code_string}' {function_name}"
             ))
         }
     }

@@ -26,11 +26,11 @@ impl Entry {
                 let flags = format_flags(mapping, symbols);
                 (label, flags, false)
             }
-            MatchType::Prefix(count) => (format!("+{} mappings", count), " ".repeat(5), true),
+            MatchType::Prefix(count) => (format!("+{count} mappings"), " ".repeat(5), true),
             MatchType::None => ("(invalid)".into(), "".into(), true),
         };
 
-        let raw_entry = format!("{} → {} {}", key, label, flags);
+        let raw_entry = format!("{key} → {label} {flags}");
         let raw_entry_width = raw_entry.chars().count() as u16;
 
         let mut spacing = " ".to_string();
@@ -74,7 +74,7 @@ impl Entry {
 
     pub fn to_tty(&self, tty: &mut std::fs::File) -> std::io::Result<()> {
         for part in &self.styled_parts {
-            write!(tty, "{}", part)?;
+            write!(tty, "{part}")?;
         }
         Ok(())
     }

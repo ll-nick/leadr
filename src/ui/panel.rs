@@ -203,14 +203,11 @@ impl Panel {
         // Top border
         if !matches!(self.config.layout.border_type, BorderType::None) {
             let top = format!(
-                "{tl}{line}{tr}",
-                line = horizontal_line,
-                tl = top_left,
-                tr = top_right,
+                "{top_left}{horizontal_line}{top_right}",
             )
             .with(self.theme.accent.into())
             .on(self.theme.background.into());
-            write!(tty, "{}", top)?;
+            write!(tty, "{top}")?;
         }
 
         // Vertical sides
@@ -224,7 +221,7 @@ impl Panel {
             )
             .with(self.theme.accent.into())
             .on(self.theme.background.into());
-            write!(tty, "{}", line)?;
+            write!(tty, "{line}")?;
         }
 
         // Bottom border
@@ -234,14 +231,11 @@ impl Panel {
         ) {
             tty.queue(cursor::MoveTo(area.x, area.y + area.height))?;
             let bottom = format!(
-                "{bl}{line}{br}",
-                line = horizontal_line,
-                bl = bottom_left,
-                br = bottom_right
+                "{bottom_left}{horizontal_line}{bottom_right}"
             )
             .with(self.theme.accent.into())
             .on(self.theme.background.into());
-            write!(tty, "{}", bottom)?;
+            write!(tty, "{bottom}")?;
         }
 
         tty.flush()?;
@@ -295,7 +289,7 @@ impl Panel {
             .on(self.theme.background.into());
         let center_x = area.x + (area.width.saturating_sub(help_text.chars().count() as u16)) / 2;
         tty.queue(cursor::MoveTo(center_x, area.y))?;
-        write!(tty, "{}", styled_help_text)?;
+        write!(tty, "{styled_help_text}")?;
 
         tty.queue(cursor::MoveTo(area.x, area.y))?;
         let arrow = self
@@ -306,12 +300,12 @@ impl Panel {
             .to_string()
             .with(self.theme.text_secondary.into())
             .on(self.theme.background.into());
-        write!(tty, "{}", arrow)?;
+        write!(tty, "{arrow}")?;
         let sequence_text = sequence
             .to_string()
             .with(self.theme.text_primary.into())
             .on(self.theme.background.into());
-        write!(tty, "{}", sequence_text)?;
+        write!(tty, "{sequence_text}")?;
 
         Ok(())
     }

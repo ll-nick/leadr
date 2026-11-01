@@ -1,0 +1,74 @@
+name: Upgrade mise tools
+
+# Monthly refresh of the tool versions pinned in mise.toml, analogous to dependabot
+# (which has no mise support). A PR is opened (or its rolling branch updated) only
+# when a pin changes.
+on:
+  schedule:
+    - cron: "0 6 1 * *" # 1st of the month, 06:00 UTC, matching dependabot's monthly cadence
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: mise-upgrade
+  cancel-in-progress: true
+
+jobs:
+  upgrade:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: jdx/mise-action@v4
+
+      - name: Bump pinned tool versions
+        run: mise upgrade --bump
+
+      - name: Open or update a PR if mise.toml changed
+        env:
+          # The default GITHUB_TOKEN works, but pushes/PRs it makes do not
+          # trigger the CI workflow. Set a MISE_UPGRADE_PAT secret (fine-grained
+          # PAT with contents + pull-requests write) to have CI run on these PRs.
+          GH_TOKEN: ${{ secrets.MISE_UPGRADE_PAT || github.token }}
+          BRANCH: chore/mise-upgrade
+          BASE: ${{ github.event.repository.default_branch }}
+        run: |
+          set -euo pipefail
+
+          if git diff --quiet -- mise.toml; then
+            echo "mise.toml unchanged, nothing to do."
+            exit 0
+          fi
+
+          BUMPS="$(git diff --unified=0 -- mise.toml | grep -E '^[-+][^-+]')"
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git remote set-url origin \
+            "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+
+          git switch -C "$BRANCH"
+          git add mise.toml
+          git commit -m "Bump mise tool versions"
+          git push --force origin "$BRANCH"
+
+          BODY="Automatic \`mise upgrade --bump\` refresh of \`mise.toml\`.
+
+          \`\`\`diff
+          ${BUMPS}
+          \`\`\`"
+
+          if [ "$(gh pr list --head "$BRANCH" --state open --json number --jq 'length')" -eq 0 ]; then
+            gh pr create \
+              --head "$BRANCH" \
+              --base "$BASE" \
+              --title "Bump mise tool versions" \
+              --label dependencies \
+              --body "$BODY"
+          else
+            gh pr edit "$BRANCH" --body "$BODY"
+            echo "PR already open for $BRANCH; force-pushed the refreshed pins and updated its body."
+          fi

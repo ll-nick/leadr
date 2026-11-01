@@ -1,0 +1,23 @@
+# An exact version because mise.lock can't pin Rust: mise resolves `latest` to the moving
+# `stable` channel, and new clippy lints would then fail CI without any change here.
+# Refreshed monthly by .github/workflows/mise-upgrade.yml.
+[tools]
+rust = { version = "1.99.1", components = "clippy,rustfmt" }
+
+[tasks.lint]
+run = "cargo clippy --all-targets --all-features -- -D warnings"
+
+[tasks.fmt]
+run = "cargo fmt --all -- --check"
+
+[tasks.build]
+run = "cargo build --locked"
+
+[tasks.test]
+run = "cargo test --locked"
+
+[tasks.fix]
+run = ["cargo clippy --fix --allow-dirty --allow-staged --all-targets --all-features", "cargo fmt --all"]
+
+[tasks.check]
+depends = ["lint", "fmt", "build", "test"]

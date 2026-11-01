@@ -9,14 +9,9 @@ jobs:
     steps:
     - uses: actions/checkout@v7
 
-    - name: Check formatting
-      run: cargo fmt --all -- --check
+    - uses: jdx/mise-action@v4
 
-    - name: Check linting
-      run: cargo clippy --all-targets --all-features -- -D warnings
-
-    - name: Build
-      run: cargo build --locked --verbose
-
-    - name: Run tests
-      run: cargo test --locked --verbose
+    - run: mise run fmt
+    - run: mise run lint
+    - run: mise run build
+    - run: mise run test

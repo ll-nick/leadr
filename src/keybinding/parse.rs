@@ -41,9 +41,8 @@ fn parse_vim_key(key: &str) -> Result<KeyEvent> {
     let mut ctrl = false;
     let mut alt = false;
     let mut shift = false;
-    let base_key;
 
-    if parts.len() > 1 {
+    let base_key = if parts.len() > 1 {
         // Treat first N-1 as modifiers, last as base key
         for part in &parts[..parts.len() - 1] {
             match part.to_uppercase().as_str() {
@@ -58,11 +57,11 @@ fn parse_vim_key(key: &str) -> Result<KeyEvent> {
                 }
             }
         }
-        base_key = parts[parts.len() - 1].to_string();
+        parts[parts.len() - 1].to_string()
     } else {
         // Single element: literal
-        base_key = parts[0].to_string();
-    }
+        parts[0].to_string()
+    };
 
     let code = match base_key {
         k if k.len() == 1 => KeyCode::Char(k.chars().next().unwrap()),
